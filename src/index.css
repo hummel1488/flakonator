@@ -5,83 +5,83 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;  /* Белый фон */
-    --foreground: 197 97% 23%;  /* Синий текст #035B75 */
+    --background: 210 33% 98%;  /* Нежный светло-серый фон #F4F7FA */
+    --foreground: 200 33% 25%;  /* Темно-синий текст #1E4B5F */
 
     --card: 0 0% 100%;  /* Белые карточки */
-    --card-foreground: 197 97% 23%;  /* Синий текст */
+    --card-foreground: 200 33% 25%;  /* Темно-синий текст */
 
     --popover: 0 0% 100%;  /* Белые всплывающие окна */
-    --popover-foreground: 197 97% 23%;  /* Синий текст */
+    --popover-foreground: 200 33% 25%;  /* Темно-синий текст */
 
-    --primary: 197 97% 23%;  /* Синий #035B75 */
+    --primary: 200 33% 25%;  /* Темно-синий #1E4B5F */
     --primary-foreground: 0 0% 100%;  /* Белый текст */
 
-    --secondary: 14 80% 69%;  /* Оранжевый #EA9272 */
-    --secondary-foreground: 197 97% 23%;  /* Синий текст */
+    --secondary: 25 68% 70%;  /* Персиковый #E9A678 */
+    --secondary-foreground: 200 40% 15%;  /* Темно-синий текст */
 
-    --muted: 60 2% 85%;  /* Светло-серый #DADCD6 */
-    --muted-foreground: 197 70% 30%;  /* Приглушенный синий текст */
+    --muted: 210 20% 94%;  /* Очень светло-серый #EEF2F6 */
+    --muted-foreground: 200 20% 45%;  /* Приглушенный синий текст */
 
-    --accent: 14 86% 69%;  /* Яркий оранжевый #F28F6D */
-    --accent-foreground: 197 97% 23%;  /* Синий текст */
+    --accent: 25 68% 70%;  /* Персиковый #E9A678 */
+    --accent-foreground: 200 40% 15%;  /* Темно-синий текст */
 
-    --destructive: 0 84% 60%;  /* Красный */
+    --destructive: 0 70% 50%;  /* Красный */
     --destructive-foreground: 0 0% 100%;  /* Белый текст */
 
-    --border: 197 30% 85%;  /* Светло-синие границы */
-    --input: 197 30% 85%;  /* Светло-синие поля ввода */
-    --ring: 14 80% 69%;  /* Оранжевое кольцо фокуса */
+    --border: 200 25% 90%;  /* Светло-синие границы */
+    --input: 200 25% 90%;  /* Светло-синие поля ввода */
+    --ring: 25 68% 70%;  /* Персиковый #E9A678 */
 
-    --radius: 0.5rem;  /* Более мягкие скругления */
+    --radius: 0.625rem;  /* Слегка скругленные углы */
 
-    --sidebar-background: 197 97% 23%;  /* Синий фон боковой панели */
+    --sidebar-background: 200 33% 25%;  /* Темно-синий фон боковой панели #1E4B5F */
     --sidebar-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-primary: 14 80% 69%;  /* Оранжевый #EA9272 */
-    --sidebar-primary-foreground: 197 97% 23%;  /* Синий текст */
-    --sidebar-accent: 197 70% 30%;  /* Более светлый синий */
+    --sidebar-primary: 25 68% 70%;  /* Персиковый #E9A678 */
+    --sidebar-primary-foreground: 200 50% 15%;  /* Темно-синий текст */
+    --sidebar-accent: 200 45% 35%;  /* Более светлый синий */
     --sidebar-accent-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-border: 197 70% 25%;  /* Синие границы */
-    --sidebar-ring: 14 80% 69%;  /* Оранжевое кольцо фокуса */
+    --sidebar-border: 200 45% 20%;  /* Синие границы */
+    --sidebar-ring: 25 68% 70%;  /* Персиковый #E9A678 */
   }
 
   .dark {
-    --background: 197 97% 23%;  /* Синий фон #035B75 */
+    --background: 201 41% 10%;  /* Темно-синий фон #0D2B31 */
     --foreground: 0 0% 95%;  /* Светлый текст */
 
-    --card: 197 97% 20%;  /* Темно-синие карточки */
+    --card: 200 40% 12%;  /* Темно-синие карточки */
     --card-foreground: 0 0% 95%;  /* Светлый текст */
 
-    --popover: 197 97% 20%;  /* Темно-синие всплывающие окна */
+    --popover: 200 40% 12%;  /* Темно-синие всплывающие окна */
     --popover-foreground: 0 0% 95%;  /* Светлый текст */
 
-    --primary: 14 80% 69%;  /* Оранжевый #EA9272 */
-    --primary-foreground: 197 97% 23%;  /* Синий текст */
+    --primary: 25 60% 73%;  /* Золотисто-персиковый #E2B393 */
+    --primary-foreground: 200 50% 10%;  /* Темно-синий текст */
 
-    --secondary: 196 72% 29%;  /* Средний синий #176981 */
+    --secondary: 200 35% 35%;  /* Средний синий #2D6F8A */
     --secondary-foreground: 0 0% 95%;  /* Светлый текст */
 
-    --muted: 196 72% 29%;  /* Приглушенный синий */
+    --muted: 200 35% 20%;  /* Приглушенный синий */
     --muted-foreground: 0 0% 80%;  /* Светло-серый текст */
 
-    --accent: 196 72% 29%;  /* Синий акцент */
+    --accent: 200 35% 35%;  /* Средний синий #2D6F8A */
     --accent-foreground: 0 0% 95%;  /* Светлый текст */
 
-    --destructive: 0 74% 42%;  /* Темно-красный */
+    --destructive: 0 70% 40%;  /* Темно-красный */
     --destructive-foreground: 0 0% 95%;  /* Светлый текст */
 
-    --border: 196 72% 25%;  /* Синие границы */
-    --input: 196 72% 25%;  /* Синие поля ввода */
-    --ring: 14 80% 69%;  /* Оранжевое кольцо фокуса */
+    --border: 200 30% 20%;  /* Синие границы */
+    --input: 200 30% 20%;  /* Синие поля ввода */
+    --ring: 25 60% 73%;  /* Золотисто-персиковый #E2B393 */
     
-    --sidebar-background: 197 97% 23%;  /* Синий фон боковой панели */
+    --sidebar-background: 201 41% 10%;  /* Темно-синий фон боковой панели #0D2B31 */
     --sidebar-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-primary: 14 80% 69%;  /* Оранжевый #EA9272 */
-    --sidebar-primary-foreground: 197 97% 23%;  /* Синий текст */
-    --sidebar-accent: 196 72% 29%;  /* Средний синий */
+    --sidebar-primary: 25 60% 73%;  /* Золотисто-персиковый #E2B393 */
+    --sidebar-primary-foreground: 200 50% 10%;  /* Темно-синий текст */
+    --sidebar-accent: 200 35% 35%;  /* Средний синий #2D6F8A */
     --sidebar-accent-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-border: 196 72% 25%;  /* Синие границы */
-    --sidebar-ring: 14 80% 69%;  /* Оранжевое кольцо фокуса */
+    --sidebar-border: 200 30% 20%;  /* Синие границы */
+    --sidebar-ring: 25 60% 73%;  /* Золотисто-персиковый #E2B393 */
   }
 }
 
@@ -98,11 +98,11 @@
 
 @layer utilities {
   .glass-card {
-    @apply bg-white/90 backdrop-blur-md border border-white/20 shadow-md;
+    @apply bg-white/95 backdrop-blur-md border border-white/30 shadow-card;
   }
   
   .dark .glass-card {
-    @apply bg-card/80 backdrop-blur-md border border-white/10 shadow-md;
+    @apply bg-card/90 backdrop-blur-md border border-white/10 shadow-card;
   }
   
   .text-gradient {
@@ -110,11 +110,11 @@
   }
   
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02];
+    @apply transition-all duration-300 hover:shadow-hover hover:scale-[1.02];
   }
   
   .button-glow {
-    @apply relative overflow-hidden;
+    @apply relative overflow-hidden transition-all duration-300;
   }
   
   .button-glow::after {
@@ -123,5 +123,17 @@
   
   .button-glow:hover::after {
     @apply opacity-100;
+  }
+  
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-shimmer before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent;
+  }
+  
+  .gold-gradient {
+    @apply bg-gold-gradient;
+  }
+  
+  .blue-gradient {
+    @apply bg-blue-gradient;
   }
 }
