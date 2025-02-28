@@ -65,6 +65,7 @@ export const useInventory = () => {
     }
     
     const newInventory = [...inventory];
+    let importedCount = 0;
     
     products.forEach(productData => {
       if (!productData.name || !productData.locationId) {
@@ -90,14 +91,16 @@ export const useInventory = () => {
       if (existingProductIndex >= 0) {
         // Update quantity of existing product
         newInventory[existingProductIndex].quantity = product.quantity;
+        importedCount++;
       } else {
         // Add new product
         newInventory.push(product);
+        importedCount++;
       }
     });
 
     setInventory(newInventory);
-    return newInventory.length;
+    return importedCount;
   };
 
   // Update a product's quantity
