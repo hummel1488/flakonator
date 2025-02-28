@@ -56,6 +56,22 @@ const SUPPORTED_SIZES: Record<string, string> = {
   'автомобильный': 'Автофлакон',
 };
 
+// Обратное сопоставление для статистики
+const SIZE_TO_STAT_KEY: Record<string, string> = {
+  '5 мл': '5',
+  '16 мл': '16',
+  '20 мл': '20',
+  '25 мл': '25',
+  '30 мл': '30',
+  'Автофлакон': 'car',
+  'car': 'car', // для обратной совместимости
+  '5': '5',     // для обратной совместимости
+  '16': '16',   // для обратной совместимости
+  '20': '20',   // для обратной совместимости
+  '25': '25',   // для обратной совместимости
+  '30': '30',   // для обратной совместимости
+};
+
 // Валидные размеры, которые поддерживаются системой
 const VALID_SIZES = ["5 мл", "16 мл", "20 мл", "25 мл", "30 мл", "Автофлакон"];
 
@@ -68,7 +84,21 @@ export const useInventory = () => {
     const storedInventory = localStorage.getItem(LOCAL_STORAGE_KEY);
     if (storedInventory) {
       try {
-        setInventory(JSON.parse(storedInventory));
+        // При загрузке нормализуем все размеры
+        const parsedInventory = JSON.parse(storedInventory);
+        const normalizedInventory = parsedInventory.map((product: Product) => {
+          // Проверяем, нужно ли нормализовать размер
+          if (!VALID_SIZES.includes(product.size)) {
+            // Пытаемся нормализовать размер
+            const normalizedSize = normalizeSize(product.size);
+            if (normalizedSize) {
+              return { ...product, size: normalizedSize };
+            }
+          }
+          return product;
+        });
+        
+        setInventory(normalizedInventory);
       } catch (error) {
         console.error("Error parsing inventory data:", error);
       }
@@ -85,23 +115,27 @@ export const useInventory = () => {
 
   // Add a new product to inventory
   const addProduct = (product: Product) => {
+    // Нормализуем размер перед добавлением
+    const normalizedSize = normalizeSize(product.size) || product.size;
+    const productWithNormalizedSize = { ...product, size: normalizedSize };
+    
     // Check if product already exists with same name, size, type, and location
     const existingProductIndex = inventory.findIndex(
       (p) =>
-        p.name.toLowerCase() === product.name.toLowerCase() &&
-        p.size === product.size &&
-        p.type === product.type &&
-        p.locationId === product.locationId
+        p.name.toLowerCase() === productWithNormalizedSize.name.toLowerCase() &&
+        p.size === productWithNormalizedSize.size &&
+        p.type === productWithNormalizedSize.type &&
+        p.locationId === productWithNormalizedSize.locationId
     );
 
     if (existingProductIndex >= 0) {
       // Update quantity of existing product
       const updatedInventory = [...inventory];
-      updatedInventory[existingProductIndex].quantity += product.quantity;
+      updatedInventory[existingProductIndex].quantity += productWithNormalizedSize.quantity;
       setInventory(updatedInventory);
     } else {
       // Add new product
-      setInventory([...inventory, product]);
+      setInventory([...inventory, productWithNormalizedSize]);
     }
   };
 
@@ -309,6 +343,11 @@ export const useInventory = () => {
     }
     
     return null;
+  };
+
+  // Получает ключ для статистики по размеру товара
+  const getSizeStatKey = (size: string): string => {
+    return SIZE_TO_STAT_KEY[size] || size;
   };
 
   /**
@@ -610,5 +649,6 @@ export const useInventory = () => {
     deleteProduct,
     deleteAllProducts,
     getProductsByLocation,
+    getSizeStatKey, // Экспортируем новую функцию
   };
 };

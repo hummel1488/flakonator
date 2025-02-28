@@ -74,7 +74,7 @@ const QUANTITY_VARIATIONS = ['количество', 'остаток', 'кол-�
 const Inventory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { inventory, addProduct, loading, updateProductQuantity, importProducts, importFromCSV, deleteAllProducts } = useInventory();
+  const { inventory, addProduct, loading, updateProductQuantity, importProducts, importFromCSV, deleteAllProducts, getSizeStatKey } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager } = useAuth();
   
@@ -101,7 +101,7 @@ const Inventory = () => {
   // Form states
   const [formData, setFormData] = useState({
     name: "",
-    size: "5",
+    size: "5 мл",
     type: "perfume",
     location: "",
     quantity: 1,
@@ -161,7 +161,7 @@ const Inventory = () => {
     setShowAddDialog(false);
     setFormData({
       name: "",
-      size: "5",
+      size: "5 мл",
       type: "perfume",
       location: "",
       quantity: 1,
@@ -293,13 +293,15 @@ const Inventory = () => {
   };
 
   const getSizeLabel = (size: string) => {
-    return size === "car" ? "Автофлакон" : `${size} мл`;
+    if (size === "Автофлакон" || size === "car") return "Автофлакон";
+    // Проверка, содержит ли строка уже "мл"
+    return size.includes("мл") ? size : `${size} мл`;
   };
 
   const filteredInventory = inventory.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLocation = filterLocation === "all" || item.locationId === filterLocation;
-    const matchesSize = filterSize === "all" || item.size === filterSize;
+    const matchesSize = filterSize === "all" || getSizeStatKey(item.size) === filterSize;
     return matchesSearch && matchesLocation && matchesSize;
   });
 
@@ -330,13 +332,17 @@ const Inventory = () => {
       "car": 500
     };
 
-    // Correctly accumulate quantities for each size
+    // Correctly accumulate quantities for each size using the getSizeStatKey function
     inventory.forEach(item => {
-      if (sizeStats[item.size]) {
-        sizeStats[item.size].count += item.quantity;
+      const statKey = getSizeStatKey(item.size);
+      
+      if (sizeStats[statKey]) {
+        sizeStats[statKey].count += item.quantity;
         // Use the item price if available, otherwise use the default price map
-        const itemPrice = item.price || prices[item.size];
-        sizeStats[item.size].value += item.quantity * itemPrice;
+        const itemPrice = item.price || prices[statKey];
+        sizeStats[statKey].value += item.quantity * itemPrice;
+      } else {
+        console.log(`Неизвестный размер: ${item.size} (ключ: ${statKey}) для товара: ${item.name}`);
       }
     });
 
@@ -643,12 +649,12 @@ const Inventory = () => {
                     <SelectValue placeholder="Выберите объем" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="5">5 мл</SelectItem>
-                    <SelectItem value="16">16 мл</SelectItem>
-                    <SelectItem value="20">20 мл</SelectItem>
-                    <SelectItem value="25">25 мл</SelectItem>
-                    <SelectItem value="30">30 мл</SelectItem>
-                    <SelectItem value="car">Автофлакон</SelectItem>
+                    <SelectItem value="5 мл">5 мл</SelectItem>
+                    <SelectItem value="16 мл">16 мл</SelectItem>
+                    <SelectItem value="20 мл">20 мл</SelectItem>
+                    <SelectItem value="25 мл">25 мл</SelectItem>
+                    <SelectItem value="30 мл">30 мл</SelectItem>
+                    <SelectItem value="Автофлакон">Автофлакон</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
