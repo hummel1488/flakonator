@@ -4,7 +4,7 @@ import { useSales } from "@/hooks/use-sales";
 import { useInventory } from "@/hooks/use-inventory";
 import { useLocations } from "@/hooks/use-locations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { TrendingUp, Calendar, AlertTriangle, ShoppingBag, Database, BarChart3 } from "lucide-react";
 import { formatDistance, subDays } from "date-fns";
 import { ru } from "date-fns/locale";
@@ -107,12 +107,14 @@ export const Dashboard = () => {
     const totalCount = Object.values(sizeStats).reduce((sum, stat) => sum + stat.count, 0);
     const totalValue = Object.values(sizeStats).reduce((sum, stat) => sum + stat.value, 0);
 
-    // Convert to format suitable for charts
-    const pieChartData = Object.entries(sizeStats).map(([size, data]) => ({
-      name: size === "car" ? "Автофлакон" : `${size} мл`,
-      value: data.count,
-      size
-    }));
+    // Convert to format suitable for charts - only include sizes with non-zero counts
+    const pieChartData = Object.entries(sizeStats)
+      .filter(([_, data]) => data.count > 0) // Only include non-zero items
+      .map(([size, data]) => ({
+        name: size === "car" ? "Автофлакон" : `${size} мл`,
+        value: data.count,
+        size
+      }));
 
     return { sizeStats, totalCount, totalValue, pieChartData };
   }, [inventory]);
@@ -127,6 +129,27 @@ export const Dashboard = () => {
 
   const getSizeLabel = (size: string) => {
     return size === "car" ? "Автофлакон" : `${size} мл`;
+  };
+
+  // Custom label renderer for pie chart to avoid overlap
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }: any) => {
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius * 1.4;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="#333" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        fontSize="12"
+      >
+        {`${name} (${(percent * 100).toFixed(0)}%)`}
+      </text>
+    );
   };
 
   return (
@@ -225,34 +248,42 @@ export const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <h3 className="text-sm font-medium mb-3">Распределение по объемам</h3>
-                <div className="h-[200px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={inventoryStats.pieChartData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {inventoryStats.pieChartData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip 
-                        formatter={(value) => [`${value} шт.`, "Количество"]}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="h-[250px]">
+                  {inventoryStats.pieChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={inventoryStats.pieChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={renderCustomizedLabel}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {inventoryStats.pieChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [`${value} шт.`, "Количество"]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                      Нет данных о товарах
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
                 <h3 className="text-sm font-medium mb-3">Остатки по объемам</h3>
                 <div className="space-y-3">
-                  {Object.entries(inventoryStats.sizeStats).map(([size, { count, value }]) => (
+                  {Object.entries(inventoryStats.sizeStats)
+                    .filter(([_, { count }]) => count > 0) // Only show sizes with products
+                    .map(([size, { count, value }]) => (
                     <div key={size} className="flex justify-between items-center p-2 border rounded-md">
                       <div className="font-medium">{getSizeLabel(size)}</div>
                       <div className="flex items-center gap-2">
@@ -261,6 +292,11 @@ export const Dashboard = () => {
                       </div>
                     </div>
                   ))}
+                  {Object.values(inventoryStats.sizeStats).every(({ count }) => count === 0) && (
+                    <div className="text-center py-4 text-muted-foreground">
+                      Нет данных о товарах
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
