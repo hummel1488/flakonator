@@ -64,10 +64,10 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				brand: {
-					DEFAULT: '#1F3B3D', /* 1F3B3D */
+					DEFAULT: '#1A1F2C', /* Темнее чем 1F3B3D */
 					dark: '#0D2B31', /* 0D2B31 */
-					medium: '#2C3E50', /* 2C3E50 */
-					accent: '#3A3A3A', /* 3A3A3A */
+					medium: '#222222', /* Темнее чем 2C3E50 */
+					accent: '#222222', /* Темнее чем 3A3A3A */
 					light: '#F5F5F5', /* F5F5F5 */
 				}
 			},
