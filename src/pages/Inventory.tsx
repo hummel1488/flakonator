@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText } from "lucide-react";
+import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,6 +28,16 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -55,7 +65,7 @@ const QUANTITY_VARIATIONS = ['количество', 'остаток', 'кол-�
 const Inventory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { inventory, addProduct, loading, updateProductQuantity, importProducts } = useInventory();
+  const { inventory, addProduct, loading, updateProductQuantity, importProducts, deleteAllProducts } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager } = useAuth();
   
@@ -65,6 +75,7 @@ const Inventory = () => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showStats, setShowStats] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -155,6 +166,17 @@ const Inventory = () => {
     setShowUpdateDialog(false);
     setSelectedProduct(null);
     setUpdateFormData({ quantity: 0 });
+  };
+
+  const handleDeleteAllProducts = () => {
+    deleteAllProducts();
+    
+    toast({
+      title: "Инвентарь очищен",
+      description: "Все ароматы успешно удалены из инвентаря",
+    });
+    
+    setShowDeleteAllDialog(false);
   };
 
   // Find the most likely column index based on header variations
@@ -742,6 +764,14 @@ const Inventory = () => {
               {(isAdmin() || isManager()) && (
                 <>
                   <Button
+                    onClick={() => setShowDeleteAllDialog(true)}
+                    variant="destructive"
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Удалить все
+                  </Button>
+                  <Button
                     onClick={() => setShowImportDialog(true)}
                     variant="outline"
                     className="gap-2"
@@ -1099,6 +1129,27 @@ const Inventory = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete all products dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удаление всех ароматов</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить все ароматы из инвентаря? Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteAllProducts}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Удалить все
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Import data dialog */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>

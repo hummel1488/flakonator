@@ -126,6 +126,11 @@ export const useInventory = () => {
     setInventory(updatedInventory);
   };
 
+  // Delete all products
+  const deleteAllProducts = () => {
+    setInventory([]);
+  };
+
   // Get products for a specific location
   const getProductsByLocation = (locationId: string) => {
     return inventory.filter((product) => product.locationId === locationId);
@@ -139,6 +144,7 @@ export const useInventory = () => {
     updateProductQuantity,
     updateProduct,
     deleteProduct,
+    deleteAllProducts,
     getProductsByLocation,
   };
 };
