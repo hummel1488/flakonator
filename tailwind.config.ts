@@ -64,11 +64,15 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				brand: {
-					DEFAULT: '#1A1F2C', /* Темнее чем 1F3B3D */
-					dark: '#0D2B31', /* 0D2B31 */
-					medium: '#222222', /* Темнее чем 2C3E50 */
-					accent: '#222222', /* Темнее чем 3A3A3A */
-					light: '#F5F5F5', /* F5F5F5 */
+					DEFAULT: '#8B5CF6', /* Яркий фиолетовый */
+					dark: '#7C3AED', /* Темно-фиолетовый */
+					medium: '#A78BFA', /* Средне-фиолетовый */
+					accent: '#E5DEFF', /* Светло-фиолетовый */
+					light: '#F5F3FF', /* Очень светлый фиолетовый */
+					purple: '#8B5CF6', /* Основной фиолетовый */
+					'light-purple': '#C4B5FD', /* Светло-фиолетовый */
+					'dark-purple': '#6D28D9', /* Темно-фиолетовый */
+					gray: '#64748B', /* Серый для текста */
 				}
 			},
 			borderRadius: {
@@ -112,13 +116,36 @@ export default {
 						opacity: '0',
 						transform: 'translateY(10px)'
 					}
+				},
+				'pulse-gentle': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.85'
+					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0)'
+					},
+					'50%': {
+						transform: 'translateY(-5px)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
-				'fade-out': 'fade-out 0.3s ease-out'
+				'fade-out': 'fade-out 0.3s ease-out',
+				'pulse-gentle': 'pulse-gentle 3s ease-in-out infinite',
+				'float': 'float 3s ease-in-out infinite'
+			},
+			boxShadow: {
+				'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
+				'card': '0 0 20px rgba(0, 0, 0, 0.05)',
+				'button': '0 2px 4px rgba(0, 0, 0, 0.05)',
 			}
 		}
 	},
