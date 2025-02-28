@@ -61,68 +61,76 @@ export const useInventory = () => {
 
   // Bulk import products from data
   const importProducts = (products: Omit<Product, "id">[]) => {
+    console.log("Starting import with", products.length, "products");
+    
     if (!products || products.length === 0) {
       console.error("No products to import");
       return 0;
     }
     
-    console.log("Starting import of", products.length, "products");
     const newInventory = [...inventory];
     let importedCount = 0;
     
     for (let i = 0; i < products.length; i++) {
-      const productData = products[i];
-      
-      // Skip invalid products
-      if (!productData.name || !productData.locationId) {
-        console.error("Skipping invalid product:", productData);
-        continue;
-      }
-      
-      // Ensure quantity is a valid number
-      let quantity = 0;
-      if (typeof productData.quantity === 'string') {
-        // Remove any non-numeric characters except decimal points and convert to number
-        const cleanQuantity = String(productData.quantity).replace(/[^\d.]/g, '');
-        quantity = parseInt(cleanQuantity, 10) || 0;
-      } else {
-        quantity = productData.quantity || 0;
-      }
-      
-      // Skip products with invalid quantity
-      if (isNaN(quantity) || quantity <= 0) {
-        console.error("Invalid quantity for product:", productData.name, "quantity:", quantity);
-        continue;
-      }
-      
-      // Create full product with ID
-      const product: Product = {
-        ...productData,
-        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-        quantity: quantity
-      };
-      
-      console.log("Processing product:", product.name, "size:", product.size, "quantity:", product.quantity);
-      
-      // Check if product already exists
-      const existingProductIndex = newInventory.findIndex(
-        (p) =>
-          p.name.toLowerCase() === product.name.toLowerCase() &&
-          p.size === product.size &&
-          p.type === product.type &&
-          p.locationId === product.locationId
-      );
+      try {
+        const productData = products[i];
+        
+        // Skip invalid products
+        if (!productData.name || !productData.locationId) {
+          console.error("Skipping invalid product:", productData);
+          continue;
+        }
+        
+        // Ensure quantity is a valid number
+        let quantity = 0;
+        if (typeof productData.quantity === 'string') {
+          // Extract numbers from the string, handling both dot and comma as decimal separator
+          const cleanQuantity = String(productData.quantity)
+            .replace(/[^\d.,]/g, '')  // Remove anything that's not a digit, dot, or comma
+            .replace(/,/g, '.');      // Replace commas with dots
+          
+          quantity = parseInt(cleanQuantity, 10) || 0;
+        } else {
+          quantity = Number(productData.quantity) || 0;
+        }
+        
+        // Skip products with invalid quantity
+        if (isNaN(quantity) || quantity <= 0) {
+          console.error("Invalid quantity for product:", productData.name, "quantity:", quantity);
+          continue;
+        }
+        
+        // Create full product with ID
+        const product: Product = {
+          ...productData,
+          id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+          quantity: quantity
+        };
+        
+        console.log("Processing product:", product.name, "size:", product.size, "quantity:", product.quantity);
+        
+        // Check if product already exists
+        const existingProductIndex = newInventory.findIndex(
+          (p) =>
+            p.name.toLowerCase() === product.name.toLowerCase() &&
+            p.size === product.size &&
+            p.type === product.type &&
+            p.locationId === product.locationId
+        );
 
-      if (existingProductIndex >= 0) {
-        // Update quantity of existing product
-        newInventory[existingProductIndex].quantity += product.quantity;
-        console.log("Updated existing product, new quantity:", newInventory[existingProductIndex].quantity);
-        importedCount++;
-      } else {
-        // Add new product
-        newInventory.push(product);
-        console.log("Added new product to inventory");
-        importedCount++;
+        if (existingProductIndex >= 0) {
+          // Update quantity of existing product
+          newInventory[existingProductIndex].quantity += product.quantity;
+          console.log("Updated existing product, new quantity:", newInventory[existingProductIndex].quantity);
+          importedCount++;
+        } else {
+          // Add new product
+          newInventory.push(product);
+          console.log("Added new product to inventory");
+          importedCount++;
+        }
+      } catch (error) {
+        console.error("Error processing product at index", i, ":", error);
       }
     }
 
