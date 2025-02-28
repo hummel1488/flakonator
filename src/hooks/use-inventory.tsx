@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 export interface Product {
   id: string;
   name: string;
-  size: string; // "5", "16", "20", "25", "30", "car" for car diffuser
+  size: string; // "5 мл", "16 мл", "20 мл", "25 мл", "30 мл", "Автофлакон"
   type: string; // "perfume", "other"
   locationId: string;
   quantity: number;
@@ -29,32 +29,35 @@ export interface ImportResult {
 
 const LOCAL_STORAGE_KEY = "scenttrack-inventory";
 
-// Поддерживаемые размеры
+// Поддерживаемые размеры (обновлены в соответствии с требованиями)
 const SUPPORTED_SIZES: Record<string, string> = {
-  '5': '5',
-  '5мл': '5',
-  '5 мл': '5',
-  '16': '16',
-  '16мл': '16',
-  '16 мл': '16',
-  '20': '20',
-  '20мл': '20',
-  '20 мл': '20',
-  '25': '25',
-  '25мл': '25',
-  '25 мл': '25',
-  '30': '30',
-  '30мл': '30',
-  '30 мл': '30',
-  'автофлакон': 'car',
-  'авто флакон': 'car',
-  'авто': 'car',
-  'машина': 'car',
-  'car': 'car',
-  'car diffuser': 'car',
-  'диффузор': 'car',
-  'автомобильный': 'car',
+  '5': '5 мл',
+  '5мл': '5 мл',
+  '5 мл': '5 мл',
+  '16': '16 мл',
+  '16мл': '16 мл',
+  '16 мл': '16 мл',
+  '20': '20 мл',
+  '20мл': '20 мл',
+  '20 мл': '20 мл',
+  '25': '25 мл',
+  '25мл': '25 мл',
+  '25 мл': '25 мл',
+  '30': '30 мл',
+  '30мл': '30 мл',
+  '30 мл': '30 мл',
+  'автофлакон': 'Автофлакон',
+  'авто флакон': 'Автофлакон',
+  'авто': 'Автофлакон',
+  'машина': 'Автофлакон',
+  'car': 'Автофлакон',
+  'car diffuser': 'Автофлакон',
+  'диффузор': 'Автофлакон',
+  'автомобильный': 'Автофлакон',
 };
+
+// Валидные размеры, которые поддерживаются системой
+const VALID_SIZES = ["5 мл", "16 мл", "20 мл", "25 мл", "30 мл", "Автофлакон"];
 
 export const useInventory = () => {
   const [inventory, setInventory] = useState<Product[]>([]);
@@ -237,7 +240,7 @@ export const useInventory = () => {
           console.log("Updated existing product, new quantity:", newInventory[existingProductIndex].quantity);
           logs.push({
             type: 'success',
-            message: `Обновлен товар "${product.name}" (${getSizeLabel(product.size)}), новое количество: ${product.quantity}`
+            message: `Обновлен товар "${product.name}" (${product.size}), новое количество: ${product.quantity}`
           });
           importedCount++;
           updatedItemsCount++;
@@ -247,7 +250,7 @@ export const useInventory = () => {
           console.log("Added new product to inventory");
           logs.push({
             type: 'success',
-            message: `Добавлен новый товар "${product.name}" (${getSizeLabel(product.size)}), количество: ${product.quantity}`
+            message: `Добавлен новый товар "${product.name}" (${product.size}), количество: ${product.quantity}`
           });
           importedCount++;
           newItemsCount++;
@@ -273,7 +276,7 @@ export const useInventory = () => {
           newInventory[productIndex].quantity = 0;
           logs.push({
             type: 'warning',
-            message: `Обнулен товар "${product.name}" (${getSizeLabel(product.size)}), отсутствует в импорте`
+            message: `Обнулен товар "${product.name}" (${product.size}), отсутствует в импорте`
           });
           zeroedItemsCount++;
         }
@@ -298,20 +301,14 @@ export const useInventory = () => {
     if (!size) return null;
     
     const normalized = size.toString().toLowerCase().trim();
-    return SUPPORTED_SIZES[normalized] || null;
-  };
-
-  // Получает читаемую метку для размера
-  const getSizeLabel = (size: string): string => {
-    switch (size) {
-      case '5': return '5 мл';
-      case '16': return '16 мл';
-      case '20': return '20 мл';
-      case '25': return '25 мл';
-      case '30': return '30 мл';
-      case 'car': return 'Автофлакон';
-      default: return size;
+    const result = SUPPORTED_SIZES[normalized];
+    
+    // Проверяем, что размер входит в список валидных размеров
+    if (result && VALID_SIZES.includes(result)) {
+      return result;
     }
+    
+    return null;
   };
 
   /**
@@ -454,7 +451,7 @@ export const useInventory = () => {
         }
         
         // Определяем размер
-        let size = '5'; // Размер по умолчанию
+        let size = '5 мл'; // Размер по умолчанию (обновлен в соответствии с требованиями)
         if (sizeIndex !== -1 && columns[sizeIndex]) {
           const normalizedSize = normalizeSize(columns[sizeIndex]);
           if (normalizedSize) {
