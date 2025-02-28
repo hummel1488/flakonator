@@ -98,6 +98,9 @@ const Inventory = () => {
   const [zeroNonExisting, setZeroNonExisting] = useState<boolean>(true);
   const [showImportResults, setShowImportResults] = useState<boolean>(false);
 
+  console.log("Current manualLocationId:", manualLocationId);
+  console.log("Available locations:", locations.map(loc => ({ id: loc.id, name: loc.name })));
+
   // Form states
   const [formData, setFormData] = useState({
     name: "",
@@ -371,6 +374,12 @@ const Inventory = () => {
   };
 
   const stats = calculateInventoryStats();
+
+  // Обработчик изменения точки продажи в диалоге импорта
+  const handleLocationChange = (locationId: string) => {
+    console.log("Setting location to:", locationId);
+    setManualLocationId(locationId);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -807,12 +816,12 @@ const Inventory = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-2">
-                  <Label htmlFor="location">Точка продажи</Label>
+                  <Label htmlFor="import-location">Точка продажи</Label>
                   <Select 
                     value={manualLocationId} 
-                    onValueChange={setManualLocationId}
+                    onValueChange={handleLocationChange}
                   >
-                    <SelectTrigger id="location">
+                    <SelectTrigger id="import-location">
                       <SelectValue placeholder="Выберите точку продажи" />
                     </SelectTrigger>
                     <SelectContent>
