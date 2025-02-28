@@ -58,6 +58,39 @@ export const useInventory = () => {
     }
   };
 
+  // Bulk import products from data
+  const importProducts = (products: Omit<Product, "id">[]) => {
+    const newInventory = [...inventory];
+    
+    products.forEach(productData => {
+      // Create full product with ID
+      const product: Product = {
+        ...productData,
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9)
+      };
+      
+      // Check if product already exists
+      const existingProductIndex = newInventory.findIndex(
+        (p) =>
+          p.name.toLowerCase() === product.name.toLowerCase() &&
+          p.size === product.size &&
+          p.type === product.type &&
+          p.locationId === product.locationId
+      );
+
+      if (existingProductIndex >= 0) {
+        // Update quantity of existing product
+        newInventory[existingProductIndex].quantity = product.quantity;
+      } else {
+        // Add new product
+        newInventory.push(product);
+      }
+    });
+
+    setInventory(newInventory);
+    return newInventory.length;
+  };
+
   // Update a product's quantity
   const updateProductQuantity = (productId: string, newQuantity: number) => {
     const updatedInventory = inventory.map((product) =>
@@ -93,6 +126,7 @@ export const useInventory = () => {
     inventory,
     loading,
     addProduct,
+    importProducts,
     updateProductQuantity,
     updateProduct,
     deleteProduct,

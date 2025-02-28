@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Search, ArrowLeft, Filter, Database } from "lucide-react";
+import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -40,7 +40,7 @@ import { Separator } from "@/components/ui/separator";
 const Inventory = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { inventory, addProduct, loading, updateProductQuantity } = useInventory();
+  const { inventory, addProduct, loading, updateProductQuantity, importProducts } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager } = useAuth();
   
@@ -49,8 +49,12 @@ const Inventory = () => {
   const [filterSize, setFilterSize] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showStats, setShowStats] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [importData, setImportData] = useState<string>("");
+  const [importPreview, setImportPreview] = useState<any[]>([]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -135,6 +139,206 @@ const Inventory = () => {
     setShowUpdateDialog(false);
     setSelectedProduct(null);
     setUpdateFormData({ quantity: 0 });
+  };
+
+  // Handle file upload for import
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      setImportData(content);
+      parseImportData(content);
+    };
+    reader.readAsText(file);
+  };
+
+  // Parse imported data from CSV or other formats
+  const parseImportData = (data: string) => {
+    try {
+      // This handles various formats including CSV, TSV, or even pasted data from Excel
+      const lines = data.trim().split(/\r?\n/);
+      
+      // Detect if it's a CSV, TSV, etc.
+      let separator = ',';
+      if (lines[0].includes('\t')) {
+        separator = '\t';
+      } else if (lines[0].includes(';')) {
+        separator = ';';
+      }
+      
+      // Parse header line to find column indexes
+      const headers = lines[0].split(separator);
+      const nameIndex = headers.findIndex(h => h.toLowerCase().includes('название') || h.toLowerCase().includes('name'));
+      const sizeIndex = headers.findIndex(h => h.toLowerCase().includes('объем') || h.toLowerCase().includes('size'));
+      const typeIndex = headers.findIndex(h => h.toLowerCase().includes('тип') || h.toLowerCase().includes('type'));
+      const locationIndex = headers.findIndex(h => h.toLowerCase().includes('точка') || h.toLowerCase().includes('location'));
+      const quantityIndex = headers.findIndex(h => h.toLowerCase().includes('количество') || h.toLowerCase().includes('quantity'));
+      
+      if (nameIndex === -1 || locationIndex === -1 || quantityIndex === -1) {
+        throw new Error('Не удалось найти необходимые столбцы в файле');
+      }
+      
+      // Parse data lines
+      const preview = [];
+      for (let i = 1; i < Math.min(lines.length, 11); i++) {
+        const line = lines[i].split(separator);
+        
+        const name = line[nameIndex]?.trim();
+        const size = line[sizeIndex] ? line[sizeIndex].trim() : '5';
+        const type = line[typeIndex] ? line[typeIndex].trim() : 'perfume';
+        const locationName = line[locationIndex]?.trim();
+        const quantity = parseInt(line[quantityIndex], 10) || 0;
+        
+        // Skip empty lines
+        if (!name || !locationName) continue;
+        
+        // Find location ID by name
+        const location = locations.find(loc => loc.name.toLowerCase() === locationName.toLowerCase());
+        
+        if (location) {
+          preview.push({
+            name,
+            size: mapSize(size),
+            type: mapType(type),
+            locationId: location.id,
+            locationName: location.name,
+            quantity
+          });
+        }
+      }
+      
+      setImportPreview(preview);
+    } catch (error) {
+      console.error("Error parsing import data:", error);
+      toast({
+        title: "Ошибка импорта",
+        description: "Не удалось разобрать данные из файла. Проверьте формат.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Map size values from text to valid values
+  const mapSize = (size: string): string => {
+    size = size.toLowerCase();
+    if (size.includes('автофлакон') || size.includes('авто') || size.includes('car')) {
+      return 'car';
+    }
+    
+    // Extract numbers from size string
+    const match = size.match(/\d+/);
+    if (match) {
+      const num = parseInt(match[0], 10);
+      if ([5, 16, 20, 25, 30].includes(num)) {
+        return num.toString();
+      }
+    }
+    
+    return '5'; // Default fallback
+  };
+  
+  // Map type values from text to valid values
+  const mapType = (type: string): string => {
+    type = type.toLowerCase();
+    if (type.includes('парфюм') || type.includes('perfume')) {
+      return 'perfume';
+    }
+    return 'other';
+  };
+
+  // Import all data
+  const handleImportData = () => {
+    try {
+      if (importData.trim() === '') {
+        toast({
+          title: "Ошибка",
+          description: "Нет данных для импорта",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Process all data lines, not just the preview
+      const lines = importData.trim().split(/\r?\n/);
+      
+      // Detect separator
+      let separator = ',';
+      if (lines[0].includes('\t')) {
+        separator = '\t';
+      } else if (lines[0].includes(';')) {
+        separator = ';';
+      }
+      
+      // Parse header line
+      const headers = lines[0].split(separator);
+      const nameIndex = headers.findIndex(h => h.toLowerCase().includes('название') || h.toLowerCase().includes('name'));
+      const sizeIndex = headers.findIndex(h => h.toLowerCase().includes('объем') || h.toLowerCase().includes('size'));
+      const typeIndex = headers.findIndex(h => h.toLowerCase().includes('тип') || h.toLowerCase().includes('type'));
+      const locationIndex = headers.findIndex(h => h.toLowerCase().includes('точка') || h.toLowerCase().includes('location'));
+      const quantityIndex = headers.findIndex(h => h.toLowerCase().includes('количество') || h.toLowerCase().includes('quantity'));
+      
+      if (nameIndex === -1 || locationIndex === -1 || quantityIndex === -1) {
+        throw new Error('Не удалось найти необходимые столбцы в файле');
+      }
+      
+      // Prepare data for import
+      const productsToImport = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].split(separator);
+        
+        // Skip empty lines
+        if (line.length <= 1 || !line[nameIndex]?.trim()) continue;
+        
+        const name = line[nameIndex]?.trim();
+        const size = line[sizeIndex] ? line[sizeIndex].trim() : '5';
+        const type = line[typeIndex] ? line[typeIndex].trim() : 'perfume';
+        const locationName = line[locationIndex]?.trim();
+        const quantity = parseInt(line[quantityIndex], 10) || 0;
+        
+        // Skip rows with missing critical data
+        if (!name || !locationName) continue;
+        
+        // Find location ID by name
+        const location = locations.find(loc => loc.name.toLowerCase() === locationName.toLowerCase());
+        
+        if (location) {
+          productsToImport.push({
+            name,
+            size: mapSize(size),
+            type: mapType(type),
+            locationId: location.id,
+            quantity
+          });
+        }
+      }
+      
+      // Import all products
+      const importedCount = importProducts(productsToImport);
+      
+      toast({
+        title: "Импорт завершен",
+        description: `Успешно импортировано ${importedCount} товаров`,
+      });
+      
+      setShowImportDialog(false);
+      setImportData("");
+      setImportPreview([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      
+    } catch (error) {
+      console.error("Error during import:", error);
+      toast({
+        title: "Ошибка импорта",
+        description: error instanceof Error ? error.message : "Произошла ошибка при импорте данных",
+        variant: "destructive",
+      });
+    }
   };
 
   const openUpdateDialog = (product: any) => {
@@ -227,14 +431,24 @@ const Inventory = () => {
                 {showStats ? "Скрыть статистику" : "Показать статистику"}
               </Button>
               {(isAdmin() || isManager()) && (
-                <Button
-                  onClick={() => setShowAddDialog(true)}
-                  variant={isAdmin() ? "admin" : "manager"}
-                  className="gap-2"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Добавить товар
-                </Button>
+                <>
+                  <Button
+                    onClick={() => setShowImportDialog(true)}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    Импорт
+                  </Button>
+                  <Button
+                    onClick={() => setShowAddDialog(true)}
+                    variant={isAdmin() ? "admin" : "manager"}
+                    className="gap-2"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    Добавить товар
+                  </Button>
+                </>
               )}
             </div>
           </motion.div>
@@ -566,6 +780,92 @@ const Inventory = () => {
               variant={isAdmin() ? "admin" : "manager"}
             >
               Сохранить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import data dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Импорт инвентаря</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="file-upload">Загрузить таблицу (CSV, TSV, Excel)</Label>
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    accept=".csv,.tsv,.txt,.xls,.xlsx"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-500 mt-2">
+                <p className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Требуемый формат таблицы должен содержать столбцы:
+                </p>
+                <ul className="list-disc list-inside ml-4 mt-1">
+                  <li>Название товара</li>
+                  <li>Точка продажи (должна совпадать с существующей)</li>
+                  <li>Количество</li>
+                  <li>Опционально: Объем (5, 16, 20, 25, 30 мл или Автофлакон)</li>
+                  <li>Опционально: Тип (Парфюм или Другое)</li>
+                </ul>
+              </div>
+            </div>
+
+            {importPreview.length > 0 && (
+              <div className="border rounded-md overflow-hidden">
+                <div className="font-medium p-3 bg-gray-50 border-b">
+                  Предпросмотр (первые 10 товаров):
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Название</TableHead>
+                        <TableHead>Объем</TableHead>
+                        <TableHead>Тип</TableHead>
+                        <TableHead>Точка</TableHead>
+                        <TableHead className="text-right">Количество</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {importPreview.map((item, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{getSizeLabel(item.size)}</TableCell>
+                          <TableCell>
+                            {item.type === "perfume" ? "Парфюм" : "Другое"}
+                          </TableCell>
+                          <TableCell>{item.locationName}</TableCell>
+                          <TableCell className="text-right">{item.quantity}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImportDialog(false)}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleImportData} 
+              variant={isAdmin() ? "admin" : "manager"}
+              disabled={importPreview.length === 0}
+            >
+              Импортировать
             </Button>
           </DialogFooter>
         </DialogContent>
