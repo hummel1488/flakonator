@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2 } from "lucide-react";
@@ -260,26 +261,106 @@ const Inventory = () => {
       
       // Check for size-specific quantity columns
       const sizeQuantityMap: Record<string, number> = {};
+      
+      // Improved detection for size-specific quantity columns
       for (let i = 0; i < headers.length; i++) {
         const header = headers[i].toLowerCase();
-        if (header.includes('5') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
+        
+        // 5ml detection
+        if ((header.includes('5') && header.includes('мл')) || 
+            (header.includes('5ml')) || 
+            (header.includes('5 ml')) || 
+            (header.includes('5мл'))) {
+          if (header.includes('кол') || header.includes('ост') || header.includes('qty') || header.includes('count')) {
+            sizeQuantityMap['5'] = i;
+            hasQuantityInfo = true;
+            console.log("Found 5ml quantity column at index", i, ":", headers[i]);
+          }
+        }
+        // 16ml detection
+        else if ((header.includes('16') && header.includes('мл')) || 
+                 (header.includes('16ml')) || 
+                 (header.includes('16 ml')) || 
+                 (header.includes('16мл'))) {
+          if (header.includes('кол') || header.includes('ост') || header.includes('qty') || header.includes('count')) {
+            sizeQuantityMap['16'] = i;
+            hasQuantityInfo = true;
+            console.log("Found 16ml quantity column at index", i, ":", headers[i]);
+          }
+        }
+        // 20ml detection
+        else if ((header.includes('20') && header.includes('мл')) || 
+                 (header.includes('20ml')) || 
+                 (header.includes('20 ml')) || 
+                 (header.includes('20мл'))) {
+          if (header.includes('кол') || header.includes('ост') || header.includes('qty') || header.includes('count')) {
+            sizeQuantityMap['20'] = i;
+            hasQuantityInfo = true;
+            console.log("Found 20ml quantity column at index", i, ":", headers[i]);
+          }
+        }
+        // 25ml detection
+        else if ((header.includes('25') && header.includes('мл')) || 
+                 (header.includes('25ml')) || 
+                 (header.includes('25 ml')) || 
+                 (header.includes('25мл'))) {
+          if (header.includes('кол') || header.includes('ост') || header.includes('qty') || header.includes('count')) {
+            sizeQuantityMap['25'] = i;
+            hasQuantityInfo = true;
+            console.log("Found 25ml quantity column at index", i, ":", headers[i]);
+          }
+        }
+        // 30ml detection
+        else if ((header.includes('30') && header.includes('мл')) || 
+                 (header.includes('30ml')) || 
+                 (header.includes('30 ml')) || 
+                 (header.includes('30мл'))) {
+          if (header.includes('кол') || header.includes('ост') || header.includes('qty') || header.includes('count')) {
+            sizeQuantityMap['30'] = i;
+            hasQuantityInfo = true;
+            console.log("Found 30ml quantity column at index", i, ":", headers[i]);
+          }
+        }
+        // Car diffuser detection
+        else if ((header.includes('авто') || header.includes('diffuser') || header.includes('диффузор') || 
+                 header.includes('car'))) {
+          if (header.includes('кол') || header.includes('ост') || header.includes('qty') || header.includes('count')) {
+            sizeQuantityMap['car'] = i;
+            hasQuantityInfo = true;
+            console.log("Found car diffuser quantity column at index", i, ":", headers[i]);
+          }
+        }
+        
+        // Try to detect columns with just size numbers (e.g. "5" or "5 ml" without explicit mention of quantity)
+        if (header === '5' || header === '5ml' || header === '5 ml' || header === '5мл') {
           sizeQuantityMap['5'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('16') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
+          console.log("Found potential 5ml column at index", i, ":", headers[i]);
+        }
+        else if (header === '16' || header === '16ml' || header === '16 ml' || header === '16мл') {
           sizeQuantityMap['16'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('20') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
+          console.log("Found potential 16ml column at index", i, ":", headers[i]);
+        }
+        else if (header === '20' || header === '20ml' || header === '20 ml' || header === '20мл') {
           sizeQuantityMap['20'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('25') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
+          console.log("Found potential 20ml column at index", i, ":", headers[i]);
+        }
+        else if (header === '25' || header === '25ml' || header === '25 ml' || header === '25мл') {
           sizeQuantityMap['25'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('30') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
+          console.log("Found potential 25ml column at index", i, ":", headers[i]);
+        }
+        else if (header === '30' || header === '30ml' || header === '30 ml' || header === '30мл') {
           sizeQuantityMap['30'] = i;
           hasQuantityInfo = true;
-        } else if ((header.includes('авто') || header.includes('диффузор')) && (header.includes('кол') || header.includes('остаток'))) {
+          console.log("Found potential 30ml column at index", i, ":", headers[i]);
+        }
+        else if (header === 'car' || header === 'авто' || header === 'diffuser' || header === 'диффузор') {
           sizeQuantityMap['car'] = i;
           hasQuantityInfo = true;
+          console.log("Found potential car diffuser column at index", i, ":", headers[i]);
         }
       }
       
@@ -877,3 +958,210 @@ const Inventory = () => {
                 <Select 
                   value={formData.type} 
                   onValueChange={(value) => handleSelectChange("type", value)}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Выберите тип" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="perfume">Парфюм</SelectItem>
+                    <SelectItem value="other">Другое</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="location">Точка продажи</Label>
+                <Select 
+                  value={formData.location} 
+                  onValueChange={(value) => handleSelectChange("location", value)}
+                >
+                  <SelectTrigger id="location">
+                    <SelectValue placeholder="Выберите точку" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="quantity">Количество</Label>
+                <Input
+                  id="quantity"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleAddProduct}>Добавить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update product dialog */}
+      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Обновить количество</DialogTitle>
+            <DialogDescription>
+              {selectedProduct && (
+                <>
+                  {selectedProduct.name} ({getSizeLabel(selectedProduct.size)})
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="update-quantity">Новое количество</Label>
+              <Input
+                id="update-quantity"
+                type="number"
+                min="0"
+                value={updateFormData.quantity}
+                onChange={handleUpdateInputChange}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleUpdateProduct}>Обновить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Импорт товаров</DialogTitle>
+            <DialogDescription>
+              Загрузите CSV файл или скопируйте данные из таблицы для импорта товаров
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="file-upload">Загрузите файл</Label>
+              <Input
+                id="file-upload"
+                type="file"
+                accept=".csv,.txt,.xls,.xlsx"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+              />
+              <p className="text-sm text-gray-500">
+                Поддерживаемые форматы: CSV, TXT, данные из Excel
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="location-override">Точка продажи (для всех товаров)</Label>
+              <Select
+                value={manualLocationId}
+                onValueChange={setManualLocationId}
+              >
+                <SelectTrigger id="location-override">
+                  <SelectValue placeholder="Выберите точку или оставьте из файла" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="use-from-file">Использовать из файла</SelectItem>
+                  {locations.map((location) => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-500">
+                Выберите точку продажи для всех товаров или оставьте "Использовать из файла"
+              </p>
+            </div>
+
+            {importPreview.length > 0 && (
+              <>
+                <div className="my-4">
+                  <h3 className="text-md font-medium mb-2">Предпросмотр импорта:</h3>
+                  <div className="border rounded overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Объем</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Точка</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Кол-во</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {importPreview.map((item, index) => (
+                          <tr key={index}>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm">{item.name}</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm">{getSizeLabel(item.size)}</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm">{item.type === 'perfume' ? 'Парфюм' : 'Другое'}</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm">{item.locationName || getLocationName(item.locationId)}</td>
+                            <td className="px-4 py-2 whitespace-nowrap text-sm">{item.quantity}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {fullImportData.length > importPreview.length ? 
+                      `Показаны первые ${importPreview.length} из ${fullImportData.length} товаров` : 
+                      `Всего ${importPreview.length} товаров для импорта`}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImportDialog(false)}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleImportData} 
+              disabled={fullImportData.length === 0 && importPreview.length === 0}
+            >
+              Импортировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete all confirmation dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить весь инвентарь?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Это действие удалит все товары из инвентаря. Это действие невозможно отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllProducts} className="bg-red-600 hover:bg-red-700">
+              Удалить все
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default Inventory;
