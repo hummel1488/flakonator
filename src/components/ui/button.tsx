@@ -10,17 +10,17 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-button border border-primary/20",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-button border border-primary/20 font-medium",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-button border border-destructive/20",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-button border border-destructive/20 font-medium",
         outline:
-          "border border-input bg-background hover:bg-accent/50 hover:text-accent-foreground shadow-sm",
+          "border-2 border-input bg-background hover:bg-accent/50 hover:text-accent-foreground shadow-sm font-medium",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-button border border-secondary/20",
-        ghost: "hover:bg-accent/50 hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        soft: "bg-primary/10 text-primary hover:bg-primary/20 shadow-sm border border-primary/10",
-        gold: "bg-brand-gold text-white hover:bg-brand-dark-gold shadow-button border border-brand-gold/20 font-medium",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-button border-2 border-secondary/30 font-medium",
+        ghost: "hover:bg-accent/50 hover:text-accent-foreground font-medium",
+        link: "text-primary underline-offset-4 hover:underline font-medium",
+        soft: "bg-primary/20 text-primary hover:bg-primary/30 shadow-sm border-2 border-primary/20 font-medium",
+        gold: "bg-brand-gold text-white hover:bg-brand-dark-gold shadow-button border-2 border-brand-gold/30 font-medium",
       },
       size: {
         default: "h-10 px-4 py-2",
