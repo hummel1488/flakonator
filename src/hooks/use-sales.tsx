@@ -48,6 +48,12 @@ export const useSales = () => {
     setSales([...sales, sale]);
   };
 
+  // Reset all sales data
+  const resetSalesData = () => {
+    setSales([]);
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+  };
+
   // Get sales for a specific location
   const getSalesByLocation = (locationId: string) => {
     return sales.filter((sale) => sale.locationId === locationId);
@@ -76,6 +82,7 @@ export const useSales = () => {
     sales,
     loading,
     addSale,
+    resetSalesData,
     getSalesByLocation,
     getSalesByDateRange,
     getTotalRevenue,
