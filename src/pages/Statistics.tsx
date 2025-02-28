@@ -17,10 +17,11 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useSales } from "@/hooks/use-sales";
 import { useLocations } from "@/hooks/use-locations";
+import { LowStockAlert } from "@/components/LowStockAlert";
 
 type DateRangeType = "7days" | "30days" | "90days" | "all";
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#9146FF", "#FF4560"];
+const COLORS = ["#E2B393", "#1A3B41", "#C89978", "#F0D4B4", "#0D2B31", "#3A3A3A"];
 
 const Statistics = () => {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ const Statistics = () => {
   const { locations } = useLocations();
   const [dateRange, setDateRange] = useState<DateRangeType>("30days");
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedLocation, setSelectedLocation] = useState<string>("");
 
   const getDateRangeStart = (range: DateRangeType): Date => {
     const now = new Date();
@@ -186,7 +188,7 @@ const Statistics = () => {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
+          className="flex items-center justify-between mb-6"
         >
           <div className="flex items-center gap-4">
             <Button
@@ -218,6 +220,39 @@ const Statistics = () => {
           </div>
         </motion.div>
 
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6"
+        >
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-medium">Ароматы с низким остатком</h2>
+              <p className="text-sm text-muted-foreground">Отслеживание товаров, требующих пополнения</p>
+            </div>
+            <div className="mt-2 md:mt-0">
+              <Select
+                value={selectedLocation}
+                onValueChange={setSelectedLocation}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Все точки" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Все точки</SelectItem>
+                  {locations.map(location => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <LowStockAlert locationId={selectedLocation || undefined} threshold={3} />
+        </motion.div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="grid w-full md:w-[400px] grid-cols-2">
             <TabsTrigger value="overview">Обзор</TabsTrigger>
@@ -236,11 +271,11 @@ const Statistics = () => {
                     <CardTitle className="text-sm font-medium">
                       Общая выручка
                     </CardTitle>
-                    <TrendingUp className="h-4 w-4 text-gray-500" />
+                    <TrendingUp className="h-4 w-4 text-brand-gold" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       За период: {dateRange === "7days" ? "7 дней" : dateRange === "30days" ? "30 дней" : dateRange === "90days" ? "90 дней" : "всё время"}
                     </p>
                   </CardContent>
@@ -256,11 +291,11 @@ const Statistics = () => {
                     <CardTitle className="text-sm font-medium">
                       Количество продаж
                     </CardTitle>
-                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <Calendar className="h-4 w-4 text-brand-gold" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{totalSales}</div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Средний чек: {formatCurrency(averageSale)}
                     </p>
                   </CardContent>
@@ -276,13 +311,13 @@ const Statistics = () => {
                     <CardTitle className="text-sm font-medium">
                       Лидер продаж
                     </CardTitle>
-                    <Store className="h-4 w-4 text-gray-500" />
+                    <Store className="h-4 w-4 text-brand-gold" />
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
                       {salesByLocation.length > 0 ? salesByLocation[0].name : "Нет данных"}
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {salesByLocation.length > 0 
                         ? `Выручка: ${formatCurrency(salesByLocation[0].value)}`
                         : "Нет данных о продажах"
@@ -337,14 +372,14 @@ const Statistics = () => {
                             <Line 
                               type="monotone" 
                               dataKey="value" 
-                              stroke="#3f51b5" 
+                              stroke="#E2B393" 
                               activeDot={{ r: 8 }} 
                               strokeWidth={2}
                             />
                           </LineChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="h-full flex items-center justify-center text-gray-500">
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
                           Нет данных за выбранный период
                         </div>
                       )}
@@ -396,11 +431,11 @@ const Statistics = () => {
                               formatter={(value) => [formatCurrency(value as number), "Выручка"]}
                               labelFormatter={(label) => `Точка: ${label}`}
                             />
-                            <Bar dataKey="value" fill="#3f51b5" radius={[0, 4, 4, 0]} />
+                            <Bar dataKey="value" fill="#E2B393" radius={[0, 4, 4, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="h-full flex items-center justify-center text-gray-500">
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
                           Нет данных за выбранный период
                         </div>
                       )}
@@ -446,7 +481,7 @@ const Statistics = () => {
                           </PieChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="h-full flex items-center justify-center text-gray-500">
+                        <div className="h-full flex items-center justify-center text-muted-foreground">
                           Нет данных за выбранный период
                         </div>
                       )}
@@ -475,12 +510,12 @@ const Statistics = () => {
                         {topProducts.map((product, index) => (
                           <div key={`product-${index}`} className="flex items-center justify-between">
                             <div className="flex items-start gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-accent/20">
                                 {index + 1}
                               </div>
                               <div>
                                 <p className="font-medium">{product.name}</p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-muted-foreground">
                                   Продано: {product.quantity} шт.
                                 </p>
                               </div>
@@ -492,7 +527,7 @@ const Statistics = () => {
                         ))}
                       </div>
                     ) : (
-                      <div className="py-8 text-center text-gray-500">
+                      <div className="py-8 text-center text-muted-foreground">
                         Нет данных за выбранный период
                       </div>
                     )}
@@ -521,15 +556,15 @@ const Statistics = () => {
                                   <Badge variant="outline" className="rounded-sm">
                                     {format(new Date(sale.date), "dd.MM.yyyy")}
                                   </Badge>
-                                  <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-sm">
+                                  <Badge className="bg-brand-accent text-brand-DEFAULT hover:bg-brand-dark-gold rounded-sm">
                                     {location?.name || "Неизвестно"}
                                   </Badge>
                                 </div>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-muted-foreground mt-1">
                                   {sale.items.length} {sale.items.length === 1 ? "товар" : 
                                     sale.items.length < 5 ? "товара" : "товаров"}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-muted-foreground mt-1">
                                   {formatDistance(new Date(sale.date), new Date(), { 
                                     addSuffix: true,
                                     locale: ru
@@ -544,7 +579,7 @@ const Statistics = () => {
                         })}
                       </div>
                     ) : (
-                      <div className="py-8 text-center text-gray-500">
+                      <div className="py-8 text-center text-muted-foreground">
                         Нет данных за выбранный период
                       </div>
                     )}
