@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2 } from "lucide-react";
@@ -872,4 +873,123 @@ const Inventory = () => {
               />
             </div>
           </div>
-          <
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleUpdateProduct}>Сохранить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить все товары?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить все товары из инвентаря? Это действие невозможно отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllProducts} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Удалить все
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Импорт товаров</DialogTitle>
+            <DialogDescription>
+              Загрузите файл CSV или Excel для импорта товаров
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="file-upload">Выберите файл</Label>
+              <Input 
+                id="file-upload" 
+                type="file" 
+                accept=".csv,.xls,.xlsx,.txt" 
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Поддерживаемые форматы: CSV, Excel, TXT
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="location">Точка продажи</Label>
+              <Select 
+                value={manualLocationId} 
+                onValueChange={setManualLocationId}
+              >
+                <SelectTrigger id="location">
+                  <SelectValue placeholder="Выберите точку или использовать из файла" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="use-from-file">Использовать из файла</SelectItem>
+                  {locations.map((location) => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Если выбрано "Использовать из файла", система попытается определить точку продажи из данных
+              </p>
+            </div>
+            
+            {importPreview.length > 0 && (
+              <div className="border rounded-md p-4">
+                <h3 className="font-medium mb-2">Предпросмотр импорта ({importPreview.length} из {fullImportData.length})</h3>
+                <div className="overflow-x-auto max-h-[200px] overflow-y-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Название</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Объем</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Кол-во</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Точка</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {importPreview.map((item, index) => (
+                        <tr key={index}>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">{item.name}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">{getSizeLabel(item.size)}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">{item.quantity}</td>
+                          <td className="px-4 py-2 whitespace-nowrap text-sm">{getLocationName(item.locationId)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImportDialog(false)}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleImportData}
+              disabled={importPreview.length === 0 && fullImportData.length === 0}
+            >
+              Импортировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Inventory;
