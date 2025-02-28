@@ -70,7 +70,7 @@ const Inventory = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importData, setImportData] = useState<string>("");
   const [importPreview, setImportPreview] = useState<any[]>([]);
-  const [manualLocationId, setManualLocationId] = useState<string>(""); // Изменено начальное значение
+  const [manualLocationId, setManualLocationId] = useState<string>("");
 
   // Form states
   const [formData, setFormData] = useState({
@@ -233,63 +233,154 @@ const Inventory = () => {
         throw new Error('Не удалось найти столбец с названием товара');
       }
       
-      if (quantityIndex === -1) {
+      // We need either a quantity column or size-specific quantity columns
+      let hasQuantityInfo = quantityIndex !== -1;
+      
+      // Check for size-specific quantity columns
+      const sizeQuantityMap: Record<string, number> = {};
+      for (let i = 0; i < headers.length; i++) {
+        const header = headers[i].toLowerCase();
+        if (header.includes('5') && header.includes('мл') && header.includes('кол')) {
+          sizeQuantityMap['5'] = i;
+          hasQuantityInfo = true;
+        } else if (header.includes('16') && header.includes('мл') && header.includes('кол')) {
+          sizeQuantityMap['16'] = i;
+          hasQuantityInfo = true;
+        } else if (header.includes('20') && header.includes('мл') && header.includes('кол')) {
+          sizeQuantityMap['20'] = i;
+          hasQuantityInfo = true;
+        } else if (header.includes('25') && header.includes('мл') && header.includes('кол')) {
+          sizeQuantityMap['25'] = i;
+          hasQuantityInfo = true;
+        } else if (header.includes('30') && header.includes('мл') && header.includes('кол')) {
+          sizeQuantityMap['30'] = i;
+          hasQuantityInfo = true;
+        } else if ((header.includes('авто') || header.includes('диффузор')) && header.includes('кол')) {
+          sizeQuantityMap['car'] = i;
+          hasQuantityInfo = true;
+        }
+      }
+      
+      if (!hasQuantityInfo) {
         throw new Error('Не удалось найти столбец с количеством товара');
       }
       
       // Parse data lines
       const preview = [];
       for (let i = 1; i < Math.min(lines.length, 11); i++) {
-        const line = lines[i].split(separator).map(item => item.trim());
+        const line = lines[i].trim();
+        if (!line) continue; // Skip empty lines
+        
+        const columns = line.split(separator).map(item => item.trim());
         
         // Skip empty lines
-        if (line.length <= 1 || !line[nameIndex]?.trim()) continue;
+        if (columns.length <= 1 || !columns[nameIndex]?.trim()) continue;
         
-        const name = line[nameIndex]?.trim() || '';
-        const size = line[sizeIndex] ? line[sizeIndex].trim() : '5';
-        const type = line[typeIndex] ? line[typeIndex].trim() : 'perfume';
+        const name = columns[nameIndex]?.trim() || '';
         
-        // If location column exists, try to find by name, otherwise use manually selected location
-        let locationId = manualLocationId;
-        let locationName = '';
-        
-        if (locationIndex !== -1 && line[locationIndex]?.trim()) {
-          const locationText = line[locationIndex].trim();
-          const location = locations.find(loc => 
-            normalizeText(loc.name).includes(normalizeText(locationText)) || 
-            normalizeText(locationText).includes(normalizeText(loc.name))
-          );
-          
-          if (location) {
-            locationId = location.id;
-            locationName = location.name;
+        // Handle case with size-specific quantity columns
+        if (Object.keys(sizeQuantityMap).length > 0) {
+          for (const [size, index] of Object.entries(sizeQuantityMap)) {
+            if (!columns[index]) continue;
+            
+            const quantityText = columns[index].trim();
+            if (!quantityText) continue;
+            
+            const match = quantityText.match(/\d+/);
+            const quantity = match ? parseInt(match[0], 10) : 0;
+            if (quantity <= 0) continue;
+            
+            let locationId = manualLocationId || '';
+            let locationName = '';
+            
+            // Try to find location from columns if location index exists
+            if (locationIndex !== -1 && columns[locationIndex]?.trim()) {
+              const locationText = columns[locationIndex].trim();
+              const location = locations.find(loc => 
+                normalizeText(loc.name).includes(normalizeText(locationText)) || 
+                normalizeText(locationText).includes(normalizeText(loc.name))
+              );
+              
+              if (location) {
+                locationId = location.id;
+                locationName = location.name;
+              }
+            }
+            
+            // If no location found and manual location selected, use that
+            if (!locationId && manualLocationId) {
+              locationId = manualLocationId;
+              const location = locations.find(loc => loc.id === manualLocationId);
+              locationName = location ? location.name : '';
+            }
+            
+            // Skip if we don't have a locationId
+            if (!locationId) continue;
+            
+            // Get type (defaulting to perfume)
+            const type = typeIndex !== -1 && columns[typeIndex] 
+              ? mapType(columns[typeIndex]) 
+              : 'perfume';
+            
+            preview.push({
+              name,
+              size,
+              type,
+              locationId,
+              locationName,
+              quantity
+            });
           }
-        }
-        
-        // If we don't have a location yet, use the selected manual location
-        if (!locationId && manualLocationId) {
-          locationId = manualLocationId;
-          const location = locations.find(loc => loc.id === manualLocationId);
-          locationName = location ? location.name : '';
-        }
-        
-        // Parse quantity - search for first number in the quantity field
-        let quantity = 0;
-        if (quantityIndex !== -1) {
-          const quantityText = line[quantityIndex];
-          const match = quantityText.match(/\d+/);
-          quantity = match ? parseInt(match[0], 10) : 0;
-        }
-        
-        if (name && locationId) {
-          preview.push({
-            name,
-            size: mapSize(size),
-            type: mapType(type),
-            locationId,
-            locationName,
-            quantity
-          });
+        } else {
+          // Process as single product with one quantity
+          const size = sizeIndex !== -1 && columns[sizeIndex] 
+            ? mapSize(columns[sizeIndex]) 
+            : '5';
+            
+          const type = typeIndex !== -1 && columns[typeIndex] 
+            ? mapType(columns[typeIndex]) 
+            : 'perfume';
+          
+          let locationId = manualLocationId || '';
+          let locationName = '';
+          
+          if (locationIndex !== -1 && columns[locationIndex]?.trim()) {
+            const locationText = columns[locationIndex].trim();
+            const location = locations.find(loc => 
+              normalizeText(loc.name).includes(normalizeText(locationText)) || 
+              normalizeText(locationText).includes(normalizeText(loc.name))
+            );
+            
+            if (location) {
+              locationId = location.id;
+              locationName = location.name;
+            }
+          }
+          
+          if (!locationId && manualLocationId) {
+            locationId = manualLocationId;
+            const location = locations.find(loc => loc.id === manualLocationId);
+            locationName = location ? location.name : '';
+          }
+          
+          // Parse quantity
+          let quantity = 0;
+          if (quantityIndex !== -1) {
+            const quantityText = columns[quantityIndex];
+            const match = quantityText.match(/\d+/);
+            quantity = match ? parseInt(match[0], 10) : 0;
+          }
+          
+          if (name && locationId && quantity > 0) {
+            preview.push({
+              name,
+              size,
+              type,
+              locationId,
+              locationName,
+              quantity
+            });
+          }
         }
       }
       
@@ -360,11 +451,11 @@ const Inventory = () => {
       
       // If we have a preview, use that directly
       if (importPreview.length > 0) {
-        // Parse all lines, not just the preview
+        // Process all data, not just the preview
         const productsToImport = [...importPreview];
         
-        // For files with more than 10 lines
-        if (importData.trim() !== '') {
+        // For files with more than 10 lines, parse the rest of the lines
+        if (importData.trim() !== '' && importPreview.length === 10) {
           const lines = importData.trim().split(/\r?\n/);
           
           // Detect separator
@@ -385,67 +476,156 @@ const Inventory = () => {
           const locationIndex = findColumnIndex(headers, LOCATION_VARIATIONS);
           const quantityIndex = findColumnIndex(headers, QUANTITY_VARIATIONS);
           
+          // Check for size-specific quantity columns
+          const sizeQuantityMap: Record<string, number> = {};
+          for (let i = 0; i < headers.length; i++) {
+            const header = headers[i].toLowerCase();
+            if (header.includes('5') && header.includes('мл') && header.includes('кол')) {
+              sizeQuantityMap['5'] = i;
+            } else if (header.includes('16') && header.includes('мл') && header.includes('кол')) {
+              sizeQuantityMap['16'] = i;
+            } else if (header.includes('20') && header.includes('мл') && header.includes('кол')) {
+              sizeQuantityMap['20'] = i;
+            } else if (header.includes('25') && header.includes('мл') && header.includes('кол')) {
+              sizeQuantityMap['25'] = i;
+            } else if (header.includes('30') && header.includes('мл') && header.includes('кол')) {
+              sizeQuantityMap['30'] = i;
+            } else if ((header.includes('авто') || header.includes('диффузор')) && header.includes('кол')) {
+              sizeQuantityMap['car'] = i;
+            }
+          }
+          
           // Only proceed if we found the required columns
-          if (nameIndex !== -1 && quantityIndex !== -1) {
+          if (nameIndex !== -1) {
             // Start from line 11 (if we already have 10 in preview)
-            for (let i = Math.min(lines.length, 11); i < lines.length; i++) {
-              const line = lines[i].split(separator).map(item => item.trim());
+            for (let i = 11; i < lines.length; i++) {
+              const line = lines[i].trim();
+              if (!line) continue; // Skip empty lines
+              
+              const columns = line.split(separator).map(item => item.trim());
               
               // Skip empty lines
-              if (line.length <= 1 || !line[nameIndex]?.trim()) continue;
+              if (columns.length <= 1 || !columns[nameIndex]?.trim()) continue;
               
-              const name = line[nameIndex]?.trim() || '';
-              const size = line[sizeIndex] ? line[sizeIndex].trim() : '5';
-              const type = line[typeIndex] ? line[typeIndex].trim() : 'perfume';
+              const name = columns[nameIndex]?.trim() || '';
               
-              // Handle location
-              let locationId = manualLocationId;
-              let locationName = '';
-              
-              if (locationIndex !== -1 && line[locationIndex]?.trim()) {
-                const locationText = line[locationIndex].trim();
-                const location = locations.find(loc => 
-                  normalizeText(loc.name).includes(normalizeText(locationText)) || 
-                  normalizeText(locationText).includes(normalizeText(loc.name))
-                );
-                
-                if (location) {
-                  locationId = location.id;
-                  locationName = location.name;
+              // Handle case with size-specific quantity columns
+              if (Object.keys(sizeQuantityMap).length > 0) {
+                for (const [size, index] of Object.entries(sizeQuantityMap)) {
+                  if (!columns[index]) continue;
+                  
+                  const quantityText = columns[index].trim();
+                  if (!quantityText) continue;
+                  
+                  const match = quantityText.match(/\d+/);
+                  const quantity = match ? parseInt(match[0], 10) : 0;
+                  if (quantity <= 0) continue;
+                  
+                  let locationId = manualLocationId || '';
+                  let locationName = '';
+                  
+                  // Try to find location from columns if location index exists
+                  if (locationIndex !== -1 && columns[locationIndex]?.trim()) {
+                    const locationText = columns[locationIndex].trim();
+                    const location = locations.find(loc => 
+                      normalizeText(loc.name).includes(normalizeText(locationText)) || 
+                      normalizeText(locationText).includes(normalizeText(loc.name))
+                    );
+                    
+                    if (location) {
+                      locationId = location.id;
+                      locationName = location.name;
+                    }
+                  }
+                  
+                  // If no location found and manual location selected, use that
+                  if (!locationId && manualLocationId) {
+                    locationId = manualLocationId;
+                    const location = locations.find(loc => loc.id === manualLocationId);
+                    locationName = location ? location.name : '';
+                  }
+                  
+                  // Skip if we don't have a locationId
+                  if (!locationId) continue;
+                  
+                  // Get type (defaulting to perfume)
+                  const type = typeIndex !== -1 && columns[typeIndex] 
+                    ? mapType(columns[typeIndex]) 
+                    : 'perfume';
+                  
+                  productsToImport.push({
+                    name,
+                    size,
+                    type,
+                    locationId,
+                    locationName,
+                    quantity
+                  });
                 }
-              }
-              
-              // If we don't have a location yet, use the selected manual location
-              if (!locationId && manualLocationId) {
-                locationId = manualLocationId;
-                const location = locations.find(loc => loc.id === manualLocationId);
-                locationName = location ? location.name : '';
-              }
-              
-              // Parse quantity
-              let quantity = 0;
-              if (quantityIndex !== -1) {
-                const quantityText = line[quantityIndex];
-                const match = quantityText.match(/\d+/);
-                quantity = match ? parseInt(match[0], 10) : 0;
-              }
-              
-              if (name && locationId) {
-                productsToImport.push({
-                  name,
-                  size: mapSize(size),
-                  type: mapType(type),
-                  locationId,
-                  locationName,
-                  quantity
-                });
+              } else if (quantityIndex !== -1) {
+                // Process as single product with one quantity
+                const size = sizeIndex !== -1 && columns[sizeIndex] 
+                  ? mapSize(columns[sizeIndex]) 
+                  : '5';
+                  
+                const type = typeIndex !== -1 && columns[typeIndex] 
+                  ? mapType(columns[typeIndex]) 
+                  : 'perfume';
+                
+                let locationId = manualLocationId || '';
+                let locationName = '';
+                
+                if (locationIndex !== -1 && columns[locationIndex]?.trim()) {
+                  const locationText = columns[locationIndex].trim();
+                  const location = locations.find(loc => 
+                    normalizeText(loc.name).includes(normalizeText(locationText)) || 
+                    normalizeText(locationText).includes(normalizeText(loc.name))
+                  );
+                  
+                  if (location) {
+                    locationId = location.id;
+                    locationName = location.name;
+                  }
+                }
+                
+                if (!locationId && manualLocationId) {
+                  locationId = manualLocationId;
+                  const location = locations.find(loc => loc.id === manualLocationId);
+                  locationName = location ? location.name : '';
+                }
+                
+                // Parse quantity
+                let quantity = 0;
+                if (quantityIndex !== -1) {
+                  const quantityText = columns[quantityIndex];
+                  const match = quantityText.match(/\d+/);
+                  quantity = match ? parseInt(match[0], 10) : 0;
+                }
+                
+                if (name && locationId && quantity > 0) {
+                  productsToImport.push({
+                    name,
+                    size,
+                    type,
+                    locationId,
+                    locationName,
+                    quantity
+                  });
+                }
               }
             }
           }
         }
         
+        // Filter out invalid products and prepare for import
+        const validProducts = productsToImport.filter(
+          product => product.name && product.locationId && product.quantity > 0
+        );
+        
         // Import all products
-        const importedCount = importProducts(productsToImport.map(({ locationName, ...product }) => product));
+        const importedCount = importProducts(
+          validProducts.map(({ locationName, ...product }) => product)
+        );
         
         toast({
           title: "Импорт завершен",

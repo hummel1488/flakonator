@@ -60,9 +60,18 @@ export const useInventory = () => {
 
   // Bulk import products from data
   const importProducts = (products: Omit<Product, "id">[]) => {
+    if (!products || products.length === 0) {
+      return 0;
+    }
+    
     const newInventory = [...inventory];
     
     products.forEach(productData => {
+      if (!productData.name || !productData.locationId) {
+        console.log("Skipping invalid product:", productData);
+        return;
+      }
+      
       // Create full product with ID
       const product: Product = {
         ...productData,
