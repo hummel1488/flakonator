@@ -70,7 +70,7 @@ const Inventory = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importData, setImportData] = useState<string>("");
   const [importPreview, setImportPreview] = useState<any[]>([]);
-  const [manualLocationId, setManualLocationId] = useState<string>("");
+  const [manualLocationId, setManualLocationId] = useState<string>(""); // Изменено начальное значение
 
   // Form states
   const [formData, setFormData] = useState({
@@ -837,7 +837,7 @@ const Inventory = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {locations.length === 0 ? (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-locations" disabled>
                         Нет доступных точек
                       </SelectItem>
                     ) : (
@@ -941,7 +941,7 @@ const Inventory = () => {
                     <SelectValue placeholder="Выберите точку" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Использовать из файла</SelectItem>
+                    <SelectItem value="use-from-file">Использовать из файла</SelectItem>
                     {locations.map((location) => (
                       <SelectItem key={location.id} value={location.id}>
                         {location.name}
