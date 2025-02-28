@@ -46,7 +46,7 @@ const Index = () => {
         icon: <Store className="h-6 w-6" />,
         path: "/locations",
         roles: ["admin"],
-        variant: "admin"
+        variant: "admin" as const
       },
       {
         id: "statistics",
@@ -55,7 +55,7 @@ const Index = () => {
         icon: <BarChart3 className="h-6 w-6" />,
         path: "/statistics",
         roles: ["admin"],
-        variant: "admin"
+        variant: "admin" as const
       },
     ];
 
