@@ -5,8 +5,9 @@ export interface SaleItem {
   productId: string;
   name: string;
   size: string;
-  price: number;
+  price?: number;
   quantity: number;
+  locationId?: string;
 }
 
 export interface Sale {
@@ -48,6 +49,9 @@ export const useSales = () => {
     setSales([...sales, sale]);
   };
 
+  // Alias for addSale for backwards compatibility
+  const recordSale = addSale;
+
   // Reset all sales data
   const resetSalesData = () => {
     setSales([]);
@@ -82,6 +86,7 @@ export const useSales = () => {
     sales,
     loading,
     addSale,
+    recordSale,
     resetSalesData,
     getSalesByLocation,
     getSalesByDateRange,

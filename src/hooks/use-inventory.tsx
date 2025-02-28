@@ -90,7 +90,7 @@ export const useInventory = () => {
 
       if (existingProductIndex >= 0) {
         // Update quantity of existing product
-        newInventory[existingProductIndex].quantity = product.quantity;
+        newInventory[existingProductIndex].quantity += product.quantity;
         importedCount++;
       } else {
         // Add new product
