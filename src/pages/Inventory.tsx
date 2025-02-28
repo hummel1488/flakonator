@@ -484,10 +484,13 @@ const Inventory = () => {
       "car": 500
     };
 
+    // Correctly accumulate quantities for each size
     inventory.forEach(item => {
       if (sizeStats[item.size]) {
         sizeStats[item.size].count += item.quantity;
-        sizeStats[item.size].value += item.quantity * prices[item.size];
+        // Use the item price if available, otherwise use the default price map
+        const itemPrice = item.price || prices[item.size];
+        sizeStats[item.size].value += item.quantity * itemPrice;
       }
     });
 
