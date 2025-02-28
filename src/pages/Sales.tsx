@@ -65,12 +65,13 @@ const Sales = () => {
   };
 
   const getProductPrice = (size: string) => {
-    // Example pricing structure
+    // Updated pricing structure
     const prices: Record<string, number> = {
-      "5": 700,
-      "16": 1500,
-      "20": 1800,
-      "30": 2500,
+      "5": 500,
+      "16": 1000,
+      "20": 1300,
+      "25": 1500,
+      "30": 1800,
       "car": 500
     };
     return prices[size] || 0;

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 export interface Product {
   id: string;
   name: string;
-  size: string; // "5", "16", "20", "30", "car" for car diffuser
+  size: string; // "5", "16", "20", "25", "30", "car" for car diffuser
   type: string; // "perfume", "other"
   locationId: string;
   quantity: number;
