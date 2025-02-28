@@ -1,18 +1,110 @@
 
-// This is a helper file that contains just the parseImportData function
-// to be included in the Inventory.tsx file
+import { Location } from "@/hooks/use-locations";
+import { Product } from "@/hooks/use-inventory";
+
+// Helper function to normalize text for better matching
+export const normalizeText = (text: string) => {
+  return text.toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[^\w\s]/gi, '');
+};
+
+// Common variations of column names
+export const NAME_VARIATIONS = ['название', 'наименование', 'товар', 'продукт', 'name', 'product', 'title', 'item'];
+export const SIZE_VARIATIONS = ['объем', 'размер', 'size', 'volume', 'capacity'];
+export const TYPE_VARIATIONS = ['тип', 'вид', 'type', 'category', 'kind'];
+export const LOCATION_VARIATIONS = ['точка', 'магазин', 'место', 'расположение', 'location', 'store', 'shop', 'place'];
+export const QUANTITY_VARIATIONS = ['количество', 'остаток', 'кол-во', 'колво', 'число', 'штук', 'quantity', 'amount', 'count', 'qty', 'pcs'];
+
+// Find the most likely column index based on header variations
+export const findColumnIndex = (headers: string[], variations: string[]) => {
+  for (const header of headers) {
+    const normalizedHeader = normalizeText(header);
+    for (const variation of variations) {
+      if (normalizedHeader.includes(normalizeText(variation))) {
+        return headers.indexOf(header);
+      }
+    }
+  }
+  return -1;
+};
+
+// Enhanced parsing of quantity values from CSV fields
+export const parseQuantity = (value: string): number => {
+  if (!value || value.trim() === '') return 0;
+  
+  // Remove any non-numeric characters except decimal points
+  // and ensure we only have one decimal point
+  const numStr = value.replace(/[^\d,.]/g, '')
+    .replace(/,/g, '.')  // Replace commas with dots for decimal
+    .replace(/(\..*)\./g, '$1'); // Keep only the first decimal point
+    
+  const num = parseFloat(numStr);
+  return isNaN(num) ? 0 : Math.round(num); // Round to whole number
+};
+
+// Map size values from text to valid values
+export const mapSize = (size: string): string => {
+  const normalizedSize = normalizeText(size);
+  
+  if (normalizedSize.includes('автофлакон') || 
+      normalizedSize.includes('авто') || 
+      normalizedSize.includes('car') ||
+      normalizedSize.includes('дифф')) {
+    return 'car';
+  }
+  
+  // Extract numbers from size string
+  const match = size.match(/\d+/);
+  if (match) {
+    const num = parseInt(match[0], 10);
+    if ([5, 16, 20, 25, 30].includes(num)) {
+      return num.toString();
+    }
+  }
+  
+  return '5'; // Default fallback
+};
+
+// Map type values from text to valid values
+export const mapType = (type: string): string => {
+  const normalizedType = normalizeText(type);
+  
+  if (normalizedType.includes('парфюм') || 
+      normalizedType.includes('духи') || 
+      normalizedType.includes('аромат') || 
+      normalizedType.includes('perfume')) {
+    return 'perfume';
+  }
+  return 'other';
+};
+
+export interface ImportOptions {
+  manualLocationId: string;
+  locations: Location[];
+}
+
+export interface ImportPreviewItem {
+  name: string;
+  size: string;
+  type: string;
+  locationId: string;
+  locationName: string;
+  quantity: number;
+}
+
+export interface ImportResult {
+  preview: ImportPreviewItem[];
+  fullData: ImportPreviewItem[];
+  error?: string;
+}
 
 // Parse imported data from CSV or other formats
-const parseImportData = (data: string) => {
+export function parseImportData(data: string, options: ImportOptions): ImportResult {
   try {
-    // Clean up the data - remove any BOM markers and normalize line endings
-    data = data.replace(/^\uFEFF/, ''); // Remove BOM if present
-    
-    // Normalize line endings
-    data = data.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
-    // Split into lines
-    const lines = data.trim().split('\n');
+    const { manualLocationId, locations } = options;
+    // This handles various formats including CSV, TSV, or even pasted data from Excel
+    const lines = data.trim().split(/\r?\n/);
     
     if (lines.length <= 1) {
       throw new Error('Файл пуст или содержит только заголовок');
@@ -115,7 +207,7 @@ const parseImportData = (data: string) => {
       // If the column header is numeric or empty, it might be a quantity column
       if (!Object.values(sizeQuantityMap).includes(i) && // Not already identified as a size column
           (header === '' || /^\d+$/.test(header) || 
-           QUANTITY_VARIATIONS.some(v => normalizeText(header).includes(normalizeText(v))))) {
+           QUANTITY_VARIATIONS.some(v => header.includes(normalizeText(v))))) {
         possibleQuantityColumns.push(i);
         console.log("Found possible quantity column at index", i, ":", headers[i]);
       }
@@ -186,14 +278,13 @@ const parseImportData = (data: string) => {
     }
     
     // Parse all data lines for full import (not just preview)
-    const allProducts = [];
+    const allProducts: ImportPreviewItem[] = [];
     
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue; // Skip empty lines
       
-      // Handle quoted fields that might contain the separator
-      const columns = parseCSVLine(line, separator);
+      const columns = line.split(separator).map(item => item.trim());
       
       // Skip rows that don't have enough columns or don't have a product name
       if (columns.length <= 1 || !columns[nameIndex]?.trim()) continue;
@@ -308,78 +399,22 @@ const parseImportData = (data: string) => {
     
     console.log(`Found ${allProducts.length} products to import`);
     
-    // For preview, just show first 10 items
-    setImportPreview(allProducts.slice(0, 10));
-    
-    // But store all products for actual import
-    if (allProducts.length > 0) {
-      // Store the full list separately for when user clicks import
-      setFullImportData(allProducts);
-    } else {
+    if (allProducts.length === 0) {
       throw new Error('Не удалось найти данные для импорта');
     }
+
+    // For preview, just show first 10 items
+    return {
+      preview: allProducts.slice(0, 10),
+      fullData: allProducts
+    };
     
   } catch (error) {
     console.error("Error parsing import data:", error);
-    toast({
-      title: "Ошибка импорта",
-      description: error instanceof Error ? error.message : "Не удалось разобрать данные из файла. Проверьте формат.",
-      variant: "destructive",
-    });
-    setImportPreview([]);
-    setFullImportData([]);
+    return {
+      preview: [],
+      fullData: [],
+      error: error instanceof Error ? error.message : "Не удалось разобрать данные из файла. Проверьте формат."
+    };
   }
-};
-
-// Helper function to parse a CSV line that might contain quoted fields with separators
-const parseCSVLine = (line: string, separator: string): string[] => {
-  const result: string[] = [];
-  let currentField = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"') {
-      // Toggle quote state
-      inQuotes = !inQuotes;
-    } else if (char === separator && !inQuotes) {
-      // End of field
-      result.push(currentField);
-      currentField = '';
-    } else {
-      // Add character to current field
-      currentField += char;
-    }
-  }
-  
-  // Add the last field
-  result.push(currentField);
-  
-  return result;
-};
-
-// Enhanced parsing of quantity values from CSV fields
-const parseQuantity = (value: string): number => {
-  if (!value || value.trim() === '') return 0;
-  
-  // First, check if the value is already a clean number
-  const directNumber = Number(value.trim());
-  if (!isNaN(directNumber) && directNumber > 0) {
-    return Math.round(directNumber);
-  }
-  
-  // If not, clean it up more aggressively
-  // Remove any non-numeric characters except decimal points and commas
-  let cleanedValue = value.replace(/[^\d.,]/g, '')
-                          .replace(/,/g, '.')  // Replace commas with dots for decimal
-                          .replace(/(\..*)\./g, '$1'); // Keep only the first decimal point
-  
-  // If it's still empty after cleaning, return 0
-  if (!cleanedValue) return.0;
-  
-  // Convert to number and round to integer
-  const parsedNumber = parseFloat(cleanedValue);
-  
-  return isNaN(parsedNumber) ? 0 : Math.round(parsedNumber);
-};
+}

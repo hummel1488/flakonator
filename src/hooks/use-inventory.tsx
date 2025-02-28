@@ -83,7 +83,7 @@ export const useInventory = () => {
       let quantity = 0;
       if (typeof productData.quantity === 'string') {
         // Remove any non-numeric characters except decimal points and convert to number
-        const cleanQuantity = productData.quantity.replace(/[^\d.]/g, '');
+        const cleanQuantity = String(productData.quantity).replace(/[^\d.]/g, '');
         quantity = parseInt(cleanQuantity, 10) || 0;
       } else {
         quantity = productData.quantity || 0;
