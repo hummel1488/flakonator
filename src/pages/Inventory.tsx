@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -57,14 +56,12 @@ import {
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"; 
 
-// Helper function to normalize text for better matching
 const normalizeText = (text: string) => {
   return text.toLowerCase()
     .replace(/\s+/g, '')
     .replace(/[^\w\s]/gi, '');
 };
 
-// Common variations of column names
 const NAME_VARIATIONS = ['название', 'наименование', 'товар', 'продукт', 'name', 'product', 'title', 'item'];
 const SIZE_VARIATIONS = ['объем', 'размер', 'size', 'volume', 'capacity'];
 const TYPE_VARIATIONS = ['тип', 'вид', 'type', 'category', 'kind'];
@@ -101,7 +98,6 @@ const Inventory = () => {
   console.log("Current manualLocationId:", manualLocationId);
   console.log("Available locations:", locations.map(loc => ({ id: loc.id, name: loc.name })));
 
-  // Form states
   const [formData, setFormData] = useState({
     name: "",
     size: "5 мл",
@@ -197,7 +193,6 @@ const Inventory = () => {
     setShowDeleteAllDialog(false);
   };
 
-  // Handle file upload for import
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -208,7 +203,6 @@ const Inventory = () => {
       setImportData(content);
       setImportTab("preview");
       
-      // Очищаем предыдущие результаты
       setImportResultLogs([]);
       setImportStats(null);
       setShowImportResults(false);
@@ -216,7 +210,6 @@ const Inventory = () => {
     reader.readAsText(file);
   };
 
-  // Import all data
   const handleImportData = () => {
     try {
       if (!importData) {
@@ -239,10 +232,8 @@ const Inventory = () => {
         
       console.log(`Importing data for location ${manualLocationId}, zero non-existing: ${zeroNonExisting}`);
       
-      // Импортируем данные
       const result = importFromCSV(importData, manualLocationId, zeroNonExisting);
       
-      // Сохраняем результаты импорта
       setImportResultLogs(result.logs);
       setImportStats({
         importedCount: result.importedCount,
@@ -297,7 +288,6 @@ const Inventory = () => {
 
   const getSizeLabel = (size: string) => {
     if (size === "Автофлакон" || size === "car") return "Автофлакон";
-    // Проверка, содержит ли строка уже "мл"
     return size.includes("мл") ? size : `${size} мл`;
   };
 
@@ -308,15 +298,12 @@ const Inventory = () => {
     return matchesSearch && matchesLocation && matchesSize;
   });
 
-  // Get location name by ID
   const getLocationName = (id: string) => {
     const location = locations.find(loc => loc.id === id);
     return location ? location.name : "Неизвестно";
   };
 
-  // Calculate inventory statistics
   const calculateInventoryStats = () => {
-    // Фильтруем инвентарь для статистики в зависимости от выбранной локации
     const inventoryToCalculate = filterLocation === "all" 
       ? inventory 
       : inventory.filter(item => item.locationId === filterLocation);
@@ -330,7 +317,6 @@ const Inventory = () => {
       "car": { count: 0, value: 0 },
     };
 
-    // Price mapping for each size
     const prices: Record<string, number> = {
       "5": 500,
       "16": 1000,
@@ -340,13 +326,11 @@ const Inventory = () => {
       "car": 500
     };
 
-    // Correctly accumulate quantities for each size using the getSizeStatKey function
     inventoryToCalculate.forEach(item => {
       const statKey = getSizeStatKey(item.size);
       
       if (sizeStats[statKey]) {
         sizeStats[statKey].count += item.quantity;
-        // Use the item price if available, otherwise use the default price map
         const itemPrice = item.price || prices[statKey];
         sizeStats[statKey].value += item.quantity * itemPrice;
       } else {
@@ -375,7 +359,6 @@ const Inventory = () => {
 
   const stats = calculateInventoryStats();
 
-  // Обработчик изменения точки продажи в диалоге импорта
   const handleLocationChange = (locationId: string) => {
     console.log("Setting location to:", locationId);
     setManualLocationId(locationId);
@@ -411,7 +394,6 @@ const Inventory = () => {
                 <Database className="h-4 w-4" />
                 {showStats ? "Скрыть статистику" : "Показать статистику"}
               </Button>
-              {/* Only show Delete All button for admin */}
               {isAdmin() && (
                 <Button
                   onClick={() => setShowDeleteAllDialog(true)}
@@ -632,7 +614,6 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Add product dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -730,7 +711,6 @@ const Inventory = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Update product dialog */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -764,7 +744,6 @@ const Inventory = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete All Confirmation Dialog */}
       <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -782,7 +761,6 @@ const Inventory = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Improved Import Dialog */}
       <Dialog open={showImportDialog} onOpenChange={closeImportDialog}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
           <DialogHeader>
@@ -973,4 +951,3 @@ const Inventory = () => {
 };
 
 export default Inventory;
-
