@@ -97,10 +97,25 @@ export const Dashboard = () => {
       "car": 500
     };
 
+    // Проверяем каждый элемент инвентаря
     inventory.forEach(item => {
-      if (sizeStats[item.size]) {
-        sizeStats[item.size].count += item.quantity;
-        sizeStats[item.size].value += item.quantity * prices[item.size];
+      // Нормализуем размер к одному из поддерживаемых ключей
+      let size = item.size;
+      
+      // Преобразование значений размера в ключи для статистики
+      if (size === "5 мл") size = "5";
+      else if (size === "16 мл") size = "16";
+      else if (size === "20 мл") size = "20";
+      else if (size === "25 мл") size = "25";
+      else if (size === "30 мл") size = "30";
+      else if (size === "Автофлакон") size = "car";
+      
+      // Проверяем, что размер существует в нашей статистике
+      if (sizeStats[size]) {
+        sizeStats[size].count += item.quantity;
+        sizeStats[size].value += item.quantity * prices[size];
+      } else {
+        console.log(`Неизвестный размер: ${size} для товара: ${item.name}`);
       }
     });
 
@@ -418,7 +433,7 @@ export const Dashboard = () => {
                             <p className="font-medium">{item.name}</p>
                             <div className="flex gap-2 mt-1">
                               <Badge variant="outline">
-                                {item.size === "car" ? "Автофлакон" : `${item.size} мл`}
+                                {item.size === "car" ? "Автофлакон" : `${item.size}`}
                               </Badge>
                               <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">
                                 {location?.name || "Неизвестная точка"}
