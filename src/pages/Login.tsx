@@ -1,7 +1,7 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,24 +13,37 @@ import { Badge } from "@/components/ui/badge";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const location = useLocation();
+  const { login, user } = useAuth();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  
+  const from = location.state?.from || "/";
+  
+  // Если пользователь уже авторизован, перенаправляем его
+  useEffect(() => {
+    if (user) {
+      console.log("User already logged in, redirecting to:", from);
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      console.log("Submitting login form:", username);
       const success = await login(username, password);
       if (success) {
         toast({
           title: "Успешный вход",
           description: "Вы успешно вошли в систему",
         });
-        navigate("/");
+        console.log("Login successful, redirecting to:", from);
+        navigate(from, { replace: true });
       } else {
         toast({
           title: "Ошибка входа",
@@ -39,6 +52,7 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Ошибка",
         description: "Произошла ошибка при входе",

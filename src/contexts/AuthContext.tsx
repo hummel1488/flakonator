@@ -35,10 +35,12 @@ const INITIAL_MOCK_USERS: User[] = [
 ];
 
 const STORAGE_KEY = "authUsers";
+const USER_STORAGE_KEY = "authUser";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [MOCK_USERS, setMockUsers] = useState<User[]>(INITIAL_MOCK_USERS);
+  const [initialized, setInitialized] = useState(false);
 
   // Load saved users and current user on initial render
   useEffect(() => {
@@ -53,23 +55,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Load current user
-    const storedUser = localStorage.getItem("authUser");
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY);
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        console.log("Restored user from localStorage:", parsedUser);
+        setUser(parsedUser);
       } catch (e) {
         console.error("Failed to parse stored user:", e);
-        localStorage.removeItem("authUser");
+        localStorage.removeItem(USER_STORAGE_KEY);
       }
     }
+    
+    setInitialized(true);
   }, []);
 
   // Save users whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_USERS));
-  }, [MOCK_USERS]);
+    if (initialized) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_USERS));
+    }
+  }, [MOCK_USERS, initialized]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
+    console.log("Attempting login:", username);
+    
     // Find user in our mock database
     const foundUser = MOCK_USERS.find(u => 
       u.name.toLowerCase() === username.toLowerCase() && u.password === password
@@ -77,18 +87,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (foundUser) {
       // Create a new object without the password for security
-      const { password, ...userWithoutPassword } = foundUser;
+      const { password: _, ...userWithoutPassword } = foundUser;
+      console.log("Login successful, user:", userWithoutPassword);
       setUser(userWithoutPassword);
-      localStorage.setItem("authUser", JSON.stringify(userWithoutPassword));
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userWithoutPassword));
       return true;
     }
     
+    console.log("Login failed");
     return false;
   };
 
   const logout = () => {
+    console.log("Logging out user");
     setUser(null);
-    localStorage.removeItem("authUser");
+    localStorage.removeItem(USER_STORAGE_KEY);
   };
 
   const isAdmin = () => user?.role === "admin";
@@ -99,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user && user.role === "seller") {
       const updatedUser = { ...user, locationId };
       setUser(updatedUser);
-      localStorage.setItem("authUser", JSON.stringify(updatedUser));
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
 
       // Also update in MOCK_USERS
       const updatedUsers = MOCK_USERS.map(u => 
@@ -123,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (user && user.id === updatedUser.id) {
       const { password, ...userWithoutPassword } = updatedUser;
       setUser(userWithoutPassword);
-      localStorage.setItem("authUser", JSON.stringify(userWithoutPassword));
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userWithoutPassword));
     }
   };
 
