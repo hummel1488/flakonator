@@ -170,78 +170,80 @@ export const Dashboard = () => {
         </div>
       </div>
 
-      {/* Inventory Statistics */}
-      <Card className="bg-white shadow-md border border-gray-100">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Статистика инвентаря</CardTitle>
-          <Database className="h-5 w-5 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Общее количество</div>
-                <div className="text-2xl font-bold">{inventoryStats.totalCount} шт.</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
-                <div className="text-2xl font-bold">{formatCurrency(inventoryStats.totalValue)}</div>
-              </CardContent>
-            </Card>
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
-                <div className="text-2xl font-bold">{inventory.length} шт.</div>
-              </CardContent>
-            </Card>
-          </div>
+      {/* Inventory Statistics - Only visible for admin */}
+      {isAdmin() && (
+        <Card className="bg-white shadow-md border border-gray-100">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Статистика инвентаря</CardTitle>
+            <Database className="h-5 w-5 text-amber-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="text-sm text-gray-500 mb-1">Общее количество</div>
+                  <div className="text-2xl font-bold">{inventoryStats.totalCount} шт.</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
+                  <div className="text-2xl font-bold">{formatCurrency(inventoryStats.totalValue)}</div>
+                </CardContent>
+              </Card>
+              <Card className="shadow-sm">
+                <CardContent className="p-4">
+                  <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
+                  <div className="text-2xl font-bold">{inventory.length} шт.</div>
+                </CardContent>
+              </Card>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-medium mb-3">Распределение по объемам</h3>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={inventoryStats.pieChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {inventoryStats.pieChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value) => [`${value} шт.`, "Количество"]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm font-medium mb-3">Распределение по объемам</h3>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={inventoryStats.pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {inventoryStats.pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => [`${value} шт.`, "Количество"]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium mb-3">Остатки по объемам</h3>
-              <div className="space-y-3">
-                {Object.entries(inventoryStats.sizeStats).map(([size, { count, value }]) => (
-                  <div key={size} className="flex justify-between items-center p-2 border rounded-md">
-                    <div className="font-medium">{getSizeLabel(size)}</div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{count} шт.</Badge>
-                      <Badge variant="secondary">{formatCurrency(value)}</Badge>
+              <div>
+                <h3 className="text-sm font-medium mb-3">Остатки по объемам</h3>
+                <div className="space-y-3">
+                  {Object.entries(inventoryStats.sizeStats).map(([size, { count, value }]) => (
+                    <div key={size} className="flex justify-between items-center p-2 border rounded-md">
+                      <div className="font-medium">{getSizeLabel(size)}</div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{count} шт.</Badge>
+                        <Badge variant="secondary">{formatCurrency(value)}</Badge>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Show sales stats only for admin */}
       {isAdmin() && (

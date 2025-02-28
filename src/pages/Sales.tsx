@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ShoppingBag, Search, Plus, Minus, Trash2 } from "lucide-react";
@@ -44,14 +43,12 @@ const Sales = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [saleComplete, setSaleComplete] = useState(false);
   
-  // Set default location for sellers
   useEffect(() => {
     if (user?.role === "seller" && user.locationId) {
       setSelectedLocation(user.locationId);
     }
   }, [user]);
   
-  // Reset completion state when changing locations
   useEffect(() => {
     setSaleComplete(false);
     setCart([]);
@@ -75,7 +72,6 @@ const Sales = () => {
   };
 
   const getProductPrice = (size: string) => {
-    // Updated pricing structure
     const prices: Record<string, number> = {
       "5": 500,
       "16": 1000,
@@ -176,7 +172,6 @@ const Sales = () => {
       return;
     }
 
-    // Update inventory
     cart.forEach(item => {
       const product = inventory.find(p => p.id === item.productId);
       if (product) {
@@ -184,7 +179,6 @@ const Sales = () => {
       }
     });
 
-    // Record the sale
     addSale({
       id: Date.now().toString(),
       locationId: selectedLocation,
