@@ -97,7 +97,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
       <Navigation />
       <div className="p-6 md:p-12">
         <div className="max-w-6xl mx-auto">
@@ -116,7 +116,7 @@ const Index = () => {
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-            {menuItems.map((item, index) => (
+            {menuItems.map((item) => (
               <motion.div
                 key={item.id}
                 variants={itemVariants}
@@ -131,7 +131,7 @@ const Index = () => {
                   }`}
                 >
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-60 z-0"
+                    className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 opacity-60 z-0"
                     initial={{ opacity: 0 }}
                     animate={{
                       opacity: hoveredCard === item.id ? 0.8 : 0,
@@ -153,22 +153,22 @@ const Index = () => {
                   <div className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-4">
                       <div className={`
-                        ${item.variant === "admin" ? "bg-indigo-100 text-indigo-600" :
-                          item.variant === "seller" ? "bg-blue-100 text-blue-600" :
-                          "bg-teal-100 text-teal-600"
+                        ${item.variant === "admin" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300" :
+                          item.variant === "seller" ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300" :
+                          "bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-300"
                         } p-2 rounded-full`
                       }>
                         {item.icon}
                       </div>
                     </div>
                     <h2 className="text-xl font-medium mb-2">{item.title}</h2>
-                    <p className="text-gray-500 mb-6 text-sm">
+                    <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
                       {item.description}
                     </p>
                     <Button
                       onClick={() => navigate(item.path)}
                       className="w-full"
-                      variant={item.variant as "admin" | "seller" | "manager"}
+                      variant={item.variant}
                     >
                       Перейти
                     </Button>

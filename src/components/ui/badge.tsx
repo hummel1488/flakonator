@@ -15,23 +15,11 @@ const badgeVariants = cva(
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
           "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground border-border",
-        accent: 
-          "border-transparent bg-accent text-accent-foreground hover:bg-accent/80",
-        success:
-          "border-transparent bg-emerald-500 text-white hover:bg-emerald-500/80",
-        warning:
-          "border-transparent bg-amber-500 text-white hover:bg-amber-500/80",
-        info:
-          "border-transparent bg-sky-500 text-white hover:bg-sky-500/80",
-        premium:
-          "border-transparent bg-gradient-to-r from-amber-500 to-amber-400 text-white",
-        admin:
-          "border-transparent bg-gradient-to-r from-indigo-600 to-indigo-500 text-white",
-        manager:
-          "border-transparent bg-gradient-to-r from-teal-600 to-teal-500 text-white",
-        seller:
-          "border-transparent bg-gradient-to-r from-blue-600 to-blue-500 text-white",
+        outline: "text-foreground",
+        // Add custom variants for user roles
+        admin: "border-transparent bg-indigo-100 text-indigo-800 hover:bg-indigo-200",
+        seller: "border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200",
+        manager: "border-transparent bg-teal-100 text-teal-800 hover:bg-teal-200",
       },
     },
     defaultVariants: {
