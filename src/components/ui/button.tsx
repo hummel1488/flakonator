@@ -10,18 +10,21 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-button border border-primary/10 font-medium",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md border border-primary/10 font-medium",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-button border border-destructive/10 font-medium",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md border border-destructive/10 font-medium",
         outline:
-          "border border-input bg-background hover:bg-accent/10 hover:border-accent hover:text-accent-foreground shadow-sm font-medium",
+          "border border-input bg-background hover:bg-accent/15 hover:border-accent hover:text-accent-foreground shadow-sm font-medium",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-button border border-secondary/20 font-medium",
-        ghost: "hover:bg-accent/10 hover:text-accent-foreground font-medium",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md border border-secondary/20 font-medium",
+        ghost: "hover:bg-accent/15 hover:text-accent-foreground font-medium",
         link: "text-primary underline-offset-4 hover:underline font-medium p-0 h-auto",
-        soft: "bg-primary/10 text-primary hover:bg-primary/20 shadow-sm border border-primary/10 font-medium",
-        gold: "bg-brand-gold text-white hover:bg-brand-dark-gold shadow-button border border-brand-gold/10 font-semibold",
-        premium: "bg-gradient-to-r from-brand-gold to-brand-light-gold text-white hover:from-brand-dark-gold hover:to-brand-gold shadow-button border border-brand-gold/10 font-semibold",
+        soft: "bg-primary/15 text-primary hover:bg-primary/25 shadow-sm border border-primary/10 font-medium",
+        gold: "bg-amber-500 text-white hover:bg-amber-600 shadow-md border border-amber-400/10 font-semibold",
+        premium: "bg-gradient-to-r from-amber-500 to-amber-400 text-white hover:from-amber-600 hover:to-amber-500 shadow-md border border-amber-400/10 font-semibold",
+        admin: "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white hover:from-indigo-700 hover:to-indigo-600 shadow-md border border-indigo-500/10 font-semibold",
+        manager: "bg-gradient-to-r from-teal-600 to-teal-500 text-white hover:from-teal-700 hover:to-teal-600 shadow-md border border-teal-500/10 font-semibold",
+        seller: "bg-gradient-to-r from-blue-600 to-blue-500 text-white hover:from-blue-700 hover:to-blue-600 shadow-md border border-blue-500/10 font-semibold",
       },
       size: {
         default: "h-10 px-5 py-2",

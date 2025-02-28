@@ -25,7 +25,13 @@ const badgeVariants = cva(
         info:
           "border-transparent bg-sky-500 text-white hover:bg-sky-500/80",
         premium:
-          "border-transparent bg-gradient-to-r from-brand-gold to-brand-light-gold text-white",
+          "border-transparent bg-gradient-to-r from-amber-500 to-amber-400 text-white",
+        admin:
+          "border-transparent bg-gradient-to-r from-indigo-600 to-indigo-500 text-white",
+        manager:
+          "border-transparent bg-gradient-to-r from-teal-600 to-teal-500 text-white",
+        seller:
+          "border-transparent bg-gradient-to-r from-blue-600 to-blue-500 text-white",
       },
     },
     defaultVariants: {
