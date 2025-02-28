@@ -8,6 +8,7 @@ export interface Product {
   type: string; // "perfume", "other"
   locationId: string;
   quantity: number;
+  price?: number; // Optional price field
 }
 
 const LOCAL_STORAGE_KEY = "scenttrack-inventory";
@@ -61,9 +62,11 @@ export const useInventory = () => {
   // Bulk import products from data
   const importProducts = (products: Omit<Product, "id">[]) => {
     if (!products || products.length === 0) {
+      console.log("No products to import");
       return 0;
     }
     
+    console.log("Starting import of", products.length, "products");
     const newInventory = [...inventory];
     let importedCount = 0;
     
@@ -79,6 +82,8 @@ export const useInventory = () => {
         id: Date.now().toString() + Math.random().toString(36).substring(2, 9)
       };
       
+      console.log("Processing product:", product.name, "size:", product.size, "quantity:", product.quantity);
+      
       // Check if product already exists
       const existingProductIndex = newInventory.findIndex(
         (p) =>
@@ -91,14 +96,17 @@ export const useInventory = () => {
       if (existingProductIndex >= 0) {
         // Update quantity of existing product
         newInventory[existingProductIndex].quantity += product.quantity;
+        console.log("Updated existing product, new quantity:", newInventory[existingProductIndex].quantity);
         importedCount++;
       } else {
         // Add new product
         newInventory.push(product);
+        console.log("Added new product to inventory");
         importedCount++;
       }
     });
 
+    console.log("Import completed, total products imported:", importedCount);
     setInventory(newInventory);
     return importedCount;
   };

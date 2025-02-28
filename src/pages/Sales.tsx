@@ -131,35 +131,30 @@ const Sales = () => {
     setCart(cart.filter(item => item.id !== productId));
   };
 
+  // Get price based on size
+  const getPrice = (size: string): number => {
+    switch (size) {
+      case "5":
+        return 500;
+      case "16":
+        return 1000;
+      case "20":
+        return 1300;
+      case "25":
+        return 1500;
+      case "30":
+        return 1800;
+      case "car":
+        return 500;
+      default:
+        return 500;
+    }
+  };
+
   // Calculate total
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
-      let price = 0;
-      
-      // Set price based on size
-      switch (item.size) {
-        case "5":
-          price = 500;
-          break;
-        case "16":
-          price = 1000;
-          break;
-        case "20":
-          price = 1300;
-          break;
-        case "25":
-          price = 1500;
-          break;
-        case "30":
-          price = 1800;
-          break;
-        case "car":
-          price = 500;
-          break;
-        default:
-          price = 500;
-      }
-      
+      const price = getPrice(item.size);
       return total + (price * item.cartQuantity);
     }, 0);
   };
@@ -188,6 +183,7 @@ const Sales = () => {
         size: item.size,
         quantity: item.cartQuantity,
         locationId: item.locationId,
+        price: getPrice(item.size),
       })),
       total: calculateTotal(),
     });
