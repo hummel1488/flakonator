@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -802,7 +803,7 @@ const Inventory = () => {
                     <SelectTrigger id="import-location">
                       <SelectValue placeholder="Выберите точку продажи" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-[9999] bg-white">
                       {locations.map((location) => (
                         <SelectItem key={location.id} value={location.id}>
                           {location.name}
@@ -931,7 +932,7 @@ const Inventory = () => {
             </TabsContent>
           </Tabs>
           
-          <DialogFooter className="sticky bottom-0 bg-white pt-2 pb-2 z-10 border-t">
+          <DialogFooter className="sticky bottom-0 bg-white pt-6 pb-4 z-10 border-t mt-8">
             <Button variant="outline" onClick={closeImportDialog}>
               Закрыть
             </Button>
