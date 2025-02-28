@@ -10,52 +10,96 @@ export interface Location {
 
 const LOCAL_STORAGE_KEY = "scenttrack-locations";
 
+// Примеры точек продаж по умолчанию (на случай если localStorage пуст)
+const DEFAULT_LOCATIONS: Location[] = [
+  {
+    id: "1",
+    name: "Центральный магазин",
+    address: "ул. Центральная, 123",
+    contact: "+7 (999) 123-45-67",
+  },
+  {
+    id: "2",
+    name: "ТЦ Галерея",
+    address: "пр. Ленина, 45",
+    contact: "+7 (999) 987-65-43",
+  },
+];
+
 export const useLocations = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load locations from local storage on initial render
+  // Загрузка точек продаж из localStorage при первом рендере
   useEffect(() => {
-    const storedLocations = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (storedLocations) {
-      try {
-        setLocations(JSON.parse(storedLocations));
-      } catch (error) {
-        console.error("Error parsing locations data:", error);
+    try {
+      const storedLocations = localStorage.getItem(LOCAL_STORAGE_KEY);
+      console.log("Загруженные данные из localStorage:", storedLocations);
+      
+      if (storedLocations) {
+        const parsedLocations = JSON.parse(storedLocations);
+        if (Array.isArray(parsedLocations) && parsedLocations.length > 0) {
+          setLocations(parsedLocations);
+          console.log("Точки продаж успешно загружены:", parsedLocations);
+        } else {
+          // Если массив пустой или не массив, используем значения по умолчанию
+          console.log("Данные из localStorage пусты или недействительны, используем значения по умолчанию");
+          setLocations(DEFAULT_LOCATIONS);
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+        }
+      } else {
+        // Если в localStorage нет данных, используем значения по умолчанию
+        console.log("В localStorage нет данных, используем значения по умолчанию");
+        setLocations(DEFAULT_LOCATIONS);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
       }
+    } catch (error) {
+      console.error("Ошибка при загрузке точек продаж:", error);
+      // В случае ошибки, используем значения по умолчанию
+      setLocations(DEFAULT_LOCATIONS);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  // Save locations to local storage whenever it changes
+  // Сохранение точек продаж в localStorage при их изменении
   useEffect(() => {
     if (!loading) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(locations));
+      try {
+        console.log("Сохранение точек продаж:", locations);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(locations));
+      } catch (error) {
+        console.error("Ошибка при сохранении точек продаж:", error);
+      }
     }
   }, [locations, loading]);
 
-  // Add a new location
+  // Добавление новой точки
   const addLocation = (location: Location) => {
+    console.log("Добавление точки:", location);
     setLocations([...locations, location]);
   };
 
-  // Update a location
+  // Обновление точки
   const updateLocation = (updatedLocation: Location) => {
+    console.log("Обновление точки:", updatedLocation);
     const updatedLocations = locations.map((location) =>
       location.id === updatedLocation.id ? updatedLocation : location
     );
     setLocations(updatedLocations);
   };
 
-  // Delete a location
+  // Удаление точки
   const deleteLocation = (locationId: string) => {
+    console.log("Удаление точки с ID:", locationId);
     const updatedLocations = locations.filter(
       (location) => location.id !== locationId
     );
     setLocations(updatedLocations);
   };
 
-  // Get a location by ID
+  // Получение точки по ID
   const getLocationById = (locationId: string) => {
     return locations.find((location) => location.id === locationId);
   };
