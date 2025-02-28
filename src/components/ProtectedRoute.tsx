@@ -4,12 +4,12 @@ import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRoles?: UserRole[];
+  allowedRoles?: UserRole[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRoles = ["admin", "seller", "manager"]
+  allowedRoles = ["admin", "seller", "manager"]
 }) => {
   const { user } = useAuth();
   const location = useLocation();
@@ -20,7 +20,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check if user has the required role
-  if (user.role && requiredRoles.includes(user.role)) {
+  if (user.role && allowedRoles.includes(user.role)) {
     return <>{children}</>;
   }
 

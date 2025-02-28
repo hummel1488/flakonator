@@ -41,7 +41,7 @@ function App() {
             <Route
               path="/inventory"
               element={
-                <ProtectedRoute requiredRoles={["admin", "manager"]}>
+                <ProtectedRoute allowedRoles={["admin", "manager"]}>
                   <>
                     <Navigation />
                     <div className="pl-64 pt-4">
@@ -80,7 +80,7 @@ function App() {
             <Route
               path="/locations"
               element={
-                <ProtectedRoute requiredRoles={["admin", "manager"]}>
+                <ProtectedRoute allowedRoles={["admin", "manager"]}>
                   <>
                     <Navigation />
                     <div className="pl-64 pt-4">
@@ -93,7 +93,7 @@ function App() {
             <Route
               path="/marketing"
               element={
-                <ProtectedRoute requiredRoles={["admin", "manager"]}>
+                <ProtectedRoute allowedRoles={["admin", "manager"]}>
                   <>
                     <Navigation />
                     <div className="pl-64 pt-4">
@@ -119,7 +119,7 @@ function App() {
             <Route
               path="/statistics"
               element={
-                <ProtectedRoute requiredRoles={["admin", "manager"]}>
+                <ProtectedRoute allowedRoles={["admin", "manager"]}>
                   <>
                     <Navigation />
                     <div className="pl-64 pt-4">
@@ -132,7 +132,7 @@ function App() {
             <Route
               path="/users"
               element={
-                <ProtectedRoute requiredRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <>
                     <Navigation />
                     <div className="pl-64 pt-4">

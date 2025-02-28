@@ -14,9 +14,6 @@ import { Dashboard } from "@/components/Dashboard";
 import Navigation from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Define valid button variants
-type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | "admin" | "seller" | "manager";
-
 const Index = () => {
   const navigate = useNavigate();
   const { isAdmin, isSeller, isManager } = useAuth();
@@ -31,7 +28,7 @@ const Index = () => {
         icon: <PlusCircle className="h-6 w-6" />,
         path: "/inventory",
         roles: ["admin", "manager"],
-        variant: isAdmin() ? "admin" as ButtonVariant : "manager" as ButtonVariant
+        variant: isAdmin() ? "admin" : "manager"
       },
       {
         id: "sales",
@@ -40,7 +37,7 @@ const Index = () => {
         icon: <ShoppingBag className="h-6 w-6" />,
         path: "/sales",
         roles: ["admin", "seller"],
-        variant: isAdmin() ? "admin" as ButtonVariant : "seller" as ButtonVariant
+        variant: isAdmin() ? "admin" : "seller"
       },
       {
         id: "locations",
@@ -49,7 +46,7 @@ const Index = () => {
         icon: <Store className="h-6 w-6" />,
         path: "/locations",
         roles: ["admin"],
-        variant: "admin" as ButtonVariant
+        variant: "admin" as const
       },
       {
         id: "statistics",
@@ -58,7 +55,7 @@ const Index = () => {
         icon: <BarChart3 className="h-6 w-6" />,
         path: "/statistics",
         roles: ["admin"],
-        variant: "admin" as ButtonVariant
+        variant: "admin" as const
       },
     ];
 
