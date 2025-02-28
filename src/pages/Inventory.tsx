@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -878,77 +877,4 @@ const Inventory = () => {
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                         <div className="bg-green-50 p-3 rounded-md">
                           <div className="text-sm text-green-700">Импортировано</div>
-                          <div className="text-xl font-bold">{importStats.importedCount}</div>
-                        </div>
-                        <div className="bg-blue-50 p-3 rounded-md">
-                          <div className="text-sm text-blue-700">Новых</div>
-                          <div className="text-xl font-bold">{importStats.newItemsCount}</div>
-                        </div>
-                        <div className="bg-indigo-50 p-3 rounded-md">
-                          <div className="text-sm text-indigo-700">Обновлено</div>
-                          <div className="text-xl font-bold">{importStats.updatedItemsCount}</div>
-                        </div>
-                        <div className="bg-red-50 p-3 rounded-md">
-                          <div className="text-sm text-red-700">Пропущено</div>
-                          <div className="text-xl font-bold">{importStats.skippedCount}</div>
-                        </div>
-                        <div className="bg-amber-50 p-3 rounded-md">
-                          <div className="text-sm text-amber-700">Обнулено</div>
-                          <div className="text-xl font-bold">{importStats.zeroedItemsCount}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Журнал операций</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[300px]">
-                        <div className="space-y-2">
-                          {importResultLogs.length > 0 ? (
-                            importResultLogs.map((log, index) => (
-                              <div key={index} className={`flex items-start gap-2 p-2 rounded-md ${
-                                log.type === 'success' ? 'bg-green-50' : 
-                                log.type === 'warning' ? 'bg-amber-50' : 
-                                'bg-red-50'
-                              }`}>
-                                {getLogTypeIcon(log.type)}
-                                <span className="text-sm">{log.message}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-center py-8 text-gray-500">
-                              Нет данных для отображения
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-          
-          <DialogFooter className="sticky bottom-0 bg-white pt-6 pb-4 z-10 border-t mt-8">
-            <Button variant="outline" onClick={closeImportDialog}>
-              Закрыть
-            </Button>
-            {importTab !== "results" && (
-              <Button 
-                onClick={handleImportData}
-                disabled={!importData || !manualLocationId}
-              >
-                Импортировать
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default Inventory;
+                          <div className="text
