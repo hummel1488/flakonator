@@ -2,8 +2,14 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem;
   text-align: center;
+}
+
+@media (min-width: 768px) {
+  #root {
+    padding: 2rem;
+  }
 }
 
 .logo {
@@ -35,43 +41,88 @@
 }
 
 .card {
-  padding: 2em;
+  padding: 1.5em;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 2em;
+  }
 }
 
 .read-the-docs {
   color: #888;
 }
 
-/* Add styles for non-admin dashboards */
+/* Dashboard sections for different user roles */
 .manager-dashboard-section,
 .seller-dashboard-section {
-  margin-top: 2rem;
-  padding: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
   border-radius: var(--radius);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-.manager-dashboard-title {
-  font-size: 1.75rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: hsl(var(--primary));
+@media (min-width: 768px) {
+  .manager-dashboard-section,
+  .seller-dashboard-section {
+    margin-top: 2rem;
+    padding: 1.5rem;
+  }
 }
 
+.manager-dashboard-title,
 .seller-dashboard-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
   color: hsl(var(--primary));
 }
 
-/* Fix the Sales page variant button issue */
-.manager-button {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
+@media (min-width: 768px) {
+  .manager-dashboard-title,
+  .seller-dashboard-title {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
 }
 
+/* Role-specific buttons */
+.manager-button,
 .seller-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
   background-color: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .manager-button,
+  .seller-button {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Responsive table layouts */
+.responsive-table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 1rem;
+}
+
+/* Mobile navigation adjustments */
+.mobile-nav-item {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+}
+
+.desktop-nav-item {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
 }
