@@ -29,7 +29,7 @@ const Statistics = () => {
   const { locations } = useLocations();
   const [dateRange, setDateRange] = useState<DateRangeType>("30days");
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedLocation, setSelectedLocation] = useState<string>("");
+  const [selectedLocation, setSelectedLocation] = useState<string>("all");
 
   const getDateRangeStart = (range: DateRangeType): Date => {
     const now = new Date();
@@ -240,7 +240,7 @@ const Statistics = () => {
                   <SelectValue placeholder="Все точки" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Все точки</SelectItem>
+                  <SelectItem value="all">Все точки</SelectItem>
                   {locations.map(location => (
                     <SelectItem key={location.id} value={location.id}>
                       {location.name}
@@ -250,7 +250,7 @@ const Statistics = () => {
               </Select>
             </div>
           </div>
-          <LowStockAlert locationId={selectedLocation || undefined} threshold={3} />
+          <LowStockAlert locationId={selectedLocation !== "all" ? selectedLocation : undefined} threshold={3} />
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
