@@ -28,7 +28,7 @@ const Index = () => {
         icon: <PlusCircle className="h-6 w-6" />,
         path: "/inventory",
         roles: ["admin", "manager"],
-        variant: isAdmin() ? "admin" : "manager"
+        variant: isAdmin() ? "default" : "default"
       },
       {
         id: "sales",
@@ -37,7 +37,7 @@ const Index = () => {
         icon: <ShoppingBag className="h-6 w-6" />,
         path: "/sales",
         roles: ["admin", "seller"],
-        variant: isAdmin() ? "admin" : "seller"
+        variant: isAdmin() ? "default" : "default"
       },
       {
         id: "locations",
@@ -46,7 +46,7 @@ const Index = () => {
         icon: <Store className="h-6 w-6" />,
         path: "/locations",
         roles: ["admin"],
-        variant: "admin" as const
+        variant: "default" as const
       },
       {
         id: "statistics",
@@ -55,7 +55,7 @@ const Index = () => {
         icon: <BarChart3 className="h-6 w-6" />,
         path: "/statistics",
         roles: ["admin"],
-        variant: "admin" as const
+        variant: "default" as const
       },
     ];
 
@@ -140,9 +140,10 @@ const Index = () => {
                   />
                   <motion.div
                     className={`absolute bottom-0 left-0 right-0 h-1 ${
-                      item.variant === "admin" ? "bg-indigo-500" :
-                      item.variant === "seller" ? "bg-blue-500" :
-                      "bg-teal-500"
+                      item.id === "inventory" ? "bg-teal-500" :
+                      item.id === "sales" ? "bg-blue-500" :
+                      item.id === "locations" ? "bg-indigo-500" :
+                      "bg-indigo-500"
                     }`}
                     initial={{ scaleX: 0, originX: 0 }}
                     animate={{
@@ -153,9 +154,10 @@ const Index = () => {
                   <div className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-4">
                       <div className={`
-                        ${item.variant === "admin" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300" :
-                          item.variant === "seller" ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300" :
-                          "bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-300"
+                        ${item.id === "inventory" ? "bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-300" :
+                          item.id === "sales" ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300" :
+                          item.id === "locations" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300" :
+                          "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300"
                         } p-2 rounded-full`
                       }>
                         {item.icon}
