@@ -313,6 +313,11 @@ const Inventory = () => {
 
   // Calculate inventory statistics
   const calculateInventoryStats = () => {
+    // Фильтруем инвентарь для статистики в зависимости от выбранной локации
+    const inventoryToCalculate = filterLocation === "all" 
+      ? inventory 
+      : inventory.filter(item => item.locationId === filterLocation);
+
     const sizeStats: Record<string, { count: number, value: number }> = {
       "5": { count: 0, value: 0 },
       "16": { count: 0, value: 0 },
@@ -333,7 +338,7 @@ const Inventory = () => {
     };
 
     // Correctly accumulate quantities for each size using the getSizeStatKey function
-    inventory.forEach(item => {
+    inventoryToCalculate.forEach(item => {
       const statKey = getSizeStatKey(item.size);
       
       if (sizeStats[statKey]) {
@@ -439,7 +444,7 @@ const Inventory = () => {
             >
               <Card className="shadow-md border border-gray-100 bg-white">
                 <CardHeader>
-                  <CardTitle>Статистика инвентаря</CardTitle>
+                  <CardTitle>Статистика инвентаря {filterLocation !== "all" && `- ${getLocationName(filterLocation)}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -458,7 +463,7 @@ const Inventory = () => {
                     <Card className="shadow-sm">
                       <CardContent className="p-4">
                         <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
-                        <div className="text-2xl font-bold">{inventory.length} шт.</div>
+                        <div className="text-2xl font-bold">{filteredInventory.length} шт.</div>
                       </CardContent>
                     </Card>
                   </div>
@@ -939,7 +944,7 @@ const Inventory = () => {
             </TabsContent>
           </Tabs>
           
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 bg-white pt-2 pb-2 z-10 border-t">
             <Button variant="outline" onClick={closeImportDialog}>
               Закрыть
             </Button>
@@ -959,3 +964,4 @@ const Inventory = () => {
 };
 
 export default Inventory;
+
