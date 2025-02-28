@@ -174,10 +174,14 @@ const Sales = () => {
       updateProductQuantity(item.id, newQuantity);
     });
 
+    // Get the location id from the first item in the cart (all items should have the same location)
+    const saleLocationId = cart[0]?.locationId || "";
+
     // Record the sale
     recordSale({
       id: Date.now().toString(),
       date: new Date().toISOString(),
+      locationId: saleLocationId,
       items: cart.map(item => ({
         productId: item.id,
         name: item.name,
