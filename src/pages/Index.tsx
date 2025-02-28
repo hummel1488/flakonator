@@ -168,7 +168,7 @@ const Index = () => {
                     <Button
                       onClick={() => navigate(item.path)}
                       className="w-full"
-                      variant={item.variant}
+                      variant={item.variant as "admin" | "seller" | "manager"}
                     >
                       Перейти
                     </Button>
