@@ -136,4 +136,17 @@
   .blue-gradient {
     @apply bg-blue-gradient;
   }
+  
+  /* Added new utility classes for non-admin user dashboards */
+  .user-dashboard-header {
+    @apply text-2xl font-semibold mb-4 pt-2;
+  }
+  
+  .user-dashboard-subheader {
+    @apply text-lg font-medium text-muted-foreground mb-6;
+  }
+  
+  .user-dashboard-section {
+    @apply mt-6 p-4 bg-white rounded-lg shadow-sm border border-border dark:bg-card;
+  }
 }

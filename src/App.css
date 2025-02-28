@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +40,34 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Add styles for non-admin dashboards */
+.manager-dashboard-section,
+.seller-dashboard-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.manager-dashboard-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: hsl(var(--primary));
+}
+
+.seller-dashboard-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: hsl(var(--primary));
+}
+
+/* Fix the Sales page variant button issue */
+.manager-button,
+.seller-button {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
