@@ -207,6 +207,13 @@ const Sales = () => {
     setSaleComplete(false);
   };
 
+  // Функция для определения варианта кнопки в зависимости от роли пользователя
+  const getButtonVariant = () => {
+    if (isAdmin()) return "admin";
+    if (isSeller()) return "seller";
+    return "manager";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Navigation />
@@ -251,7 +258,7 @@ const Sales = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {locations.length === 0 ? (
-                            <SelectItem value="" disabled>
+                            <SelectItem value="no-locations" disabled>
                               Нет доступных точек
                             </SelectItem>
                           ) : (
@@ -319,7 +326,7 @@ const Sales = () => {
                               <Button
                                 size="sm"
                                 onClick={() => addToCart(product)}
-                                variant={isAdmin() ? "admin" : isSeller() ? "seller" : "manager"}
+                                variant={getButtonVariant()}
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -339,7 +346,7 @@ const Sales = () => {
                       <p className="text-gray-500 mb-6">
                         Продажа успешно проведена. Инвентарь обновлен.
                       </p>
-                      <Button onClick={startNewSale} variant={isAdmin() ? "admin" : isSeller() ? "seller" : "manager"}>
+                      <Button onClick={startNewSale} variant={getButtonVariant()}>
                         Новая продажа
                       </Button>
                     </div>
@@ -430,7 +437,7 @@ const Sales = () => {
                             className="w-full"
                             onClick={completeSale}
                             disabled={cart.length === 0 || saleComplete}
-                            variant={isAdmin() ? "admin" : isSeller() ? "seller" : "manager"}
+                            variant={getButtonVariant()}
                           >
                             Завершить продажу
                           </Button>
