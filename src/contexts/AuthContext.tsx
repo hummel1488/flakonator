@@ -8,6 +8,7 @@ interface User {
   name: string;
   role: UserRole;
   locationId?: string; // For sellers who are assigned to a specific location
+  password?: string; // Only for internal use, not exposed to components
 }
 
 interface AuthContextType {
@@ -18,22 +19,40 @@ interface AuthContextType {
   isSeller: () => boolean;
   isManager: () => boolean;
   assignSellerLocation: (locationId: string) => void;
+  MOCK_USERS: User[]; // Expose users for admin management
+  addUser: (user: User) => void;
+  updateUser: (user: User) => void;
+  deleteUser: (userId: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demonstration purposes
-const MOCK_USERS = [
+// Initial mock users
+const INITIAL_MOCK_USERS: User[] = [
   { id: "1", name: "Администратор", role: "admin" as UserRole, password: "admin" },
   { id: "2", name: "Продавец", role: "seller" as UserRole, password: "seller" },
   { id: "3", name: "Управляющий", role: "manager" as UserRole, password: "manager" },
 ];
 
+const STORAGE_KEY = "authUsers";
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [MOCK_USERS, setMockUsers] = useState<User[]>(INITIAL_MOCK_USERS);
 
-  // Check for existing session on load
+  // Load saved users and current user on initial render
   useEffect(() => {
+    // Load saved users
+    const savedUsers = localStorage.getItem(STORAGE_KEY);
+    if (savedUsers) {
+      try {
+        setMockUsers(JSON.parse(savedUsers));
+      } catch (e) {
+        console.error("Failed to parse saved users:", e);
+      }
+    }
+
+    // Load current user
     const storedUser = localStorage.getItem("authUser");
     if (storedUser) {
       try {
@@ -45,13 +64,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  // Save users whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_USERS));
+  }, [MOCK_USERS]);
+
   const login = async (username: string, password: string): Promise<boolean> => {
-    // In a real app, this would be an API call
+    // Find user in our mock database
     const foundUser = MOCK_USERS.find(u => 
       u.name.toLowerCase() === username.toLowerCase() && u.password === password
     );
     
     if (foundUser) {
+      // Create a new object without the password for security
       const { password, ...userWithoutPassword } = foundUser;
       setUser(userWithoutPassword);
       localStorage.setItem("authUser", JSON.stringify(userWithoutPassword));
@@ -75,7 +100,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedUser = { ...user, locationId };
       setUser(updatedUser);
       localStorage.setItem("authUser", JSON.stringify(updatedUser));
+
+      // Also update in MOCK_USERS
+      const updatedUsers = MOCK_USERS.map(u => 
+        u.id === user.id ? { ...u, locationId } : u
+      );
+      setMockUsers(updatedUsers);
     }
+  };
+
+  const addUser = (newUser: User) => {
+    setMockUsers(prev => [...prev, newUser]);
+  };
+
+  const updateUser = (updatedUser: User) => {
+    const updatedUsers = MOCK_USERS.map(u => 
+      u.id === updatedUser.id ? updatedUser : u
+    );
+    setMockUsers(updatedUsers);
+
+    // Update current user if it's the same user
+    if (user && user.id === updatedUser.id) {
+      const { password, ...userWithoutPassword } = updatedUser;
+      setUser(userWithoutPassword);
+      localStorage.setItem("authUser", JSON.stringify(userWithoutPassword));
+    }
+  };
+
+  const deleteUser = (userId: string) => {
+    // Cannot delete current user
+    if (user && user.id === userId) {
+      return;
+    }
+    
+    const updatedUsers = MOCK_USERS.filter(u => u.id !== userId);
+    setMockUsers(updatedUsers);
   };
 
   return (
@@ -86,7 +145,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAdmin, 
       isSeller, 
       isManager,
-      assignSellerLocation 
+      assignSellerLocation,
+      MOCK_USERS,
+      addUser,
+      updateUser,
+      deleteUser
     }}>
       {children}
     </AuthContext.Provider>

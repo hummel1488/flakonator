@@ -10,6 +10,7 @@ import Statistics from "@/pages/Statistics";
 import Sales from "@/pages/Sales";
 import Inventory from "@/pages/Inventory";
 import Locations from "@/pages/Locations";
+import UserManagement from "@/pages/UserManagement";
 import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
 import Unauthorized from "@/pages/Unauthorized";
@@ -51,6 +52,12 @@ function App() {
           <Route path="/locations" element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Locations />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/users" element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <UserManagement />
             </ProtectedRoute>
           } />
           
