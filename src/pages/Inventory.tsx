@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2 } from "lucide-react";
@@ -81,6 +80,7 @@ const Inventory = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [importData, setImportData] = useState<string>("");
   const [importPreview, setImportPreview] = useState<any[]>([]);
+  const [fullImportData, setFullImportData] = useState<any[]>([]);
   const [manualLocationId, setManualLocationId] = useState<string>("");
 
   // Form states
@@ -262,37 +262,37 @@ const Inventory = () => {
       const sizeQuantityMap: Record<string, number> = {};
       for (let i = 0; i < headers.length; i++) {
         const header = headers[i].toLowerCase();
-        if (header.includes('5') && header.includes('мл') && header.includes('кол')) {
+        if (header.includes('5') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
           sizeQuantityMap['5'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('16') && header.includes('мл') && header.includes('кол')) {
+        } else if (header.includes('16') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
           sizeQuantityMap['16'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('20') && header.includes('мл') && header.includes('кол')) {
+        } else if (header.includes('20') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
           sizeQuantityMap['20'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('25') && header.includes('мл') && header.includes('кол')) {
+        } else if (header.includes('25') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
           sizeQuantityMap['25'] = i;
           hasQuantityInfo = true;
-        } else if (header.includes('30') && header.includes('мл') && header.includes('кол')) {
+        } else if (header.includes('30') && header.includes('мл') && (header.includes('кол') || header.includes('остаток'))) {
           sizeQuantityMap['30'] = i;
           hasQuantityInfo = true;
-        } else if ((header.includes('авто') || header.includes('диффузор')) && header.includes('кол')) {
+        } else if ((header.includes('авто') || header.includes('диффузор')) && (header.includes('кол') || header.includes('остаток'))) {
           sizeQuantityMap['car'] = i;
           hasQuantityInfo = true;
         }
       }
       
+      console.log("Size quantity map:", sizeQuantityMap);
+      
       if (!hasQuantityInfo) {
         throw new Error('Не удалось найти столбец с количеством товара');
       }
       
-      // Parse data lines - limit to only 10 products for preview
-      const preview = [];
-      // Only use a reasonable subset of lines for the preview
-      const previewLineLimit = Math.min(lines.length, 11);
+      // Parse all data lines for full import (not just preview)
+      const allProducts = [];
       
-      for (let i = 1; i < previewLineLimit; i++) {
+      for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue; // Skip empty lines
         
@@ -305,12 +305,14 @@ const Inventory = () => {
         
         // Handle case with size-specific quantity columns
         if (Object.keys(sizeQuantityMap).length > 0) {
+          // For each size in the map, check if there's a quantity in this row
           for (const [size, index] of Object.entries(sizeQuantityMap)) {
             if (!columns[index]) continue;
             
             const quantityText = columns[index].trim();
             if (!quantityText) continue;
             
+            // Extract digits from the quantity text
             const match = quantityText.match(/\d+/);
             const quantity = match ? parseInt(match[0], 10) : 0;
             if (quantity <= 0) continue;
@@ -333,7 +335,7 @@ const Inventory = () => {
             }
             
             // If no location found and manual location selected, use that
-            if (!locationId && manualLocationId) {
+            if (!locationId && manualLocationId && manualLocationId !== 'use-from-file') {
               locationId = manualLocationId;
               const location = locations.find(loc => loc.id === manualLocationId);
               locationName = location ? location.name : '';
@@ -347,7 +349,7 @@ const Inventory = () => {
               ? mapType(columns[typeIndex]) 
               : 'perfume';
             
-            preview.push({
+            allProducts.push({
               name,
               size,
               type,
@@ -356,7 +358,7 @@ const Inventory = () => {
               quantity
             });
           }
-        } else {
+        } else if (quantityIndex !== -1) {
           // Process as single product with one quantity
           const size = sizeIndex !== -1 && columns[sizeIndex] 
             ? mapSize(columns[sizeIndex]) 
@@ -382,7 +384,7 @@ const Inventory = () => {
             }
           }
           
-          if (!locationId && manualLocationId) {
+          if (!locationId && manualLocationId && manualLocationId !== 'use-from-file') {
             locationId = manualLocationId;
             const location = locations.find(loc => loc.id === manualLocationId);
             locationName = location ? location.name : '';
@@ -397,7 +399,7 @@ const Inventory = () => {
           }
           
           if (name && locationId && quantity > 0) {
-            preview.push({
+            allProducts.push({
               name,
               size,
               type,
@@ -409,9 +411,16 @@ const Inventory = () => {
         }
       }
       
-      setImportPreview(preview);
+      console.log(`Found ${allProducts.length} products to import`);
       
-      if (preview.length === 0) {
+      // For preview, just show first 10 items
+      setImportPreview(allProducts.slice(0, 10));
+      
+      // But store all products for actual import
+      if (allProducts.length > 0) {
+        // Store the full list separately for when user clicks import
+        setFullImportData(allProducts);
+      } else {
         throw new Error('Не удалось найти данные для импорта');
       }
       
@@ -423,9 +432,10 @@ const Inventory = () => {
         variant: "destructive",
       });
       setImportPreview([]);
+      setFullImportData([]);
     }
   };
-  
+
   // Map size values from text to valid values
   const mapSize = (size: string): string => {
     const normalizedSize = normalizeText(size);
@@ -465,7 +475,7 @@ const Inventory = () => {
   // Import all data
   const handleImportData = () => {
     try {
-      if (importData.trim() === '' && importPreview.length === 0) {
+      if (fullImportData.length === 0 && importPreview.length === 0) {
         toast({
           title: "Ошибка",
           description: "Нет данных для импорта",
@@ -474,200 +484,33 @@ const Inventory = () => {
         return;
       }
       
-      // If we have a preview, use that directly
-      if (importPreview.length > 0) {
-        // Process all data, not just the preview
-        let productsToImport = [...importPreview];
+      // Use fullImportData which contains all parsed products, not just the preview
+      const productsToImport = fullImportData.length > 0 ? fullImportData : importPreview;
         
-        // For files with more than the preview limit, parse the rest of the lines
-        if (importData.trim() !== '') {
-          const lines = importData.trim().split(/\r?\n/);
-          
-          // Skip processing if we only have a header line or a few lines already in the preview
-          if (lines.length > importPreview.length + 1) {
-            // Detect separator
-            let separator = ',';
-            if (lines[0].includes('\t')) {
-              separator = '\t';
-            } else if (lines[0].includes(';')) {
-              separator = ';';
-            }
-            
-            // Parse header line
-            const headers = lines[0].split(separator).map(h => h.trim());
-            
-            // Find column indices
-            const nameIndex = findColumnIndex(headers, NAME_VARIATIONS);
-            const sizeIndex = findColumnIndex(headers, SIZE_VARIATIONS);
-            const typeIndex = findColumnIndex(headers, TYPE_VARIATIONS);
-            const locationIndex = findColumnIndex(headers, LOCATION_VARIATIONS);
-            const quantityIndex = findColumnIndex(headers, QUANTITY_VARIATIONS);
-            
-            // Check for size-specific quantity columns
-            const sizeQuantityMap: Record<string, number> = {};
-            for (let i = 0; i < headers.length; i++) {
-              const header = headers[i].toLowerCase();
-              if (header.includes('5') && header.includes('мл') && header.includes('кол')) {
-                sizeQuantityMap['5'] = i;
-              } else if (header.includes('16') && header.includes('мл') && header.includes('кол')) {
-                sizeQuantityMap['16'] = i;
-              } else if (header.includes('20') && header.includes('мл') && header.includes('кол')) {
-                sizeQuantityMap['20'] = i;
-              } else if (header.includes('25') && header.includes('мл') && header.includes('кол')) {
-                sizeQuantityMap['25'] = i;
-              } else if (header.includes('30') && header.includes('мл') && header.includes('кол')) {
-                sizeQuantityMap['30'] = i;
-              } else if ((header.includes('авто') || header.includes('диффузор')) && header.includes('кол')) {
-                sizeQuantityMap['car'] = i;
-              }
-            }
-            
-            // Only proceed if we found the required columns
-            if (nameIndex !== -1) {
-              // Start from line after the preview lines we've already processed
-              // (typically line 11 if we already have 10 in preview)
-              for (let i = importPreview.length + 1; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (!line) continue; // Skip empty lines
-                
-                const columns = line.split(separator).map(item => item.trim());
-                
-                // Skip empty lines
-                if (columns.length <= 1 || !columns[nameIndex]?.trim()) continue;
-                
-                const name = columns[nameIndex]?.trim() || '';
-                
-                // Handle case with size-specific quantity columns
-                if (Object.keys(sizeQuantityMap).length > 0) {
-                  for (const [size, index] of Object.entries(sizeQuantityMap)) {
-                    if (!columns[index]) continue;
-                    
-                    const quantityText = columns[index].trim();
-                    if (!quantityText) continue;
-                    
-                    const match = quantityText.match(/\d+/);
-                    const quantity = match ? parseInt(match[0], 10) : 0;
-                    if (quantity <= 0) continue;
-                    
-                    let locationId = manualLocationId || '';
-                    let locationName = '';
-                    
-                    // Try to find location from columns if location index exists
-                    if (locationIndex !== -1 && columns[locationIndex]?.trim()) {
-                      const locationText = columns[locationIndex].trim();
-                      const location = locations.find(loc => 
-                        normalizeText(loc.name).includes(normalizeText(locationText)) || 
-                        normalizeText(locationText).includes(normalizeText(loc.name))
-                      );
-                      
-                      if (location) {
-                        locationId = location.id;
-                        locationName = location.name;
-                      }
-                    }
-                    
-                    // If no location found and manual location selected, use that
-                    if (!locationId && manualLocationId) {
-                      locationId = manualLocationId;
-                      const location = locations.find(loc => loc.id === manualLocationId);
-                      locationName = location ? location.name : '';
-                    }
-                    
-                    // Skip if we don't have a locationId
-                    if (!locationId) continue;
-                    
-                    // Get type (defaulting to perfume)
-                    const type = typeIndex !== -1 && columns[typeIndex] 
-                      ? mapType(columns[typeIndex]) 
-                      : 'perfume';
-                    
-                    productsToImport.push({
-                      name,
-                      size,
-                      type,
-                      locationId,
-                      locationName,
-                      quantity
-                    });
-                  }
-                } else if (quantityIndex !== -1) {
-                  // Process as single product with one quantity
-                  const size = sizeIndex !== -1 && columns[sizeIndex] 
-                    ? mapSize(columns[sizeIndex]) 
-                    : '5';
-                    
-                  const type = typeIndex !== -1 && columns[typeIndex] 
-                    ? mapType(columns[typeIndex]) 
-                    : 'perfume';
-                  
-                  let locationId = manualLocationId || '';
-                  let locationName = '';
-                  
-                  if (locationIndex !== -1 && columns[locationIndex]?.trim()) {
-                    const locationText = columns[locationIndex].trim();
-                    const location = locations.find(loc => 
-                      normalizeText(loc.name).includes(normalizeText(locationText)) || 
-                      normalizeText(locationText).includes(normalizeText(loc.name))
-                    );
-                    
-                    if (location) {
-                      locationId = location.id;
-                      locationName = location.name;
-                    }
-                  }
-                  
-                  if (!locationId && manualLocationId) {
-                    locationId = manualLocationId;
-                    const location = locations.find(loc => loc.id === manualLocationId);
-                    locationName = location ? location.name : '';
-                  }
-                  
-                  // Parse quantity
-                  let quantity = 0;
-                  if (quantityIndex !== -1) {
-                    const quantityText = columns[quantityIndex];
-                    const match = quantityText.match(/\d+/);
-                    quantity = match ? parseInt(match[0], 10) : 0;
-                  }
-                  
-                  if (name && locationId && quantity > 0) {
-                    productsToImport.push({
-                      name,
-                      size,
-                      type,
-                      locationId,
-                      locationName,
-                      quantity
-                    });
-                  }
-                }
-              }
-            }
-          }
-        }
-        
-        // Filter out invalid products and prepare for import
-        const validProducts = productsToImport.filter(
-          product => product.name && product.locationId && product.quantity > 0
-        );
-        
-        // Import all products
-        const importedCount = importProducts(
-          validProducts.map(({ locationName, ...product }) => product)
-        );
-        
-        toast({
-          title: "Импорт завершен",
-          description: `Успешно импортировано ${importedCount} товаров`,
-        });
-        
-        setShowImportDialog(false);
-        setImportData("");
-        setImportPreview([]);
-        setManualLocationId("");
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+      // Filter out invalid products and prepare for import
+      const validProducts = productsToImport.filter(
+        product => product.name && product.locationId && product.quantity > 0
+      );
+      
+      console.log(`Importing ${validProducts.length} products...`);
+      
+      // Import all products
+      const importedCount = importProducts(
+        validProducts.map(({ locationName, ...product }) => product)
+      );
+      
+      toast({
+        title: "Импорт завершен",
+        description: `Успешно импортировано ${importedCount} товаров`,
+      });
+      
+      setShowImportDialog(false);
+      setImportData("");
+      setImportPreview([]);
+      setFullImportData([]);
+      setManualLocationId("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     } catch (error) {
       console.error("Error during import:", error);
@@ -1034,248 +877,3 @@ const Inventory = () => {
                 <Select 
                   value={formData.type} 
                   onValueChange={(value) => handleSelectChange("type", value)}
-                >
-                  <SelectTrigger id="type">
-                    <SelectValue placeholder="Выберите тип" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="perfume">Парфюм</SelectItem>
-                    <SelectItem value="other">Другое</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid grid-cols-1 gap-2">
-                <Label htmlFor="location">Точка продажи</Label>
-                <Select 
-                  value={formData.location} 
-                  onValueChange={(value) => handleSelectChange("location", value)}
-                >
-                  <SelectTrigger id="location">
-                    <SelectValue placeholder="Выберите точку" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.length === 0 ? (
-                      <SelectItem value="no-locations" disabled>
-                        Нет доступных точек
-                      </SelectItem>
-                    ) : (
-                      locations.map((location) => (
-                        <SelectItem key={location.id} value={location.id}>
-                          {location.name}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                <Label htmlFor="quantity">Количество</Label>
-                <Input
-                  id="quantity"
-                  name="quantity"
-                  type="number"
-                  min="1"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
-              Отмена
-            </Button>
-            <Button 
-              onClick={handleAddProduct} 
-              variant={isAdmin() ? "admin" : "manager"}
-            >
-              Добавить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Update product dialog */}
-      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle>Изменить количество</DialogTitle>
-            <DialogDescription>
-              Укажите новое количество товара
-            </DialogDescription>
-          </DialogHeader>
-          {selectedProduct && (
-            <div className="grid gap-4 py-4">
-              <div className="flex flex-col gap-1">
-                <p className="font-medium">{selectedProduct.name}</p>
-                <p className="text-sm text-gray-500">
-                  {getSizeLabel(selectedProduct.size)} • {getLocationName(selectedProduct.locationId)}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 gap-2">
-                <Label htmlFor="update-quantity">Новое количество</Label>
-                <Input
-                  id="update-quantity"
-                  type="number"
-                  min="0"
-                  value={updateFormData.quantity}
-                  onChange={handleUpdateInputChange}
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
-              Отмена
-            </Button>
-            <Button 
-              onClick={handleUpdateProduct} 
-              variant={isAdmin() ? "admin" : "manager"}
-            >
-              Сохранить
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete all products dialog - only for admin */}
-      {isAdmin() && (
-        <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Удаление всех ароматов</AlertDialogTitle>
-              <AlertDialogDescription>
-                Вы уверены, что хотите удалить все ароматы из инвентаря? Это действие нельзя отменить.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Отмена</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDeleteAllProducts}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                Удалить все
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-
-      {/* Import data dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Импорт инвентаря</DialogTitle>
-            <DialogDescription>
-              Загрузите файл с данными или укажите точку продажи для импорта
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="flex flex-col gap-3">
-              <div>
-                <Label htmlFor="manual-location" className="mb-2 block">Точка продажи для всех товаров</Label>
-                <Select 
-                  value={manualLocationId} 
-                  onValueChange={setManualLocationId}
-                >
-                  <SelectTrigger id="manual-location">
-                    <SelectValue placeholder="Выберите точку" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="use-from-file">Использовать из файла</SelectItem>
-                    {locations.map((location) => (
-                      <SelectItem key={location.id} value={location.id}>
-                        {location.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-gray-500 mt-1">
-                  Если в файле нет информации о точке продажи, выберите её здесь
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-4 mt-4">
-                <div className="flex-1">
-                  <Label htmlFor="file-upload">Загрузить файл (CSV, TSV, Excel)</Label>
-                  <Input
-                    id="file-upload"
-                    type="file"
-                    accept=".csv,.tsv,.txt,.xls,.xlsx"
-                    ref={fileInputRef}
-                    onChange={handleFileUpload}
-                    className="mt-1"
-                  />
-                </div>
-              </div>
-              
-              <div className="text-sm text-gray-500 mt-2">
-                <p className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Требуемый формат файла должен содержать столбцы:
-                </p>
-                <ul className="list-disc list-inside ml-4 mt-1">
-                  <li>Название товара (обязательно)</li>
-                  <li>Количество (обязательно)</li>
-                  <li>Опционально: Точка продажи (или выберите выше)</li>
-                  <li>Опционально: Объем (5, 16, 20, 25, 30 мл или Автофлакон)</li>
-                  <li>Опционально: Тип (Парфюм или Другое)</li>
-                </ul>
-              </div>
-            </div>
-
-            {importPreview.length > 0 && (
-              <div className="border rounded-md overflow-hidden">
-                <div className="font-medium p-3 bg-gray-50 border-b">
-                  Предпросмотр (первые {importPreview.length} товаров):
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Название</TableHead>
-                        <TableHead>Объем</TableHead>
-                        <TableHead>Тип</TableHead>
-                        <TableHead>Точка</TableHead>
-                        <TableHead className="text-right">Количество</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {importPreview.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell>{getSizeLabel(item.size)}</TableCell>
-                          <TableCell>
-                            {item.type === "perfume" ? "Парфюм" : "Другое"}
-                          </TableCell>
-                          <TableCell>{item.locationName}</TableCell>
-                          <TableCell className="text-right">{item.quantity}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImportDialog(false)}>
-              Отмена
-            </Button>
-            <Button 
-              onClick={handleImportData} 
-              variant={isAdmin() ? "admin" : "manager"}
-              disabled={importPreview.length === 0}
-            >
-              Импортировать
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default Inventory;
