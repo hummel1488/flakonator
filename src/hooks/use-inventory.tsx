@@ -79,8 +79,18 @@ export const useInventory = () => {
       // Create full product with ID
       const product: Product = {
         ...productData,
-        id: Date.now().toString() + Math.random().toString(36).substring(2, 9)
+        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
+        // Ensure quantity is treated as a number
+        quantity: typeof productData.quantity === 'string' 
+          ? parseInt(productData.quantity, 10) || 0 
+          : (productData.quantity || 0)
       };
+      
+      // Ensure quantity is a valid number greater than 0
+      if (isNaN(product.quantity) || product.quantity <= 0) {
+        console.log("Invalid quantity for product:", product.name, "quantity:", product.quantity);
+        return;
+      }
       
       console.log("Processing product:", product.name, "size:", product.size, "quantity:", product.quantity);
       
