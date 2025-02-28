@@ -131,13 +131,14 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-semibold">Обзор бизнеса</h2>
-          <p className="text-muted-foreground">Анализ данных и статистика</p>
-        </div>
-        <div className="flex gap-2">
-          {isAdmin() && (
+      {/* Business Overview Section - Only visible for admin */}
+      {isAdmin() && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Обзор бизнеса</h2>
+            <p className="text-muted-foreground">Анализ данных и статистика</p>
+          </div>
+          <div className="flex gap-2">
             <Button 
               variant="admin" 
               onClick={() => navigate("/statistics")}
@@ -146,10 +147,32 @@ export const Dashboard = () => {
               <TrendingUp className="h-4 w-4" />
               Полная статистика
             </Button>
-          )}
-          {(isAdmin() || isManager()) && (
             <Button 
-              variant={isAdmin() ? "outline" : "manager"} 
+              variant="outline" 
+              onClick={() => navigate("/inventory")}
+              className="gap-2"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Управление инвентарем
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate("/sales")}
+              className="gap-2"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Продажи
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Non-admin action buttons */}
+      {!isAdmin() && (
+        <div className="flex gap-2 mb-6">
+          {isManager() && (
+            <Button 
+              variant="manager" 
               onClick={() => navigate("/inventory")}
               className="gap-2"
             >
@@ -157,9 +180,9 @@ export const Dashboard = () => {
               Управление инвентарем
             </Button>
           )}
-          {(isAdmin() || isSeller()) && (
+          {isSeller() && (
             <Button 
-              variant={isAdmin() ? "outline" : "seller"} 
+              variant="seller" 
               onClick={() => navigate("/sales")}
               className="gap-2"
             >
@@ -168,7 +191,7 @@ export const Dashboard = () => {
             </Button>
           )}
         </div>
-      </div>
+      )}
 
       {/* Inventory Statistics - Only visible for admin */}
       {isAdmin() && (

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ShoppingBag, Search, Plus, Minus, Trash2 } from "lucide-react";
@@ -36,7 +37,7 @@ const Sales = () => {
   const { inventory, updateProductQuantity } = useInventory();
   const { locations } = useLocations();
   const { addSale } = useSales();
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isSeller } = useAuth();
   
   const [selectedLocation, setSelectedLocation] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -318,7 +319,7 @@ const Sales = () => {
                               <Button
                                 size="sm"
                                 onClick={() => addToCart(product)}
-                                variant={isAdmin() ? "admin" : "seller"}
+                                variant={isAdmin() ? "admin" : isSeller() ? "seller" : "manager"}
                               >
                                 <Plus className="h-4 w-4" />
                               </Button>
@@ -338,7 +339,7 @@ const Sales = () => {
                       <p className="text-gray-500 mb-6">
                         Продажа успешно проведена. Инвентарь обновлен.
                       </p>
-                      <Button onClick={startNewSale} variant={isAdmin() ? "admin" : "seller"}>
+                      <Button onClick={startNewSale} variant={isAdmin() ? "admin" : isSeller() ? "seller" : "manager"}>
                         Новая продажа
                       </Button>
                     </div>
@@ -429,7 +430,7 @@ const Sales = () => {
                             className="w-full"
                             onClick={completeSale}
                             disabled={cart.length === 0 || saleComplete}
-                            variant={isAdmin() ? "admin" : "seller"}
+                            variant={isAdmin() ? "admin" : isSeller() ? "seller" : "manager"}
                           >
                             Завершить продажу
                           </Button>
