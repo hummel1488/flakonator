@@ -1,10 +1,10 @@
 
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import { format, subDays, isWithinInterval, isAfter, formatDistance } from "date-fns";
+import { format, subDays, isAfter, formatDistance } from "date-fns";
 import { ru } from "date-fns/locale";
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, LineChart, Line
 } from "recharts";
 import { ArrowLeft, Calendar, TrendingUp, Store, ArrowUpRight } from "lucide-react";
@@ -223,333 +223,337 @@ const Statistics = () => {
             <TabsTrigger value="overview">Обзор</TabsTrigger>
             <TabsTrigger value="details">Детали</TabsTrigger>
           </TabsList>
-        </Tabs>
 
-        <TabsContent value="overview" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Общая выручка
-                  </CardTitle>
-                  <TrendingUp className="h-4 w-4 text-gray-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    За период: {dateRange === "7days" ? "7 дней" : dateRange === "30days" ? "30 дней" : dateRange === "90days" ? "90 дней" : "всё время"}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Количество продаж
-                  </CardTitle>
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{totalSales}</div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Средний чек: {formatCurrency(averageSale)}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Лидер продаж
-                  </CardTitle>
-                  <Store className="h-4 w-4 text-gray-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {salesByLocation.length > 0 ? salesByLocation[0].name : "Нет данных"}
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {salesByLocation.length > 0 
-                      ? `Выручка: ${formatCurrency(salesByLocation[0].value)}`
-                      : "Нет данных о продажах"
-                    }
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
+          <TabsContent value="overview" className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Общая выручка
+                    </CardTitle>
+                    <TrendingUp className="h-4 w-4 text-gray-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{formatCurrency(totalRevenue)}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      За период: {dateRange === "7days" ? "7 дней" : dateRange === "30days" ? "30 дней" : dateRange === "90days" ? "90 дней" : "всё время"}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Количество продаж
+                    </CardTitle>
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{totalSales}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Средний чек: {formatCurrency(averageSale)}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Лидер продаж
+                    </CardTitle>
+                    <Store className="h-4 w-4 text-gray-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {salesByLocation.length > 0 ? salesByLocation[0].name : "Нет данных"}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {salesByLocation.length > 0 
+                        ? `Выручка: ${formatCurrency(salesByLocation[0].value)}`
+                        : "Нет данных о продажах"
+                      }
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="row-span-2"
-            >
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>Продажи по времени</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    {salesOverTime.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={salesOverTime}
-                          margin={{
-                            top: 5,
-                            right: 30,
-                            left: 20,
-                            bottom: 5,
-                          }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-                          <XAxis 
-                            dataKey="displayDate" 
-                            tickLine={false}
-                            axisLine={false}
-                            tick={{ fontSize: 12 }}
-                          />
-                          <YAxis 
-                            tickFormatter={(value) => value.toLocaleString()}
-                            tick={{ fontSize: 12 }}
-                            tickLine={false}
-                            axisLine={false}
-                          />
-                          <Tooltip 
-                            formatter={(value) => [formatCurrency(value as number), "Выручка"]}
-                            labelFormatter={(label) => `Дата: ${label}`}
-                          />
-                          <Line 
-                            type="monotone" 
-                            dataKey="value" 
-                            stroke="#3f51b5" 
-                            activeDot={{ r: 8 }} 
-                            strokeWidth={2}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-gray-500">
-                        Нет данных за выбранный период
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Продажи по точкам</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    {salesByLocation.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={salesByLocation}
-                          margin={{
-                            top: 5,
-                            right: 30,
-                            left: 20,
-                            bottom: 30,
-                          }}
-                          layout="vertical"
-                        >
-                          <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
-                          <XAxis 
-                            type="number" 
-                            tickFormatter={(value) => value.toLocaleString()}
-                            tick={{ fontSize: 12 }}
-                            tickLine={false}
-                            axisLine={false}
-                          />
-                          <YAxis 
-                            dataKey="name" 
-                            type="category" 
-                            tickLine={false}
-                            axisLine={false}
-                            width={120}
-                            tick={{ fontSize: 12 }}
-                          />
-                          <Tooltip 
-                            formatter={(value) => [formatCurrency(value as number), "Выручка"]}
-                            labelFormatter={(label) => `Точка: ${label}`}
-                          />
-                          <Bar dataKey="value" fill="#3f51b5" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-gray-500">
-                        Нет данных за выбранный период
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Продажи по типам</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    {salesByProductType.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={salesByProductType}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={90}
-                            fill="#8884d8"
-                            dataKey="value"
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {salesByProductType.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value) => [formatCurrency(value as number), "Выручка"]}
-                            labelFormatter={(label, payload) => {
-                              return payload && payload.length > 0 ? `Тип: ${payload[0].name}` : label;
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="row-span-2"
+              >
+                <Card className="h-full">
+                  <CardHeader>
+                    <CardTitle>Продажи по времени</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {salesOverTime.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={salesOverTime}
+                            margin={{
+                              top: 5,
+                              right: 30,
+                              left: 20,
+                              bottom: 5,
                             }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-gray-500">
-                        Нет данных за выбранный период
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="details" className="mt-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Топ продуктов</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {topProducts.length > 0 ? (
-                    <div className="space-y-4">
-                      {topProducts.map((product, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex items-start gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <p className="font-medium">{product.name}</p>
-                              <p className="text-sm text-gray-500">
-                                Продано: {product.quantity} шт.
-                              </p>
-                            </div>
-                          </div>
-                          <div className="font-medium">
-                            {formatCurrency(product.revenue)}
-                          </div>
+                          >
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
+                            <XAxis 
+                              dataKey="displayDate" 
+                              tickLine={false}
+                              axisLine={false}
+                              tick={{ fontSize: 12 }}
+                            />
+                            <YAxis 
+                              tickFormatter={(value) => value.toLocaleString()}
+                              tick={{ fontSize: 12 }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <RechartsTooltip 
+                              formatter={(value) => [formatCurrency(value as number), "Выручка"]}
+                              labelFormatter={(label) => `Дата: ${label}`}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="#3f51b5" 
+                              activeDot={{ r: 8 }} 
+                              strokeWidth={2}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-gray-500">
+                          Нет данных за выбранный период
                         </div>
-                      ))}
+                      )}
                     </div>
-                  ) : (
-                    <div className="py-8 text-center text-gray-500">
-                      Нет данных за выбранный период
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                key="locations-chart"
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Продажи по точкам</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {salesByLocation.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={salesByLocation}
+                            margin={{
+                              top: 5,
+                              right: 30,
+                              left: 20,
+                              bottom: 30,
+                            }}
+                            layout="vertical"
+                          >
+                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} opacity={0.3} />
+                            <XAxis 
+                              type="number" 
+                              tickFormatter={(value) => value.toLocaleString()}
+                              tick={{ fontSize: 12 }}
+                              tickLine={false}
+                              axisLine={false}
+                            />
+                            <YAxis 
+                              dataKey="name" 
+                              type="category" 
+                              tickLine={false}
+                              axisLine={false}
+                              width={120}
+                              tick={{ fontSize: 12 }}
+                            />
+                            <RechartsTooltip 
+                              formatter={(value) => [formatCurrency(value as number), "Выручка"]}
+                              labelFormatter={(label) => `Точка: ${label}`}
+                            />
+                            <Bar dataKey="value" fill="#3f51b5" radius={[0, 4, 4, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-gray-500">
+                          Нет данных за выбранный период
+                        </div>
+                      )}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle>Последние продажи</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {latestSales.length > 0 ? (
-                    <div className="space-y-4">
-                      {latestSales.map((sale) => {
-                        const location = locations.find(loc => loc.id === sale.locationId);
-                        return (
-                          <div key={sale.id} className="flex items-start justify-between">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="rounded-sm">
-                                  {format(new Date(sale.date), "dd.MM.yyyy")}
-                                </Badge>
-                                <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-sm">
-                                  {location?.name || "Неизвестно"}
-                                </Badge>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                key="product-types-chart"
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Продажи по типам</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-[300px]">
+                      {salesByProductType.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={salesByProductType}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              outerRadius={90}
+                              fill="#8884d8"
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            >
+                              {salesByProductType.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <RechartsTooltip 
+                              formatter={(value) => [formatCurrency(value as number), "Выручка"]}
+                              labelFormatter={(label, payload) => {
+                                return payload && payload.length > 0 ? `Тип: ${payload[0].name}` : label;
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="h-full flex items-center justify-center text-gray-500">
+                          Нет данных за выбранный период
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="details" className="mt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                key="top-products"
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Топ продуктов</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {topProducts.length > 0 ? (
+                      <div className="space-y-4">
+                        {topProducts.map((product, index) => (
+                          <div key={`product-${index}`} className="flex items-center justify-between">
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
+                                {index + 1}
                               </div>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {sale.items.length} {sale.items.length === 1 ? "товар" : 
-                                  sale.items.length < 5 ? "товара" : "товаров"}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {formatDistance(new Date(sale.date), new Date(), { 
-                                  addSuffix: true,
-                                  locale: ru
-                                })}
-                              </p>
+                              <div>
+                                <p className="font-medium">{product.name}</p>
+                                <p className="text-sm text-gray-500">
+                                  Продано: {product.quantity} шт.
+                                </p>
+                              </div>
                             </div>
                             <div className="font-medium">
-                              {formatCurrency(sale.total)}
+                              {formatCurrency(product.revenue)}
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center text-gray-500">
-                      Нет данных за выбранный период
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </TabsContent>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-gray-500">
+                        Нет данных за выбранный период
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                key="latest-sales"
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Последние продажи</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {latestSales.length > 0 ? (
+                      <div className="space-y-4">
+                        {latestSales.map((sale) => {
+                          const location = locations.find(loc => loc.id === sale.locationId);
+                          return (
+                            <div key={`sale-${sale.id}`} className="flex items-start justify-between">
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="rounded-sm">
+                                    {format(new Date(sale.date), "dd.MM.yyyy")}
+                                  </Badge>
+                                  <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 rounded-sm">
+                                    {location?.name || "Неизвестно"}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {sale.items.length} {sale.items.length === 1 ? "товар" : 
+                                    sale.items.length < 5 ? "товара" : "товаров"}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {formatDistance(new Date(sale.date), new Date(), { 
+                                    addSuffix: true,
+                                    locale: ru
+                                  })}
+                                </p>
+                              </div>
+                              <div className="font-medium">
+                                {formatCurrency(sale.total)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-gray-500">
+                        Нет данных за выбранный период
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
