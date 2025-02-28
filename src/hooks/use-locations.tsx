@@ -29,6 +29,7 @@ const DEFAULT_LOCATIONS: Location[] = [
 export const useLocations = () => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   // Загрузка точек продаж из localStorage при первом рендере
   useEffect(() => {
@@ -45,27 +46,30 @@ export const useLocations = () => {
           // Если массив пустой или не массив, используем значения по умолчанию
           console.log("Данные из localStorage пусты или недействительны, используем значения по умолчанию");
           setLocations(DEFAULT_LOCATIONS);
-          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+          // НЕ записываем значения по умолчанию в localStorage здесь, 
+          // чтобы не перезаписать случайно существующие данные пользователя
         }
       } else {
         // Если в localStorage нет данных, используем значения по умолчанию
         console.log("В localStorage нет данных, используем значения по умолчанию");
         setLocations(DEFAULT_LOCATIONS);
+        // Сохраняем значения по умолчанию только если действительно нет данных
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
       }
     } catch (error) {
       console.error("Ошибка при загрузке точек продаж:", error);
-      // В случае ошибки, используем значения по умолчанию
+      // В случае ошибки, используем значения по умолчанию но не сохраняем их
       setLocations(DEFAULT_LOCATIONS);
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   }, []);
 
   // Сохранение точек продаж в localStorage при их изменении
   useEffect(() => {
-    if (!loading) {
+    // Сохраняем только если компонент инициализирован и не в состоянии загрузки
+    if (!loading && initialized) {
       try {
         console.log("Сохранение точек продаж:", locations);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(locations));
@@ -73,7 +77,7 @@ export const useLocations = () => {
         console.error("Ошибка при сохранении точек продаж:", error);
       }
     }
-  }, [locations, loading]);
+  }, [locations, loading, initialized]);
 
   // Добавление новой точки
   const addLocation = (location: Location) => {
