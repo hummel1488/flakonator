@@ -47,13 +47,20 @@ const Sales = () => {
   const { inventory, updateProductQuantity } = useInventory();
   const { locations } = useLocations();
   const { recordSale } = useSales();
-  const { isAdmin, isManager, isSeller } = useAuth();
+  const { isAdmin, isManager, isSeller, user } = useAuth();
   
   const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [saleComplete, setSaleComplete] = useState(false);
   
+  // Set the default location to the user's assigned location if they are a seller
+  useEffect(() => {
+    if (user?.role === "seller" && user?.locationId) {
+      setSelectedLocation(user.locationId);
+    }
+  }, [user]);
+
   // Reset selection if location is deleted
   useEffect(() => {
     if (selectedLocation && !locations.some(loc => loc.id === selectedLocation)) {
@@ -210,6 +217,15 @@ const Sales = () => {
     return "seller";
   };
 
+  // Проверка, может ли пользователь выбирать локацию
+  const canSelectLocation = isAdmin() || isManager() || (isSeller() && !user?.locationId);
+  
+  // Получаем название локации для отображения
+  const getLocationName = (locationId: string) => {
+    const location = locations.find(loc => loc.id === locationId);
+    return location ? location.name : "Неизвестная точка";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Navigation />
@@ -244,7 +260,9 @@ const Sales = () => {
                   <CardHeader>
                     <CardTitle>Выбрать товары</CardTitle>
                     <CardDescription>
-                      Выберите точку продажи и добавьте товары
+                      {user?.role === "seller" && user?.locationId 
+                        ? `Вы можете продавать только товары из точки: ${getLocationName(user.locationId)}`
+                        : "Выберите точку продажи и добавьте товары"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -255,6 +273,7 @@ const Sales = () => {
                           <Select
                             value={selectedLocation}
                             onValueChange={setSelectedLocation}
+                            disabled={user?.role === "seller" && !!user?.locationId}
                           >
                             <SelectTrigger id="location">
                               <SelectValue placeholder="Выберите точку" />
@@ -265,11 +284,15 @@ const Sales = () => {
                                   Нет доступных точек
                                 </SelectItem>
                               ) : (
-                                locations.map((location) => (
-                                  <SelectItem key={location.id} value={location.id}>
-                                    {location.name}
-                                  </SelectItem>
-                                ))
+                                locations
+                                  .filter(location => 
+                                    canSelectLocation || (user?.locationId === location.id)
+                                  )
+                                  .map((location) => (
+                                    <SelectItem key={location.id} value={location.id}>
+                                      {location.name}
+                                    </SelectItem>
+                                  ))
                               )}
                             </SelectContent>
                           </Select>
