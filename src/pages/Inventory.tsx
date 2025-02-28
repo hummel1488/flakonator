@@ -761,16 +761,19 @@ const Inventory = () => {
                 <Database className="h-4 w-4" />
                 {showStats ? "Скрыть статистику" : "Показать статистику"}
               </Button>
+              {/* Only show Delete All button for admin */}
+              {isAdmin() && (
+                <Button
+                  onClick={() => setShowDeleteAllDialog(true)}
+                  variant="destructive"
+                  className="gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Удалить все
+                </Button>
+              )}
               {(isAdmin() || isManager()) && (
                 <>
-                  <Button
-                    onClick={() => setShowDeleteAllDialog(true)}
-                    variant="destructive"
-                    className="gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Удалить все
-                  </Button>
                   <Button
                     onClick={() => setShowImportDialog(true)}
                     variant="outline"
@@ -1130,26 +1133,28 @@ const Inventory = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete all products dialog */}
-      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Удаление всех ароматов</AlertDialogTitle>
-            <AlertDialogDescription>
-              Вы уверены, что хотите удалить все ароматы из инвентаря? Это действие нельзя отменить.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteAllProducts}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Удалить все
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete all products dialog - only for admin */}
+      {isAdmin() && (
+        <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Удаление всех ароматов</AlertDialogTitle>
+              <AlertDialogDescription>
+                Вы уверены, что хотите удалить все ароматы из инвентаря? Это действие нельзя отменить.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Отмена</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteAllProducts}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Удалить все
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       {/* Import data dialog */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
