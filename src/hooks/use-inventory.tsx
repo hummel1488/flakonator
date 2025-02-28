@@ -364,32 +364,39 @@ export const useInventory = () => {
       
       console.log("Using separator:", separator);
       
-      // Получаем заголовки и пытаемся найти важные колонки
+      // Получаем заголовки и выводим их для отладки
       const headers = lines[0].split(separator).map(h => h.trim());
       console.log("Headers detected:", headers);
       
-      // Ищем индексы нужных колонок
-      const nameIndex = findColumnIndex(headers, [
-        'название', 'наименование', 'товар', 'продукт', 'name', 'product', 'title', 'item'
-      ]);
+      // Ищем нужные колонки по точным названиям (в соответствии с требованиями)
+      const nameColumnIndex = headers.findIndex(h => 
+        h.toLowerCase() === 'название' || 
+        h.toLowerCase() === 'name'
+      );
       
-      const sizeIndex = findColumnIndex(headers, [
-        'объем', 'размер', 'size', 'volume', 'capacity'
-      ]);
+      const sizeColumnIndex = headers.findIndex(h => 
+        h.toLowerCase() === 'размер' || 
+        h.toLowerCase() === 'size'
+      );
       
-      const quantityIndex = findColumnIndex(headers, [
-        'количество', 'остаток', 'кол-во', 'колво', 'число', 'штук', 'quantity', 'amount', 'count', 'qty', 'pcs'
-      ]);
+      const quantityColumnIndex = headers.findIndex(h => 
+        h.toLowerCase() === 'остаток' || 
+        h.toLowerCase() === 'quantity'
+      );
       
-      console.log("Column indices:", { nameIndex, quantityIndex, sizeIndex });
+      console.log("Identified column indices:", { 
+        nameColumnIndex, 
+        sizeColumnIndex, 
+        quantityColumnIndex 
+      });
       
-      // Проверяем, нашли ли мы необходимые колонки
+      // Проверяем наличие всех необходимых колонок
       const logs: ImportLogItem[] = [];
       
-      if (nameIndex === -1) {
+      if (nameColumnIndex === -1) {
         logs.push({
           type: 'error',
-          message: 'Не удалось найти колонку с названием товара'
+          message: 'В файле нет колонки "Название"'
         });
         return {
           importedCount: 0,
@@ -401,17 +408,10 @@ export const useInventory = () => {
         };
       }
       
-      if (sizeIndex === -1) {
-        logs.push({
-          type: 'warning',
-          message: 'Не удалось найти колонку с объемом, будет использоваться значение по умолчанию (5 мл)'
-        });
-      }
-      
-      if (quantityIndex === -1) {
+      if (sizeColumnIndex === -1) {
         logs.push({
           type: 'error',
-          message: 'Не удалось найти колонку с количеством товара'
+          message: 'В файле нет колонки "Размер"'
         });
         return {
           importedCount: 0,
@@ -423,7 +423,22 @@ export const useInventory = () => {
         };
       }
       
-      // Парсим каждую строку
+      if (quantityColumnIndex === -1) {
+        logs.push({
+          type: 'error',
+          message: 'В файле нет колонки "Остаток"'
+        });
+        return {
+          importedCount: 0,
+          skippedCount: 0,
+          newItemsCount: 0,
+          updatedItemsCount: 0,
+          zeroedItemsCount: 0,
+          logs
+        };
+      }
+      
+      // Парсим каждую строку данных
       const products: Omit<Product, "id">[] = [];
       
       for (let i = 1; i < lines.length; i++) {
@@ -432,8 +447,8 @@ export const useInventory = () => {
         
         const columns = line.split(separator).map(col => col.trim());
         
-        // Пропускаем строки, у которых недостаточно колонок
-        if (columns.length <= Math.max(nameIndex, quantityIndex, sizeIndex !== -1 ? sizeIndex : 0)) {
+        // Проверяем, что в строке достаточно колонок
+        if (columns.length <= Math.max(nameColumnIndex, sizeColumnIndex, quantityColumnIndex)) {
           logs.push({
             type: 'warning',
             message: `Пропущена строка ${i+1}: недостаточно колонок`
@@ -441,7 +456,14 @@ export const useInventory = () => {
           continue;
         }
         
-        const name = columns[nameIndex];
+        // Получаем значения из соответствующих колонок
+        const name = columns[nameColumnIndex];
+        const sizeRaw = columns[sizeColumnIndex];
+        const quantityRaw = columns[quantityColumnIndex];
+        
+        console.log(`Row ${i+1} data:`, { name, sizeRaw, quantityRaw });
+        
+        // Проверяем название
         if (!name) {
           logs.push({
             type: 'warning',
@@ -450,29 +472,40 @@ export const useInventory = () => {
           continue;
         }
         
-        // Определяем размер
-        let size = '5 мл'; // Размер по умолчанию (обновлен в соответствии с требованиями)
-        if (sizeIndex !== -1 && columns[sizeIndex]) {
-          const normalizedSize = normalizeSize(columns[sizeIndex]);
-          if (normalizedSize) {
-            size = normalizedSize;
-          } else {
-            logs.push({
-              type: 'warning',
-              message: `Пропущена строка ${i+1}: неподдерживаемый размер "${columns[sizeIndex]}"`
-            });
-            continue;
-          }
+        // Нормализуем размер
+        if (!sizeRaw) {
+          logs.push({
+            type: 'warning',
+            message: `Пропущена строка ${i+1}: отсутствует размер товара`
+          });
+          continue;
+        }
+        
+        const normalizedSize = normalizeSize(sizeRaw);
+        if (!normalizedSize) {
+          logs.push({
+            type: 'warning',
+            message: `Пропущена строка ${i+1}: неподдерживаемый размер "${sizeRaw}"`
+          });
+          continue;
         }
         
         // Парсим количество
-        const quantityText = columns[quantityIndex].replace(/[^\d.,]/g, '').replace(',', '.');
+        if (!quantityRaw) {
+          logs.push({
+            type: 'warning',
+            message: `Пропущена строка ${i+1}: отсутствует количество товара`
+          });
+          continue;
+        }
+        
+        const quantityText = quantityRaw.replace(/[^\d.,]/g, '').replace(',', '.');
         const quantity = parseFloat(quantityText);
         
         if (isNaN(quantity) || quantity <= 0) {
           logs.push({
             type: 'warning',
-            message: `Пропущена строка ${i+1}: некорректное количество "${columns[quantityIndex]}"`
+            message: `Пропущена строка ${i+1}: некорректное количество "${quantityRaw}"`
           });
           continue;
         }
@@ -480,14 +513,14 @@ export const useInventory = () => {
         // Добавляем продукт в список для импорта
         products.push({
           name,
-          size,
+          size: normalizedSize,
           type: 'perfume', // Тип по умолчанию
           locationId,
           quantity
         });
       }
       
-      console.log(`Found ${products.length} products to import`);
+      console.log(`Found ${products.length} valid products to import`);
       
       if (products.length === 0) {
         logs.push({
@@ -528,26 +561,6 @@ export const useInventory = () => {
         }]
       };
     }
-  };
-
-  // Находит наиболее вероятный индекс колонки на основе вариаций заголовка
-  const findColumnIndex = (headers: string[], variations: string[]): number => {
-    for (const header of headers) {
-      const normalizedHeader = normalizeText(header);
-      for (const variation of variations) {
-        if (normalizedHeader.includes(normalizeText(variation))) {
-          return headers.indexOf(header);
-        }
-      }
-    }
-    return -1;
-  };
-
-  // Нормализует текст для лучшего сопоставления
-  const normalizeText = (text: string): string => {
-    return text.toLowerCase()
-      .replace(/\s+/g, '')
-      .replace(/[^\w\s]/gi, '');
   };
 
   // Update a product's quantity
