@@ -342,10 +342,14 @@ export const Dashboard = () => {
       .slice(0, 3); // Take top 3
   }, [filteredSales, locations, sales, periodRanges]);
 
-  // Items with low stock
+  // Items with low stock - фильтруем по выбранной локации
   const lowStockItems = useMemo(() => {
-    return inventory.filter(item => item.quantity < 3);
-  }, [inventory]);
+    if (selectedLocation === "all") {
+      return inventory.filter(item => item.quantity < 3);
+    } else {
+      return inventory.filter(item => item.locationId === selectedLocation && item.quantity < 3);
+    }
+  }, [inventory, selectedLocation]);
 
   // Get sales data for time chart
   const getSalesTimeData = useMemo(() => {
@@ -568,7 +572,7 @@ export const Dashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{lowStockItems.length}</div>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Количество товаров с остатком &lt; 3
+                  Количество товаров с остатком &lt; 3{selectedLocation !== "all" && " в выбранной точке"}
                 </p>
               </CardContent>
             </Card>
@@ -837,7 +841,10 @@ export const Dashboard = () => {
                 </div>
               ) : (
                 <div className="h-[100px] flex items-center justify-center text-muted-foreground">
-                  Все товары в достаточном количестве
+                  {selectedLocation === "all" 
+                    ? "Все товары в достаточном количестве"
+                    : "В данной точке все товары в достаточном количестве"
+                  }
                 </div>
               )}
             </CardContent>
