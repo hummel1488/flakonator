@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle, Package } from "lucide-react";
@@ -58,7 +57,6 @@ import {
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"; 
 
-// Helper function to normalize perfume names for comparison
 const normalizePerfumeName = (text: string) => {
   return text.toLowerCase()
     .trim()
@@ -308,7 +306,9 @@ const Inventory = () => {
 
   const getSizeLabel = (size: string) => {
     if (size === "Автофлакон" || size === "car") return "Автофлакон";
-    return size.includes("мл") ? size : `${size} мл`;
+    
+    const cleanSize = size.replace(/\s*мл\s*/i, "").trim();
+    return `${cleanSize} мл`;
   };
 
   const filteredInventory = inventory.filter((item) => {
@@ -339,12 +339,9 @@ const Inventory = () => {
 
     const prices: Record<string, number> = PRICES;
 
-    // Create a set of normalized unique perfume names
     const uniquePerfumeNames = new Set<string>();
 
-    // Count total items
     inventoryToCalculate.forEach(item => {
-      // Add normalized name to unique set
       uniquePerfumeNames.add(normalizePerfumeName(item.name));
       
       const statKey = getSizeStatKey(item.size);
@@ -676,7 +673,7 @@ const Inventory = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid grid-cols-1 gap-2">
-                <Label htmlFor="size">Объем</Label>
+                <Label htmlFor="size">Объ��м</Label>
                 <Select 
                   value={formData.size} 
                   onValueChange={(value) => handleSelectChange("size", value)}

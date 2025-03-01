@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, ArrowLeft, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
@@ -54,28 +53,24 @@ const Sales = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [saleComplete, setSaleComplete] = useState(false);
   
-  // Set the default location to the user's assigned location if they are a seller
   useEffect(() => {
     if (user?.role === "seller" && user?.locationId) {
       setSelectedLocation(user.locationId);
     }
   }, [user]);
 
-  // Reset selection if location is deleted
   useEffect(() => {
     if (selectedLocation && !locations.some(loc => loc.id === selectedLocation)) {
       setSelectedLocation("");
     }
   }, [locations, selectedLocation]);
 
-  // Filter products by selected location and search term
   const filteredProducts = inventory.filter((product) => {
     const matchesLocation = !selectedLocation || product.locationId === selectedLocation;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesLocation && matchesSearch && product.quantity > 0;
   });
 
-  // Group products by name and size
   type GroupedProducts = {
     [key: string]: Product[];
   };
@@ -89,14 +84,12 @@ const Sales = () => {
     return acc;
   }, {});
 
-  // Add product to cart
   const addToCart = (product: Product) => {
     const existingItemIndex = cart.findIndex(
       item => item.id === product.id
     );
 
     if (existingItemIndex >= 0) {
-      // Item already in cart, increment quantity
       if (cart[existingItemIndex].cartQuantity < product.quantity) {
         const updatedCart = [...cart];
         updatedCart[existingItemIndex].cartQuantity += 1;
@@ -109,12 +102,10 @@ const Sales = () => {
         });
       }
     } else {
-      // Add new item to cart
       setCart([...cart, { ...product, cartQuantity: 1 }]);
     }
   };
 
-  // Remove product from cart
   const removeFromCart = (productId: string) => {
     const existingItemIndex = cart.findIndex(
       item => item.id === productId
@@ -123,22 +114,18 @@ const Sales = () => {
     if (existingItemIndex >= 0) {
       const updatedCart = [...cart];
       if (updatedCart[existingItemIndex].cartQuantity > 1) {
-        // Decrement quantity
         updatedCart[existingItemIndex].cartQuantity -= 1;
       } else {
-        // Remove item from cart
         updatedCart.splice(existingItemIndex, 1);
       }
       setCart(updatedCart);
     }
   };
 
-  // Delete product from cart completely
   const deleteFromCart = (productId: string) => {
     setCart(cart.filter(item => item.id !== productId));
   };
 
-  // Get price based on size
   const getPrice = (size: string): number => {
     switch (size) {
       case "5":
@@ -158,7 +145,6 @@ const Sales = () => {
     }
   };
 
-  // Calculate total
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
       const price = getPrice(item.size);
@@ -166,20 +152,16 @@ const Sales = () => {
     }, 0);
   };
 
-  // Complete sale
   const completeSale = () => {
     if (cart.length === 0) return;
 
-    // Update inventory quantities
     cart.forEach(item => {
       const newQuantity = item.quantity - item.cartQuantity;
       updateProductQuantity(item.id, newQuantity);
     });
 
-    // Get the location id from the first item in the cart (all items should have the same location)
     const saleLocationId = cart[0]?.locationId || "";
 
-    // Record the sale
     recordSale({
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -203,27 +185,29 @@ const Sales = () => {
     setSaleComplete(true);
   };
 
-  // Start a new sale
   const startNewSale = () => {
     setCart([]);
     setSearchTerm("");
     setSaleComplete(false);
   };
 
-  // Функция для определения варианта кнопки в зависимости от роли пользователя
   const getButtonVariant = () => {
     if (isAdmin()) return "admin";
     if (isManager()) return "manager";
     return "seller";
   };
 
-  // Проверка, может ли пользователь выбирать локацию
   const canSelectLocation = isAdmin() || isManager() || (isSeller() && !user?.locationId);
-  
-  // Получаем название локации для отображения
+
   const getLocationName = (locationId: string) => {
     const location = locations.find(loc => loc.id === locationId);
     return location ? location.name : "Неизвестная точка";
+  };
+
+  const formatSize = (size: string) => {
+    if (size === "car" || size === "Автофлакон") return "Автофлакон";
+    const cleanSize = size.replace(/\s*мл\s*/i, "").trim();
+    return `${cleanSize} мл`;
   };
 
   return (
@@ -329,7 +313,7 @@ const Sales = () => {
                                     <TableCell>
                                       {product.size === "car"
                                         ? "Автофлакон"
-                                        : `${product.size} мл`}
+                                        : formatSize(product.size)}
                                     </TableCell>
                                     <TableCell>
                                       <Badge variant="outline">{product.quantity}</Badge>
