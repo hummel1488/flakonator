@@ -58,10 +58,12 @@ import {
 } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area"; 
 
-const normalizeText = (text: string) => {
+// Helper function to normalize perfume names for comparison
+const normalizePerfumeName = (text: string) => {
   return text.toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/[^\w\s]/gi, '');
+    .trim()
+    .replace(/\s+/g, '') // Remove all spaces
+    .replace(/[^\w\s]/gi, ''); // Remove special characters
 };
 
 const NAME_VARIATIONS = ['название', 'наименование', 'товар', 'продукт', 'name', 'product', 'title', 'item'];
@@ -337,13 +339,14 @@ const Inventory = () => {
 
     const prices: Record<string, number> = PRICES;
 
-    // Get a set of unique perfume names (case insensitive)
-    const uniquePerfumeNames = new Set(
-      inventoryToCalculate.map(item => item.name.toLowerCase().trim())
-    );
+    // Create a set of normalized unique perfume names
+    const uniquePerfumeNames = new Set<string>();
 
     // Count total items
     inventoryToCalculate.forEach(item => {
+      // Add normalized name to unique set
+      uniquePerfumeNames.add(normalizePerfumeName(item.name));
+      
       const statKey = getSizeStatKey(item.size);
       
       if (sizeStats[statKey]) {

@@ -1,4 +1,3 @@
-
 import { useMemo } from "react";
 import { useSales } from "@/hooks/use-sales";
 import { useInventory } from "@/hooks/use-inventory";
@@ -13,6 +12,14 @@ import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "./ui/separator";
+
+// Helper function to normalize perfume names
+const normalizePerfumeName = (name: string) => {
+  return name.toLowerCase()
+    .trim()
+    .replace(/\s+/g, '') // Remove all spaces
+    .replace(/[^\w\s]/gi, ''); // Remove special characters
+};
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -97,8 +104,14 @@ export const Dashboard = () => {
       "car": 500
     };
 
+    // Get a set of unique perfume names using proper normalization
+    const uniquePerfumeNamesSet = new Set<string>();
+    
     // Проверяем каждый элемент инвентаря
     inventory.forEach(item => {
+      // Add normalized name to the unique names set
+      uniquePerfumeNamesSet.add(normalizePerfumeName(item.name));
+      
       // Нормализуем размер к одному из поддерживаемых ключей
       let size = item.size;
       
@@ -121,6 +134,7 @@ export const Dashboard = () => {
 
     const totalCount = Object.values(sizeStats).reduce((sum, stat) => sum + stat.count, 0);
     const totalValue = Object.values(sizeStats).reduce((sum, stat) => sum + stat.value, 0);
+    const uniqueNamesCount = uniquePerfumeNamesSet.size;
 
     // Convert to format suitable for charts - only include sizes with non-zero counts
     const pieChartData = Object.entries(sizeStats)
@@ -131,7 +145,7 @@ export const Dashboard = () => {
         size
       }));
 
-    return { sizeStats, totalCount, totalValue, pieChartData };
+    return { sizeStats, totalCount, totalValue, uniqueNamesCount, pieChartData };
   }, [inventory]);
 
   // Форматирование валюты
