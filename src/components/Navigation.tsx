@@ -44,7 +44,7 @@ const Navigation = () => {
   const items = [
     {
       icon: <LayoutDashboard className="h-[18px] w-[18px]" />,
-      title: "Панель управления",
+      title: "Дэшборд",
       href: "/dashboard",
       roles: ["admin", "manager"],
       group: "operational",
