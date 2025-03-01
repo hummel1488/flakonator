@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
@@ -102,7 +103,7 @@ const Navigation = () => {
           <div className="flex items-center">
             <NavLink to="/" className="text-xl font-bold flex items-center">
               <span className={`text-[26px] font-bold ${textColor}`}>
-                Flak<span className="ml-1">ONator</span>
+                FlakONator
               </span>
             </NavLink>
           </div>
