@@ -1,4 +1,4 @@
-<lov-code>
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle, Package } from "lucide-react";
@@ -891,4 +891,97 @@ const Inventory = () => {
               <div className="grid gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Предпросмо
+                    <CardTitle>Предпросмотр данных</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="mb-4 text-sm text-gray-600">
+                      Нажмите "Импортировать" для загрузки данных или "Отмена" для загрузки другого файла.
+                    </p>
+                    <div className="flex justify-end space-x-4">
+                      <Button 
+                        variant="outline"
+                        onClick={() => setImportTab("upload")}
+                      >
+                        Назад
+                      </Button>
+                      <Button 
+                        onClick={handleImportData}
+                        disabled={!importData || !manualLocationId || locations.length === 0}
+                      >
+                        Импортировать
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="results" className="pt-4">
+              <div className="grid gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Результаты импорта</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {importStats && (
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <div className="text-sm text-green-700">Импортировано</div>
+                          <div className="text-2xl font-bold text-green-800">{importStats.importedCount}</div>
+                        </div>
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <div className="text-sm text-blue-700">Новых товаров</div>
+                          <div className="text-2xl font-bold text-blue-800">{importStats.newItemsCount}</div>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg">
+                          <div className="text-sm text-purple-700">Обновлено</div>
+                          <div className="text-2xl font-bold text-purple-800">{importStats.updatedItemsCount}</div>
+                        </div>
+                        <div className="bg-amber-50 p-4 rounded-lg">
+                          <div className="text-sm text-amber-700">Обнулено</div>
+                          <div className="text-2xl font-bold text-amber-800">{importStats.zeroedItemsCount}</div>
+                        </div>
+                        <div className="bg-red-50 p-4 rounded-lg">
+                          <div className="text-sm text-red-700">Пропущено</div>
+                          <div className="text-2xl font-bold text-red-800">{importStats.skippedCount}</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <ScrollArea className="h-72 rounded border p-4">
+                      <div className="space-y-2">
+                        {importResultLogs.map((log, index) => (
+                          <div 
+                            key={index} 
+                            className={`flex items-start gap-2 p-2 text-sm rounded ${
+                              log.type === 'success' ? 'bg-green-50' :
+                              log.type === 'warning' ? 'bg-amber-50' : 'bg-red-50'
+                            }`}
+                          >
+                            {getLogTypeIcon(log.type)}
+                            <div>{log.message}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                    
+                    <div className="mt-6 flex justify-end space-x-4">
+                      <Button 
+                        variant="outline"
+                        onClick={closeImportDialog}
+                      >
+                        Закрыть
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Inventory;
