@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "./ui/separator";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Progress } from "@/components/ui/progress";
 
 export const Dashboard = () => {
@@ -22,7 +22,7 @@ export const Dashboard = () => {
   const { inventory } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager, isSeller } = useAuth();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [showChart, setShowChart] = useState(!isMobile);
 
   // Последние 7 дней продаж
@@ -433,7 +433,7 @@ export const Dashboard = () => {
                             )}
                           </div>
                         </div>
-                        <Progress value={percentage} className="h-2" indicatorClassName="bg-gradient-to-r" style={{ 
+                        <Progress value={percentage} className="h-2" style={{ 
                           '--tw-gradient-from': color,
                           '--tw-gradient-to': `${color}99`
                         } as React.CSSProperties} />
