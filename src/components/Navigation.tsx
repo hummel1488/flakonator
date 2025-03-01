@@ -103,7 +103,7 @@ const Navigation = () => {
           <div className="flex items-center">
             <NavLink to="/" className="text-xl font-bold flex items-center">
               <span className={`text-[26px] font-montserrat font-bold ${textColor}`}>
-                Flak<span className="text-[#0FA0CE]">ON</span>ator
+                FLAK<span className="text-[#0FA0CE]">ON</span>ATOR
               </span>
             </NavLink>
           </div>
