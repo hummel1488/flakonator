@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -880,4 +881,123 @@ const Inventory = () => {
             </TabsContent>
             
             <TabsContent value="preview" className="pt-4">
-              <div className="grid
+              <div className="grid gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Предпросмотр данных</CardTitle>
+                    <CardDescription>
+                      Данные будут импортированы в точку продажи: {
+                        locations.find(loc => loc.id === manualLocationId)?.name || "Выберите точку продажи"
+                      }
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] w-full">
+                      <div className="text-sm">
+                        <pre className="whitespace-pre-wrap font-mono text-xs">
+                          {importData.slice(0, 1000)}
+                          {importData.length > 1000 && "..."}
+                        </pre>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="results" className="pt-4">
+              <div className="grid gap-6">
+                {importStats && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Результаты импорта</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Импортировано</div>
+                          <div className="text-2xl font-bold text-green-600">{importStats.importedCount}</div>
+                        </div>
+                        <div className="bg-amber-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Пропущено</div>
+                          <div className="text-2xl font-bold text-amber-600">{importStats.skippedCount}</div>
+                        </div>
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Новых товаров</div>
+                          <div className="text-2xl font-bold text-blue-600">{importStats.newItemsCount}</div>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Обновлено товаров</div>
+                          <div className="text-2xl font-bold text-purple-600">{importStats.updatedItemsCount}</div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Обнулено товаров</div>
+                          <div className="text-2xl font-bold text-gray-600">{importStats.zeroedItemsCount}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Журнал импорта</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] w-full">
+                      <div className="space-y-2">
+                        {importResultLogs.map((log, index) => (
+                          <div key={index} className={`flex items-start gap-2 p-2 rounded-md ${
+                            log.type === 'success' ? 'bg-green-50' :
+                            log.type === 'warning' ? 'bg-amber-50' :
+                            log.type === 'error' ? 'bg-red-50' : 'bg-gray-50'
+                          }`}>
+                            <div className="mt-0.5">
+                              {getLogTypeIcon(log.type)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">
+                                {log.message}
+                              </p>
+                              {log.details && (
+                                <p className="text-xs text-gray-500">
+                                  {log.details}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {importResultLogs.length === 0 && (
+                          <div className="text-center text-gray-500 py-10">
+                            Нет данных для отображения
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={closeImportDialog}>
+              Закрыть
+            </Button>
+            {importTab !== "results" && (
+              <Button 
+                onClick={handleImportData} 
+                disabled={!importData || !manualLocationId}
+              >
+                Импортировать
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Inventory;
