@@ -1,7 +1,7 @@
-
+<lov-code>
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -69,6 +69,15 @@ const SIZE_VARIATIONS = ['объем', 'размер', 'size', 'volume', 'capaci
 const TYPE_VARIATIONS = ['тип', 'вид', 'type', 'category', 'kind'];
 const LOCATION_VARIATIONS = ['точка', 'магазин', 'место', 'расположение', 'location', 'store', 'shop', 'place'];
 const QUANTITY_VARIATIONS = ['количество', 'остаток', 'кол-во', 'колво', 'число', 'штук', 'quantity', 'amount', 'count', 'qty', 'pcs'];
+
+const PRICES: Record<string, number> = {
+  "5": 500,
+  "16": 1000,
+  "20": 1300,
+  "25": 1500,
+  "30": 1800,
+  "car": 500
+};
 
 const Inventory = () => {
   const navigate = useNavigate();
@@ -326,15 +335,14 @@ const Inventory = () => {
       "car": { count: 0, value: 0 },
     };
 
-    const prices: Record<string, number> = {
-      "5": 500,
-      "16": 1000,
-      "20": 1300,
-      "25": 1500,
-      "30": 1800,
-      "car": 500
-    };
+    const prices: Record<string, number> = PRICES;
 
+    // Get a set of unique perfume names (case insensitive)
+    const uniquePerfumeNames = new Set(
+      inventoryToCalculate.map(item => item.name.toLowerCase().trim())
+    );
+
+    // Count total items
     inventoryToCalculate.forEach(item => {
       const statKey = getSizeStatKey(item.size);
       
@@ -349,8 +357,9 @@ const Inventory = () => {
 
     const totalCount = Object.values(sizeStats).reduce((sum, stat) => sum + stat.count, 0);
     const totalValue = Object.values(sizeStats).reduce((sum, stat) => sum + stat.value, 0);
+    const uniqueNamesCount = uniquePerfumeNames.size;
 
-    return { sizeStats, totalCount, totalValue };
+    return { sizeStats, totalCount, totalValue, uniqueNamesCount };
   };
 
   const getLogTypeIcon = (type: string) => {
@@ -380,6 +389,18 @@ const Inventory = () => {
     }
     setShowImportDialog(true);
   };
+
+  const StatCard = ({ title, value, icon }: { title: string, value: string, icon: React.ReactNode }) => (
+    <Card className="shadow-sm">
+      <CardContent className="p-4 flex items-center space-x-4">
+        {icon}
+        <div>
+          <div className="text-sm text-gray-500 mb-1">{title}</div>
+          <div className="text-2xl font-bold">{value}</div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -448,7 +469,7 @@ const Inventory = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
+              className="mb-8 space-y-6"
             >
               <Card className="shadow-md border border-gray-100 bg-white">
                 <CardHeader>
@@ -456,24 +477,23 @@ const Inventory = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-gray-500 mb-1">Общее количество</div>
-                        <div className="text-2xl font-bold">{stats.totalCount} шт.</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
-                        <div className="text-2xl font-bold">{stats.totalValue.toLocaleString()} ₽</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
-                        <div className="text-2xl font-bold">{filteredInventory.length} шт.</div>
-                      </CardContent>
-                    </Card>
+                    <StatCard 
+                      title="Общее количество"
+                      value={`${stats.totalCount} шт.`}
+                      icon={<Package className="h-5 w-5 text-blue-500" />}
+                    />
+                    
+                    <StatCard 
+                      title="Общая стоимость"
+                      value={`${stats.totalValue.toLocaleString()} ₽`}
+                      icon={<Database className="h-5 w-5 text-amber-500" />}
+                    />
+                    
+                    <StatCard 
+                      title="Количество наименований"
+                      value={`${stats.uniqueNamesCount} шт.`}
+                      icon={<FileText className="h-5 w-5 text-purple-500" />}
+                    />
                   </div>
 
                   <Separator className="my-6" />
@@ -871,120 +891,4 @@ const Inventory = () => {
               <div className="grid gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Предпросмотр данных</CardTitle>
-                    <CardDescription>
-                      Данные будут импортированы в точку продажи: {
-                        locations.find(loc => loc.id === manualLocationId)?.name || "Выберите точку продажи"
-                      }
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[300px] w-full">
-                      <div className="text-sm">
-                        <pre className="whitespace-pre-wrap font-mono text-xs">
-                          {importData.slice(0, 1000)}
-                          {importData.length > 1000 && "..."}
-                        </pre>
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="results" className="pt-4">
-              <div className="grid gap-6">
-                {importStats && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Результаты импорта</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <div className="bg-green-50 p-4 rounded-lg">
-                          <div className="text-sm text-gray-500">Импортировано</div>
-                          <div className="text-2xl font-bold text-green-600">{importStats.importedCount}</div>
-                        </div>
-                        <div className="bg-amber-50 p-4 rounded-lg">
-                          <div className="text-sm text-gray-500">Пропущено</div>
-                          <div className="text-2xl font-bold text-amber-600">{importStats.skippedCount}</div>
-                        </div>
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <div className="text-sm text-gray-500">Новых товаров</div>
-                          <div className="text-2xl font-bold text-blue-600">{importStats.newItemsCount}</div>
-                        </div>
-                        <div className="bg-purple-50 p-4 rounded-lg">
-                          <div className="text-sm text-gray-500">Обновлено товаров</div>
-                          <div className="text-2xl font-bold text-purple-600">{importStats.updatedItemsCount}</div>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <div className="text-sm text-gray-500">Обнулено товаров</div>
-                          <div className="text-2xl font-bold text-gray-600">{importStats.zeroedItemsCount}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Журнал импорта</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="h-[300px] w-full">
-                      <div className="space-y-2">
-                        {importResultLogs.map((log, index) => (
-                          <div key={index} className={`flex items-start gap-2 p-2 rounded-md ${
-                            log.type === 'success' ? 'bg-green-50' :
-                            log.type === 'warning' ? 'bg-amber-50' :
-                            log.type === 'error' ? 'bg-red-50' : 'bg-gray-50'
-                          }`}>
-                            <div className="mt-0.5">
-                              {getLogTypeIcon(log.type)}
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium">
-                                {log.message}
-                              </p>
-                              {log.details && (
-                                <p className="text-xs text-gray-500">
-                                  {typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {importResultLogs.length === 0 && (
-                          <div className="text-center text-gray-500 py-10">
-                            Нет данных для отображения
-                          </div>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
-          
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={closeImportDialog}>
-              Закрыть
-            </Button>
-            {importTab !== "results" && (
-              <Button 
-                onClick={handleImportData} 
-                disabled={!importData || !manualLocationId}
-              >
-                Импортировать
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default Inventory;
+                    <CardTitle>Предпросмо
