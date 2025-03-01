@@ -1,6 +1,7 @@
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Locations from "./pages/Locations";
 import Sales from "./pages/Sales";
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <ProtectedRoute allowedRoles={["admin", "manager", "user"]}><Index /></ProtectedRoute>,
+  },
+  {
+    path: "/dashboard",
+    element: <ProtectedRoute allowedRoles={["admin", "manager"]}><Dashboard /></ProtectedRoute>,
   },
   {
     path: "/inventory",
