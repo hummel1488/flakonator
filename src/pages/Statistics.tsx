@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { format, subDays, isAfter, formatDistance, startOfMonth, endOfMonth, isSameMonth, subMonths } from "date-fns";
@@ -252,28 +251,21 @@ const Statistics = () => {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [filteredSales, dateRange]);
 
-  const topProducts = useMemo(() => {
-    const dataMap = new Map<string, { name: string, quantity: number, revenue: number, growing: boolean }>();
-    
-    // Get sales from the last 30 days
-    const thirtyDaysAgo = subDays(new Date(), 30);
+  // Calculate weekly sales data for growth tracking
+  const weeklySalesData = useMemo(() => {
     const sevenDaysAgo = subDays(new Date(), 7);
+    const fourteenDaysAgo = subDays(new Date(), 14);
     
-    // Sales for the last 30 days
-    const last30DaysSales = sales.filter(sale => 
-      isAfter(new Date(sale.date), thirtyDaysAgo) &&
-      (selectedLocation === "all" || sale.locationId === selectedLocation)
-    );
-    
-    // Calculate weekly growth (sales in last 7 days vs previous 7 days)
+    // Sales for the last 7 days
     const salesLastWeek = sales.filter(sale => 
       isAfter(new Date(sale.date), sevenDaysAgo) &&
       (selectedLocation === "all" || sale.locationId === selectedLocation)
     );
     
+    // Sales for the previous 7 days
     const salesPreviousWeek = sales.filter(sale => {
       const saleDate = new Date(sale.date);
-      return isAfter(saleDate, subDays(sevenDaysAgo, 7)) && 
+      return isAfter(saleDate, fourteenDaysAgo) && 
              !isAfter(saleDate, sevenDaysAgo) &&
              (selectedLocation === "all" || sale.locationId === selectedLocation);
     });
@@ -297,6 +289,24 @@ const Statistics = () => {
         previousWeekSales.set(key, current + (item.price * item.quantity));
       });
     });
+    
+    return { lastWeekSales, previousWeekSales };
+  }, [sales, selectedLocation]);
+
+  const { lastWeekSales, previousWeekSales } = weeklySalesData;
+
+  const topProducts = useMemo(() => {
+    const dataMap = new Map<string, { name: string, quantity: number, revenue: number, growing: boolean }>();
+    
+    // Get sales from the last 30 days
+    const thirtyDaysAgo = subDays(new Date(), 30);
+    const sevenDaysAgo = subDays(new Date(), 7);
+    
+    // Sales for the last 30 days
+    const last30DaysSales = sales.filter(sale => 
+      isAfter(new Date(sale.date), thirtyDaysAgo) &&
+      (selectedLocation === "all" || sale.locationId === selectedLocation)
+    );
     
     // Process 30-day data
     last30DaysSales.forEach(sale => {
@@ -322,7 +332,7 @@ const Statistics = () => {
     return Array.from(dataMap.values())
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
-  }, [sales, selectedLocation]);
+  }, [sales, selectedLocation, lastWeekSales, previousWeekSales]);
 
   // Get product recommendations for selected location
   const productRecommendations = useMemo(() => {
@@ -356,14 +366,16 @@ const Statistics = () => {
       );
       
       if (inventoryItem && inventoryItem.quantity <= stockThreshold) {
+        const growthMessage = product.growing 
+          ? `+${((lastWeekSales.get(product.name) || 0) / (previousWeekSales.get(product.name) || 1) * 100 - 100).toFixed(0)}% продаж за неделю` 
+          : "стабильный бестселлер, остаток ниже нормы";
+          
         recommendations.push({
           type: "low_stock",
           name,
           size: formattedSize === "car" ? "Автофлакон" : `${formattedSize} мл`,
           growing: product.growing,
-          message: product.growing 
-            ? `+${((lastWeekSales.get(product.name) || 0) / (previousWeekSales.get(product.name) || 1) * 100 - 100).toFixed(0)}% продаж за неделю` 
-            : "стабильный бестселлер, остаток ниже нормы"
+          message: growthMessage
         });
       } else if (product.growing) {
         recommendations.push({
@@ -377,7 +389,7 @@ const Statistics = () => {
     }
     
     return recommendations.slice(0, 5);
-  }, [topProducts, inventory, selectedLocation]);
+  }, [topProducts, inventory, selectedLocation, lastWeekSales, previousWeekSales]);
 
   const latestSales = useMemo(() => {
     return [...filteredSales]
