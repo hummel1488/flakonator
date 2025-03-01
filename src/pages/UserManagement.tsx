@@ -1,80 +1,230 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableHead, 
+  TableRow, 
+  TableCell 
+} from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Plus, Edit, Eye, Trash } from 'lucide-react';
 
-// Define a simple user type
-interface User {
+// Define a log entry type
+interface LogEntry {
   id: string;
-  name: string;
-  email: string;
-  role: string;
+  userId: string;
+  userName: string;
+  action: string;
+  timestamp: string;
+  details?: string;
 }
 
 const UserManagement = () => {
-  // Mock data for users
-  const [users, setUsers] = useState<User[]>([
-    { id: '1', name: 'Администратор', email: 'admin@example.com', role: 'admin' },
-    { id: '2', name: 'Менеджер', email: 'manager@example.com', role: 'manager' },
-    { id: '3', name: 'Продавец', email: 'seller@example.com', role: 'seller' },
-  ]);
+  const { MOCK_USERS, user: currentUser, addUser, updateUser, deleteUser, isAdmin } = useAuth();
   
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [selectedUserLogs, setSelectedUserLogs] = useState<string | null>(null);
 
-  // Function to update user
-  const updateUser = async (user: User) => {
-    // Simulate API call
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, 500);
-    });
+  // Initialize logs from localStorage or create demo logs if none exist
+  useEffect(() => {
+    const storedLogs = localStorage.getItem('userLogs');
+    if (storedLogs) {
+      setLogs(JSON.parse(storedLogs));
+    } else {
+      // Create some demo logs for testing
+      const demoLogs: LogEntry[] = [
+        {
+          id: '1',
+          userId: '1',
+          userName: 'Администратор',
+          action: 'Вход в систему',
+          timestamp: new Date(Date.now() - 3600000).toISOString(),
+        },
+        {
+          id: '2',
+          userId: '2',
+          userName: 'Продавец',
+          action: 'Создание продажи',
+          timestamp: new Date(Date.now() - 7200000).toISOString(),
+          details: 'Продажа #12345 на сумму 5000 р.'
+        },
+        {
+          id: '3',
+          userId: '3',
+          userName: 'Управляющий',
+          action: 'Обновление инвентаря',
+          timestamp: new Date(Date.now() - 86400000).toISOString(),
+          details: 'Добавлено 10 единиц товара "Рубашка"'
+        }
+      ];
+      setLogs(demoLogs);
+      localStorage.setItem('userLogs', JSON.stringify(demoLogs));
+    }
+  }, []);
+
+  // Function to handle user editing
+  const handleEditUser = (user: any) => {
+    setEditingUser({...user});
+    setIsEditModalOpen(true);
   };
 
-  // Function to edit user - fixed based on the provided snippet
-  const editUser = async () => {
+  // Function to handle user addition
+  const handleAddUser = () => {
+    setEditingUser({
+      id: Date.now().toString(),
+      name: '',
+      role: 'seller',
+      password: ''
+    });
+    setIsAddModalOpen(true);
+  };
+
+  // Function to save edited user
+  const saveUser = async () => {
     if (!editingUser) return;
     
     try {
       setIsSubmitting(true);
-      // Make sure id is required
-      const updatedUser = {
-        ...editingUser,
-        id: editingUser.id || '', // Ensure id is always set
-      };
       
-      // Call update user function
-      await updateUser(updatedUser);
+      // Check if required fields are filled
+      if (!editingUser.name || !editingUser.role) {
+        toast.error("Пожалуйста, заполните все обязательные поля");
+        setIsSubmitting(false);
+        return;
+      }
       
-      // Update local state with new user info
-      setUsers(prevUsers => 
-        prevUsers.map(user => 
-          user.id === updatedUser.id ? updatedUser : user
-        )
-      );
+      // Add or update user
+      if (isAddModalOpen) {
+        if (!editingUser.password) {
+          toast.error("Пожалуйста, укажите пароль для нового пользователя");
+          setIsSubmitting(false);
+          return;
+        }
+        
+        addUser(editingUser);
+        
+        // Add log entry for creating a user
+        addLogEntry({
+          userId: currentUser?.id || '',
+          userName: currentUser?.name || '',
+          action: 'Создание пользователя',
+          details: `Создан пользователь ${editingUser.name} с ролью ${translateRole(editingUser.role)}`
+        });
+        
+        toast.success("Пользователь создан");
+        setIsAddModalOpen(false);
+      } else {
+        updateUser(editingUser);
+        
+        // Add log entry for updating a user
+        addLogEntry({
+          userId: currentUser?.id || '',
+          userName: currentUser?.name || '',
+          action: 'Обновление пользователя',
+          details: `Обновлена информация пользователя ${editingUser.name}`
+        });
+        
+        toast.success("Пользователь обновлен");
+        setIsEditModalOpen(false);
+      }
       
-      // Close modal and reset form
-      setIsEditModalOpen(false);
       setEditingUser(null);
-      toast.success("Пользователь обновлен");
     } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Ошибка при обновлении пользователя");
+      console.error("Error saving user:", error);
+      toast.error("Ошибка при сохранении пользователя");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handler to open edit modal
-  const handleEditUser = (user: User) => {
-    setEditingUser(user);
-    setIsEditModalOpen(true);
+  // Function to delete user
+  const handleDeleteUser = (userId: string) => {
+    try {
+      const userToDelete = MOCK_USERS.find(u => u.id === userId);
+      if (!userToDelete) return;
+      
+      if (userId === currentUser?.id) {
+        toast.error("Невозможно удалить собственную учетную запись");
+        return;
+      }
+      
+      deleteUser(userId);
+      
+      // Add log entry for deleting a user
+      addLogEntry({
+        userId: currentUser?.id || '',
+        userName: currentUser?.name || '',
+        action: 'Удаление пользователя',
+        details: `Удален пользователь ${userToDelete.name}`
+      });
+      
+      toast.success("Пользователь удален");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Ошибка при удалении пользователя");
+    }
+  };
+
+  // Function to add a log entry
+  const addLogEntry = (logData: Omit<LogEntry, 'id' | 'timestamp'>) => {
+    const newLog: LogEntry = {
+      id: Date.now().toString(),
+      timestamp: new Date().toISOString(),
+      ...logData
+    };
+    
+    const updatedLogs = [...logs, newLog];
+    setLogs(updatedLogs);
+    localStorage.setItem('userLogs', JSON.stringify(updatedLogs));
+  };
+
+  // Function to view user logs
+  const handleViewLogs = (userId: string | null = null) => {
+    setSelectedUserLogs(userId);
+    setIsLogsModalOpen(true);
+  };
+
+  // Helper function to translate role to Russian
+  const translateRole = (role: string): string => {
+    switch (role) {
+      case 'admin': return 'Администратор';
+      case 'seller': return 'Продавец';
+      case 'manager': return 'Управляющий';
+      default: return role;
+    }
+  };
+
+  // Filter logs based on selected user
+  const filteredLogs = selectedUserLogs 
+    ? logs.filter(log => log.userId === selectedUserLogs)
+    : logs;
+
+  // Format date for display
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date);
   };
 
   return (
@@ -83,104 +233,244 @@ const UserManagement = () => {
       <div className="container mx-auto py-6 px-4">
         <h1 className="text-3xl font-bold mb-6">Управление пользователями</h1>
         
+        <div className="flex justify-between mb-6">
+          <Button onClick={handleAddUser} className="flex items-center gap-2">
+            <Plus size={16} />
+            Добавить пользователя
+          </Button>
+          
+          {isAdmin() && (
+            <Button variant="outline" onClick={() => handleViewLogs()} className="flex items-center gap-2">
+              <Eye size={16} />
+              Журнал операций
+            </Button>
+          )}
+        </div>
+        
         <Card>
           <CardHeader>
             <CardTitle>Список пользователей</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full table-auto">
-                <thead>
-                  <tr className="border-b">
-                    <th className="px-4 py-2 text-left">Имя</th>
-                    <th className="px-4 py-2 text-left">Email</th>
-                    <th className="px-4 py-2 text-left">Роль</th>
-                    <th className="px-4 py-2 text-left">Действия</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map(user => (
-                    <tr key={user.id} className="border-b">
-                      <td className="px-4 py-2">{user.name}</td>
-                      <td className="px-4 py-2">{user.email}</td>
-                      <td className="px-4 py-2">{user.role}</td>
-                      <td className="px-4 py-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Имя</TableHead>
+                  <TableHead>Роль</TableHead>
+                  <TableHead>Действия</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {MOCK_USERS.map(user => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{translateRole(user.role || '')}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
                         <Button 
                           variant="outline" 
                           size="sm" 
                           onClick={() => handleEditUser(user)}
                         >
-                          Редактировать
+                          <Edit size={16} />
                         </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        {isAdmin() && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleViewLogs(user.id)}
+                          >
+                            <Eye size={16} />
+                          </Button>
+                        )}
+                        {user.id !== currentUser?.id && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <Trash size={16} />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
-        {isEditModalOpen && editingUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-md">
-              <CardHeader>
-                <CardTitle>Редактирование пользователя</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Имя</Label>
-                    <Input 
-                      id="name" 
-                      value={editingUser.name} 
-                      onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={editingUser.email} 
-                      onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Роль</Label>
-                    <select 
-                      id="role" 
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      value={editingUser.role}
-                      onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
-                    >
-                      <option value="admin">Администратор</option>
-                      <option value="manager">Менеджер</option>
-                      <option value="seller">Продавец</option>
-                    </select>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setIsEditModalOpen(false);
-                        setEditingUser(null);
-                      }}
-                    >
-                      Отмена
-                    </Button>
-                    <Button 
-                      onClick={editUser}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? 'Сохранение...' : 'Сохранить'}
-                    </Button>
-                  </div>
+        {/* Edit User Dialog */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Редактирование пользователя</DialogTitle>
+            </DialogHeader>
+            {editingUser && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Имя</Label>
+                  <Input 
+                    id="name" 
+                    value={editingUser.name} 
+                    onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                <div className="space-y-2">
+                  <Label htmlFor="role">Роль</Label>
+                  <select 
+                    id="role" 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                  >
+                    <option value="admin">Администратор</option>
+                    <option value="manager">Управляющий</option>
+                    <option value="seller">Продавец</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Новый пароль (оставьте пустым, чтобы не менять)</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={editingUser.password || ''} 
+                    onChange={(e) => setEditingUser({...editingUser, password: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingUser(null);
+                }}
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={saveUser}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Сохранение...' : 'Сохранить'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add User Dialog */}
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Добавление пользователя</DialogTitle>
+            </DialogHeader>
+            {editingUser && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Имя</Label>
+                  <Input 
+                    id="name" 
+                    value={editingUser.name} 
+                    onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Роль</Label>
+                  <select 
+                    id="role" 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                  >
+                    <option value="admin">Администратор</option>
+                    <option value="manager">Управляющий</option>
+                    <option value="seller">Продавец</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Пароль</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={editingUser.password || ''} 
+                    onChange={(e) => setEditingUser({...editingUser, password: e.target.value})}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddModalOpen(false);
+                  setEditingUser(null);
+                }}
+              >
+                Отмена
+              </Button>
+              <Button 
+                onClick={saveUser}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Создание...' : 'Создать'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Logs Dialog */}
+        <Dialog open={isLogsModalOpen} onOpenChange={setIsLogsModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedUserLogs 
+                  ? `Журнал операций: ${MOCK_USERS.find(u => u.id === selectedUserLogs)?.name || 'Пользователь'}`
+                  : 'Журнал всех операций'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {filteredLogs.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Дата и время</TableHead>
+                    <TableHead>Пользователь</TableHead>
+                    <TableHead>Действие</TableHead>
+                    <TableHead>Детали</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredLogs
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                    .map(log => (
+                      <TableRow key={log.id}>
+                        <TableCell>{formatDate(log.timestamp)}</TableCell>
+                        <TableCell>{log.userName}</TableCell>
+                        <TableCell>{log.action}</TableCell>
+                        <TableCell>{log.details || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <Alert>
+                <AlertTitle>Записи отсутствуют</AlertTitle>
+                <AlertDescription>
+                  В журнале операций пока нет записей для отображения.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            <DialogFooter>
+              <Button onClick={() => setIsLogsModalOpen(false)}>
+                Закрыть
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
