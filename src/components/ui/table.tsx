@@ -54,12 +54,13 @@ TableFooter.displayName = "TableFooter"
 
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
-  React.HTMLAttributes<HTMLTableRowElement>
->(({ className, ...props }, ref) => (
+  React.HTMLAttributes<HTMLTableRowElement> & { highlight?: boolean }
+>(({ className, highlight, ...props }, ref) => (
   <tr
     ref={ref}
     className={cn(
       "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
+      highlight && "bg-blue-50/50 dark:bg-blue-900/20",
       className
     )}
     {...props}
@@ -106,6 +107,19 @@ const TableCaption = React.forwardRef<
 ))
 TableCaption.displayName = "TableCaption"
 
+// Add a responsive table wrapper
+const ResponsiveTable = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("overflow-x-auto w-full", className)}
+    {...props}
+  />
+))
+ResponsiveTable.displayName = "ResponsiveTable"
+
 export {
   Table,
   TableHeader,
@@ -115,4 +129,5 @@ export {
   TableRow,
   TableCell,
   TableCaption,
+  ResponsiveTable
 }
