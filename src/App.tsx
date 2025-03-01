@@ -6,9 +6,6 @@ import Inventory from "./pages/Inventory";
 import Locations from "./pages/Locations";
 import Sales from "./pages/Sales";
 import Statistics from "./pages/Statistics";
-import Clients from "./pages/Clients";
-import Marketing from "./pages/Marketing";
-import Training from "./pages/Training";
 import UserManagement from "./pages/UserManagement";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -42,18 +39,6 @@ const router = createBrowserRouter([
   {
     path: "/statistics",
     element: <ProtectedRoute allowedRoles={["admin", "manager", "user"]}><Statistics /></ProtectedRoute>,
-  },
-  {
-    path: "/clients",
-    element: <ProtectedRoute allowedRoles={["admin", "manager"]}><Clients /></ProtectedRoute>,
-  },
-  {
-    path: "/marketing",
-    element: <ProtectedRoute allowedRoles={["admin"]}><Marketing /></ProtectedRoute>,
-  },
-  {
-    path: "/training",
-    element: <ProtectedRoute allowedRoles={["admin"]}><Training /></ProtectedRoute>,
   },
   {
     path: "/user-management",
