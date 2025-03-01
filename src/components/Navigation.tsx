@@ -103,17 +103,17 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-black shadow-md">
+    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <NavLink to="/" className="text-2xl font-bold flex items-center">
-                <span className="bg-[#F90] text-black px-2 py-0.5 rounded-l-md mr-0.5 flex items-center">
+                <span className="bg-accent text-accent-foreground px-2 py-0.5 rounded-l-md mr-0.5 flex items-center">
                   <Flame className="h-5 w-5 mr-1" />
                   Flak
                 </span>
-                <span className="bg-black text-white px-2 py-0.5 rounded-r-md font-light">ONator</span>
+                <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-r-md font-light">ONator</span>
               </NavLink>
             </div>
             <div className="hidden md:block">
@@ -126,8 +126,8 @@ const Navigation = () => {
                         to={item.href}
                         className={({ isActive }) =>
                           isActive
-                            ? "bg-[#F90] text-black px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
-                            : "text-gray-300 hover:bg-gray-800 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
+                            ? "bg-accent text-accent-foreground px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
+                            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
                         }
                       >
                         {item.icon}
@@ -139,7 +139,7 @@ const Navigation = () => {
             </div>
           </div>
           <div className="hidden md:block">
-            <button className="bg-[#F90] text-black p-2 rounded-full">
+            <button className="bg-accent text-accent-foreground p-2 rounded-full">
               <Settings className="h-5 w-5" />
             </button>
           </div>
@@ -147,7 +147,7 @@ const Navigation = () => {
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-300 hover:bg-gray-800 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent"
               aria-controls="mobile-menu"
               aria-expanded="false"
             >
@@ -163,7 +163,7 @@ const Navigation = () => {
       </div>
 
       <div className={`${isMenuOpen ? "block" : "hidden"} md:hidden`} id="mobile-menu">
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black">
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-800">
           {items.map(
             (item, index) =>
               (item.roles.includes("user") || isAdmin() || isManager()) && (
@@ -173,8 +173,8 @@ const Navigation = () => {
                   onClick={() => setIsMenuOpen(false)}
                   className={({ isActive }) =>
                     isActive
-                      ? "bg-[#F90] text-black block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
-                      : "text-gray-300 hover:bg-gray-800 hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
+                      ? "bg-accent text-accent-foreground block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
                   }
                 >
                   {item.icon}
