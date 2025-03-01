@@ -75,7 +75,7 @@ export const LowStockAlert = ({ locationId, threshold = 3 }: LowStockAlertProps)
                       <div>
                         <p className="font-medium">{item.name}</p>
                         <Badge variant="outline" className="mt-1">
-                          {item.size === "car" ? "Автофлакон" : `${item.size} мл`}
+                          {item.size === "car" ? "Автофлакон" : `${item.size}`}
                         </Badge>
                       </div>
                       <div>

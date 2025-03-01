@@ -106,6 +106,21 @@ const TableCaption = React.forwardRef<
 ))
 TableCaption.displayName = "TableCaption"
 
+// Добавляем новый компонент для горизонтального скролла на мобильных
+const ResponsiveTable = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, children, ...props }, ref) => (
+  <div 
+    ref={ref}
+    className={cn("w-full overflow-x-auto", className)} 
+    {...props}
+  >
+    {children}
+  </div>
+))
+ResponsiveTable.displayName = "ResponsiveTable"
+
 export {
   Table,
   TableHeader,
@@ -115,4 +130,5 @@ export {
   TableRow,
   TableCell,
   TableCaption,
+  ResponsiveTable
 }
