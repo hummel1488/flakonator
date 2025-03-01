@@ -1,193 +1,203 @@
-
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { 
-  BarChart3, 
-  ShoppingBag, 
-  Package,
-  Store,
-  LogOut,
-  Menu,
-  X,
-  User
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState, useEffect } from "react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+  Home,
+  LayoutDashboard,
+  ListChecks,
+  Store,
+  BarChart2,
+  Users,
+  Speaker,
+  GraduationCap,
+  Settings,
+  Database,
+} from "lucide-react";
+import { NavLink } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
+// Добавьте новый пункт меню в функциональный компонент Navigation
 const Navigation = () => {
-  const navigate = useNavigate();
-  const { user, logout, isAdmin, isSeller, isManager } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAdmin, isManager } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsMenuOpen(false);
+      }
+    };
 
-  const getRoleBadgeVariant = () => {
-    if (isAdmin()) return "admin";
-    if (isSeller()) return "seller";
-    if (isManager()) return "manager";
-    return "default";
-  };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const getRoleLabel = () => {
-    if (isAdmin()) return "Администратор";
-    if (isSeller()) return "Продавец";
-    if (isManager()) return "Управляющий";
-    return "Пользователь";
-  };
-
-  const menuItems = [
+  const items = [
     {
-      name: "Статистика",
-      path: "/statistics",
-      icon: <BarChart3 className="w-5 h-5" />,
-      showFor: ["admin"]
+      icon: <Home className="h-5 w-5" />,
+      title: "Главная",
+      href: "/",
+      roles: ["admin", "manager", "user"],
     },
     {
-      name: "Продажи",
-      path: "/sales",
-      icon: <ShoppingBag className="w-5 h-5" />,
-      showFor: ["admin", "seller"]
+      icon: <LayoutDashboard className="h-5 w-5" />,
+      title: "Панель управления",
+      href: "/dashboard",
+      roles: ["admin", "manager"],
     },
     {
-      name: "Инвентарь",
-      path: "/inventory",
-      icon: <Package className="w-5 h-5" />,
-      showFor: ["admin", "manager"]
+      icon: <ListChecks className="h-5 w-5" />,
+      title: "Инвентарь",
+      href: "/inventory",
+      roles: ["admin", "manager", "user"],
     },
     {
-      name: "Точки продаж",
-      path: "/locations",
-      icon: <Store className="w-5 h-5" />,
-      showFor: ["admin"]
-    }
+      icon: <Store className="h-5 w-5" />,
+      title: "Точки продаж",
+      href: "/locations",
+      roles: ["admin", "manager"],
+    },
+    {
+      icon: <BarChart2 className="h-5 w-5" />,
+      title: "Продажи",
+      href: "/sales",
+      roles: ["admin", "manager", "user"],
+    },
+    {
+      icon: <BarChart2 className="h-5 w-5" />,
+      title: "Статистика",
+      href: "/statistics",
+      roles: ["admin", "manager"],
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      title: "Клиенты",
+      href: "/clients",
+      roles: ["admin"],
+    },
+    {
+      icon: <Speaker className="h-5 w-5" />,
+      title: "Маркетинг",
+      href: "/marketing",
+      roles: ["admin"],
+    },
+    {
+      icon: <GraduationCap className="h-5 w-5" />,
+      title: "Обучение",
+      href: "/training",
+      roles: ["admin"],
+    },
+    {
+      icon: <Database className="h-5 w-5" />,
+      title: "Управление данными",
+      href: "/data-management",
+      roles: ["admin", "manager"],
+    },
+    {
+      icon: <Settings className="h-5 w-5" />,
+      title: "Управление пользователями",
+      href: "/user-management",
+      roles: ["admin"],
+    },
   ];
 
-  const filteredMenuItems = menuItems.filter(item => 
-    !user?.role || item.showFor.includes(user.role)
-  );
-
   return (
-    <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center">
-              <img
-                src="/lovable-uploads/68b9ed5b-c4d4-44be-bf47-99958ce5197f.png"
-                alt="âme logo"
-                className="h-10"
-              />
-            </Link>
-
-            {/* Desktop menu */}
-            <nav className="hidden md:flex items-center gap-1">
-              {filteredMenuItems.map((item) => (
-                <Button
-                  key={item.path}
-                  variant="ghost"
-                  asChild
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  <Link to={item.path} className="flex items-center gap-2">
-                    {item.icon}
-                    <span>{item.name}</span>
-                  </Link>
-                </Button>
-              ))}
-            </nav>
+    <nav className="bg-white border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <NavLink to="/" className="text-xl font-bold text-gray-800">
+                ScentTrack
+              </NavLink>
+            </div>
+            <div className="hidden md:block">
+              <div className="ml-10 flex items-baseline space-x-4">
+                {items.map(
+                  (item, index) =>
+                    (item.roles.includes("user") || isAdmin() || isManager()) && (
+                      <NavLink
+                        key={index}
+                        to={item.href}
+                        className={({ isActive }) =>
+                          isActive
+                            ? "bg-gray-100 text-gray-800 px-3 py-2 rounded-md text-sm font-medium"
+                            : "text-gray-500 hover:bg-gray-50 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium"
+                        }
+                      >
+                        {item.title}
+                      </NavLink>
+                    )
+                )}
+              </div>
+            </div>
           </div>
-
-          {/* User menu */}
-          <div className="flex items-center gap-2">
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="hidden sm:inline">{user.name}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel className="flex items-center justify-between">
-                    <span>Профиль</span>
-                    <Badge variant={getRoleBadgeVariant()}>{getRoleLabel()}</Badge>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Выйти</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* Mobile menu toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          <div className="hidden md:block">
+            <Settings />
+          </div>
+          <div className="-mr-2 flex md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              type="button"
+              className="bg-white inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              aria-controls="mobile-menu"
+              aria-expanded="false"
             >
-              {mobileMenuOpen ? <X /> : <Menu />}
-            </Button>
+              <span className="sr-only">Open main menu</span>
+              <svg
+                className={`${isMenuOpen ? "hidden" : "block"} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              <svg
+                className={`${isMenuOpen ? "block" : "hidden"} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="md:hidden bg-white border-t overflow-hidden"
-          >
-            <nav className="container mx-auto px-4 py-3 flex flex-col gap-2">
-              {filteredMenuItems.map((item) => (
-                <Button
-                  key={item.path}
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigate(item.path);
-                    setMobileMenuOpen(false);
-                  }}
+      <div className={`${isMenuOpen ? "block" : "none"} md:hidden`} id="mobile-menu">
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          {items.map(
+            (item, index) =>
+              (item.roles.includes("user") || isAdmin() || isManager()) && (
+                <NavLink
+                  key={index}
+                  to={item.href}
+                  className={({ isActive }) =>
+                    isActive
+                      ? "bg-gray-100 text-gray-800 block px-3 py-2 rounded-md text-base font-medium"
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium"
+                  }
                 >
-                  <div className="flex items-center gap-3">
-                    {item.icon}
-                    <span>{item.name}</span>
-                  </div>
-                </Button>
-              ))}
-              <Button
-                variant="destructive"
-                className="w-full justify-start mt-2"
-                onClick={handleLogout}
-              >
-                <div className="flex items-center gap-3">
-                  <LogOut className="w-5 h-5" />
-                  <span>Выйти</span>
-                </div>
-              </Button>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
+                  {item.title}
+                </NavLink>
+              )
+          )}
+        </div>
+      </div>
+    </nav>
   );
 };
 

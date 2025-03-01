@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 
 export interface Product {
@@ -638,6 +637,38 @@ export const useInventory = () => {
     return inventory.filter((product) => product.locationId === locationId);
   };
 
+  // Export inventory data
+  const exportInventory = () => {
+    return JSON.stringify(inventory);
+  };
+
+  // Import inventory data
+  const importInventory = (jsonData: string) => {
+    try {
+      const parsedData = JSON.parse(jsonData);
+      if (Array.isArray(parsedData)) {
+        // Normalize sizes in imported data
+        const normalizedInventory = parsedData.map((product: Product) => {
+          if (!VALID_SIZES.includes(product.size)) {
+            const normalizedSize = normalizeSize(product.size);
+            if (normalizedSize) {
+              return { ...product, size: normalizedSize };
+            }
+          }
+          return product;
+        });
+        
+        setInventory(normalizedInventory);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(normalizedInventory));
+        return { success: true, message: "Данные инвентаря успешно импортированы" };
+      }
+      return { success: false, message: "Неверный формат данных" };
+    } catch (error) {
+      console.error("Ошибка при импорте инвентаря:", error);
+      return { success: false, message: "Ошибка при импорте данных" };
+    }
+  };
+
   return {
     inventory,
     loading,
@@ -649,6 +680,8 @@ export const useInventory = () => {
     deleteProduct,
     deleteAllProducts,
     getProductsByLocation,
-    getSizeStatKey, // Экспортируем новую функцию
+    getSizeStatKey,
+    exportInventory,
+    importInventory,
   };
 };

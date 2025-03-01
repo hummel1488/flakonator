@@ -82,6 +82,27 @@ export const useSales = () => {
     return filteredSales.reduce((total, sale) => total + sale.total, 0);
   };
 
+  // Export sales data
+  const exportSales = () => {
+    return JSON.stringify(sales);
+  };
+
+  // Import sales data
+  const importSales = (jsonData: string) => {
+    try {
+      const parsedData = JSON.parse(jsonData);
+      if (Array.isArray(parsedData)) {
+        setSales(parsedData);
+        localStorage.setItem(LOCAL_STORAGE_KEY, jsonData);
+        return { success: true, message: "Данные продаж успешно импортированы" };
+      }
+      return { success: false, message: "Неверный формат данных" };
+    } catch (error) {
+      console.error("Ошибка при импорте данных продаж:", error);
+      return { success: false, message: "Ошибка при импорте данных" };
+    }
+  };
+
   return {
     sales,
     loading,
@@ -92,5 +113,7 @@ export const useSales = () => {
     getSalesByDateRange,
     getTotalRevenue,
     getRevenueByDateRange,
+    exportSales,
+    importSales,
   };
 };

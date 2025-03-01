@@ -113,6 +113,27 @@ export const useLocations = () => {
     return locations.find((location) => location.id === locationId);
   };
 
+  // Экспорт данных
+  const exportLocations = () => {
+    return JSON.stringify(locations);
+  };
+
+  // Импорт данных
+  const importLocations = (jsonData: string) => {
+    try {
+      const parsedData = JSON.parse(jsonData);
+      if (Array.isArray(parsedData)) {
+        setLocations(parsedData);
+        localStorage.setItem(LOCAL_STORAGE_KEY, jsonData);
+        return { success: true, message: "Данные точек продаж успешно импортированы" };
+      }
+      return { success: false, message: "Неверный формат данных" };
+    } catch (error) {
+      console.error("Ошибка при импорте точек продаж:", error);
+      return { success: false, message: "Ошибка при импорте данных" };
+    }
+  };
+
   return {
     locations,
     loading,
@@ -120,5 +141,7 @@ export const useLocations = () => {
     updateLocation,
     deleteLocation,
     getLocationById,
+    exportLocations,
+    importLocations,
   };
 };

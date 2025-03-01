@@ -1,70 +1,81 @@
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Index from "./pages/Index";
+import Inventory from "./pages/Inventory";
+import Locations from "./pages/Locations";
+import Sales from "./pages/Sales";
+import Statistics from "./pages/Statistics";
+import Clients from "./pages/Clients";
+import Marketing from "./pages/Marketing";
+import Training from "./pages/Training";
+import UserManagement from "./pages/UserManagement";
+import Login from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import Unauthorized from "./pages/Unauthorized";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./contexts/AuthContext";
+import { Toaster } from "./components/ui/toaster";
+import DataManagement from "./pages/DataManagement";
 
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
-
-// Pages
-import Index from "@/pages/Index";
-import Statistics from "@/pages/Statistics";
-import Sales from "@/pages/Sales";
-import Inventory from "@/pages/Inventory";
-import Locations from "@/pages/Locations";
-import UserManagement from "@/pages/UserManagement";
-import NotFound from "@/pages/NotFound";
-import Login from "@/pages/Login";
-import Unauthorized from "@/pages/Unauthorized";
-
-import "./App.css";
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <ProtectedRoute allowedRoles={["admin", "manager", "user"]}><Index /></ProtectedRoute>,
+  },
+  {
+    path: "/inventory",
+    element: <ProtectedRoute allowedRoles={["admin", "manager"]}><Inventory /></ProtectedRoute>,
+  },
+  {
+    path: "/locations",
+    element: <ProtectedRoute allowedRoles={["admin", "manager"]}><Locations /></ProtectedRoute>,
+  },
+  {
+    path: "/sales",
+    element: <ProtectedRoute allowedRoles={["admin", "manager", "user"]}><Sales /></ProtectedRoute>,
+  },
+  {
+    path: "/statistics",
+    element: <ProtectedRoute allowedRoles={["admin", "manager", "user"]}><Statistics /></ProtectedRoute>,
+  },
+  {
+    path: "/clients",
+    element: <ProtectedRoute allowedRoles={["admin", "manager"]}><Clients /></ProtectedRoute>,
+  },
+  {
+    path: "/marketing",
+    element: <ProtectedRoute allowedRoles={["admin"]}><Marketing /></ProtectedRoute>,
+  },
+  {
+    path: "/training",
+    element: <ProtectedRoute allowedRoles={["admin"]}><Training /></ProtectedRoute>,
+  },
+  {
+    path: "/user-management",
+    element: <ProtectedRoute allowedRoles={["admin"]}><UserManagement /></ProtectedRoute>,
+  },
+  {
+    path: "/login",
+    element: <Login />,
+  },
+  {
+    path: "/unauthorized",
+    element: <Unauthorized />,
+  },
+  {
+    path: "*",
+    element: <NotFound />,
+  },
+  {
+    path: "/data-management",
+    element: <ProtectedRoute allowedRoles={["admin", "manager"]}><DataManagement /></ProtectedRoute>,
+  },
+]);
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
-          
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Index />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/statistics" element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <Statistics />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/sales" element={
-            <ProtectedRoute allowedRoles={["admin", "seller"]}>
-              <Sales />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/inventory" element={
-            <ProtectedRoute allowedRoles={["admin", "manager"]}>
-              <Inventory />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/locations" element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <Locations />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/users" element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <UserManagement />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </Router>
+      <RouterProvider router={router} />
+      <Toaster />
     </AuthProvider>
   );
 }
