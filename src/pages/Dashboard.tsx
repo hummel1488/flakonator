@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -36,8 +35,8 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useLocations } from "@/hooks/use-locations";
 import { useSales } from "@/hooks/use-sales";
 import Navigation from "@/components/Navigation";
+import { useToast } from "@/hooks/use-toast";
 
-// Sample data for charts
 const salesData = [
   { name: "01/03", value: 42000 },
   { name: "02/03", value: 38000 },
@@ -61,24 +60,21 @@ const Dashboard = () => {
   const { inventory } = useInventory();
   const { locations } = useLocations();
   const { sales } = useSales();
+  const { toast } = useToast();
   const [period, setPeriod] = useState("week");
 
-  // Calculate total inventory
   const totalInventory = inventory.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Group inventory by size
   const inventoryBySize = inventory.reduce((acc, item) => {
     const { size, quantity } = item;
     acc[size] = (acc[size] || 0) + quantity;
     return acc;
   }, {} as Record<string, number>);
 
-  // Sort products by quantity (low to high for low stock, high to low for high stock)
   const sortedInventory = [...inventory].sort((a, b) => a.quantity - b.quantity);
   const lowStockProducts = sortedInventory.slice(0, 5);
   const highStockProducts = [...sortedInventory].reverse().slice(0, 5);
 
-  // Calculate sales totals
   const todaySales = sales.filter(sale => {
     const saleDate = new Date(sale.date);
     const today = new Date();
@@ -89,7 +85,6 @@ const Dashboard = () => {
   const todayItems = todaySales.reduce((sum, sale) => 
     sum + sale.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
 
-  // Calculate top selling products
   const productSalesMap = new Map<string, number>();
   
   sales.forEach(sale => {
@@ -104,7 +99,6 @@ const Dashboard = () => {
     .slice(0, 5)
     .map(([name, quantity]) => ({ name, quantity }));
 
-  // Calculate top locations by sales
   const locationSalesMap = new Map<string, number>();
   
   sales.forEach(sale => {
@@ -123,13 +117,69 @@ const Dashboard = () => {
       };
     });
 
-  // Activity log
   const activityLog = [
     { id: 1, type: "import", user: "Администратор", action: "Импорт остатков", date: "01.03.2025 14:23" },
     { id: 2, type: "adjust", user: "Менеджер", action: "Корректировка количества", date: "01.03.2025 12:10" },
     { id: 3, type: "add", user: "Администратор", action: "Добавление товара", date: "28.02.2025 16:45" },
     { id: 4, type: "sale", user: "Продавец", action: "Продажа товара", date: "28.02.2025 15:32" },
   ];
+
+  const handleUploadInventory = () => {
+    navigate("/data-management");
+    toast({
+      title: "Переход к управлению данными",
+      description: "Вы можете загрузить остатки товаров здесь",
+    });
+  };
+
+  const handleAddProduct = () => {
+    navigate("/inventory");
+    toast({
+      title: "Переход к инвентарю",
+      description: "Вы можете добавить новый аромат здесь",
+    });
+  };
+
+  const handleManageLocations = () => {
+    navigate("/locations");
+    toast({
+      title: "Управление точками продаж",
+      description: "Вы можете редактировать точки продаж здесь",
+    });
+  };
+
+  const handleDownloadReport = () => {
+    toast({
+      title: "Скачивание отчета",
+      description: "Функция скачивания отчета будет доступна в ближайшее время",
+    });
+  };
+
+  const handleShowAllLowStock = () => {
+    navigate("/inventory", { state: { filter: "low-stock" } });
+  };
+
+  const handleShowAllHighStock = () => {
+    navigate("/inventory", { state: { filter: "high-stock" } });
+  };
+
+  const handleShowAllSales = () => {
+    navigate("/sales");
+  };
+
+  const handleRefreshActivityLog = () => {
+    toast({
+      title: "Обновление журнала",
+      description: "Журнал операций обновлен",
+    });
+  };
+
+  const handleShowFullLog = () => {
+    toast({
+      title: "Полный журнал",
+      description: "Функция просмотра полного журнала будет доступна в ближайшее время",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -148,7 +198,6 @@ const Dashboard = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Total Inventory Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -175,7 +224,6 @@ const Dashboard = () => {
               </Card>
             </motion.div>
 
-            {/* Sales Today Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -213,7 +261,6 @@ const Dashboard = () => {
               </Card>
             </motion.div>
 
-            {/* Quick Actions Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -225,19 +272,35 @@ const Dashboard = () => {
                   <CardDescription>Часто используемые операции</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={handleUploadInventory}
+                  >
                     <FileSpreadsheet className="mr-2 h-4 w-4" />
                     Загрузить остатки
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={handleAddProduct}
+                  >
                     <FilePlus2 className="mr-2 h-4 w-4" />
                     Добавить аромат
                   </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={() => navigate("/locations")}>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline" 
+                    onClick={handleManageLocations}
+                  >
                     <MapPin className="mr-2 h-4 w-4" />
                     Управление точками
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={handleDownloadReport}
+                  >
                     <Download className="mr-2 h-4 w-4" />
                     Скачать отчет
                   </Button>
@@ -247,7 +310,6 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-            {/* Low Stock Products */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -277,14 +339,18 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="pt-0">
-                  <Button variant="link" className="w-full" size="sm">
+                  <Button 
+                    variant="link" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={handleShowAllLowStock}
+                  >
                     Показать все
                   </Button>
                 </CardFooter>
               </Card>
             </motion.div>
 
-            {/* Top Stock Products */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -311,14 +377,18 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="pt-0">
-                  <Button variant="link" className="w-full" size="sm">
+                  <Button 
+                    variant="link" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={handleShowAllHighStock}
+                  >
                     Показать все
                   </Button>
                 </CardFooter>
               </Card>
             </motion.div>
 
-            {/* Top Selling Products */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -345,7 +415,12 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="pt-0">
-                  <Button variant="link" className="w-full" size="sm">
+                  <Button 
+                    variant="link" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={handleShowAllSales}
+                  >
                     Показать все
                   </Button>
                 </CardFooter>
@@ -354,7 +429,6 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            {/* Sales Chart */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -390,7 +464,6 @@ const Dashboard = () => {
               </Card>
             </motion.div>
 
-            {/* Top Locations */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -424,7 +497,6 @@ const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-6 mt-6">
-            {/* Activity Log */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -436,7 +508,12 @@ const Dashboard = () => {
                     <CardTitle className="text-lg font-medium">Журнал операций</CardTitle>
                     <CardDescription>История действий в системе</CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" className="ml-auto">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="ml-auto"
+                    onClick={handleRefreshActivityLog}
+                  >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Обновить
                   </Button>
@@ -479,7 +556,12 @@ const Dashboard = () => {
                   </div>
                 </CardContent>
                 <CardFooter>
-                  <Button variant="link" className="w-full" size="sm">
+                  <Button 
+                    variant="link" 
+                    className="w-full" 
+                    size="sm"
+                    onClick={handleShowFullLog}
+                  >
                     Показать полный журнал
                   </Button>
                 </CardFooter>
