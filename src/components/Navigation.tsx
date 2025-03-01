@@ -70,12 +70,6 @@ const Navigation = () => {
       roles: ["admin", "manager"],
     },
     {
-      icon: <Users className="h-5 w-5" />,
-      title: "Клиенты",
-      href: "/clients",
-      roles: ["admin"],
-    },
-    {
       icon: <Database className="h-5 w-5" />,
       title: "Управление данными",
       href: "/data-management",
