@@ -319,3 +319,166 @@
   top: 100%;
   margin-top: 0.25rem;
 }
+
+/* Menu styles */
+.nav-link {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.nav-link-active {
+  font-weight: 500;
+}
+
+.nav-link-active:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: #0FA0CE;
+}
+
+.nav-link-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-separator {
+  height: 24px;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 8px;
+}
+
+.nav-group {
+  display: flex;
+  align-items: center;
+}
+
+/* Mobile navigation */
+@media (max-width: 767px) {
+  .mobile-nav-container {
+    width: 100%;
+    overflow: hidden;
+  }
+  
+  .mobile-nav-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+  
+  .mobile-nav-icon {
+    margin-right: 12px;
+  }
+}
+
+/* Desktop navigation */
+@media (min-width: 768px) {
+  .desktop-nav-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .desktop-nav-group {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+  
+  .desktop-nav-item {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    position: relative;
+  }
+  
+  .desktop-nav-item.active:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    background-color: #0FA0CE;
+  }
+}
+
+/* Утилиты для текста */
+.text-sm {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+}
+
+.text-base {
+  font-size: 1rem; /* 16px */
+  line-height: 1.5rem; /* 24px */
+}
+
+/* Добавим отступы */
+.mt-2 {
+  margin-top: 0.5rem; /* 8px */
+}
+
+.ml-2 {
+  margin-left: 0.5rem; /* 8px */
+}
+
+/* Flexbox utilities */
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+/* Общие стили для навигации */
+.main-nav {
+  background-color: #3A3A3A;
+  color: white;
+  padding: 1rem;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.nav-links a.active {
+  opacity: 1;
+  font-weight: bold;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none; /* Скрываем ссылки в мобильной версии */
+  }
+}

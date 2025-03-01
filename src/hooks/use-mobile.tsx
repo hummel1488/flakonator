@@ -4,8 +4,8 @@ import * as React from "react"
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-  const [isTablet, setIsTablet] = React.useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = React.useState<boolean>(false)
+  const [isTablet, setIsTablet] = React.useState<boolean>(false)
   const [screenWidth, setScreenWidth] = React.useState<number>(0)
 
   React.useEffect(() => {
@@ -26,15 +26,15 @@ export function useIsMobile() {
   }, [])
 
   return { 
-    isMobile: !!isMobile, 
-    isTablet: !!isTablet, 
+    isMobile, 
+    isTablet, 
     isDesktop: !isMobile && !isTablet,
     screenWidth 
   }
 }
 
-// This overload allows using useIsMobile() as a boolean for backward compatibility
-// with components like the sidebar that expect just a boolean
+// This function returns a boolean value for components that
+// expect just a boolean rather than the object from useIsMobile()
 export function useIsMobile2(): boolean {
   const { isMobile } = useIsMobile()
   return isMobile
