@@ -1,4 +1,11 @@
 
+// Fix the editUser function and add the default export
+import React from 'react';
+import { toast } from 'sonner';
+
+// Add default export to the file (add at the end)
+export default UserManagement;
+
 // In the editUser function, ensure the id property is always set:
 const editUser = async () => {
   if (!editingUser) return;

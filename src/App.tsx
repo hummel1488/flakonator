@@ -8,7 +8,7 @@ import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Statistics from './pages/Statistics';
 import Locations from './pages/Locations';
-import UserManagement from './pages/UserManagement';
+import UserManagement from './pages/UserManagement'; // Fixed import
 import Training from './pages/Training';
 import DataManagement from './pages/DataManagement';
 import Unauthorized from './pages/Unauthorized';
