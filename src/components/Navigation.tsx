@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   LayoutDashboard,
@@ -8,13 +7,23 @@ import {
   Menu,
   X,
   User,
+  LogOut,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navigation = () => {
-  const { isAdmin, isManager } = useAuth();
+  const { isAdmin, isManager, logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -67,7 +76,6 @@ const Navigation = () => {
     },
   ];
 
-  // Filter items based on user role and group
   const getMenuItemsByGroup = (group) => {
     return items.filter((item) => {
       const hasPermission = item.roles.includes("user") || isAdmin() || isManager();
@@ -78,17 +86,19 @@ const Navigation = () => {
   const operationalItems = getMenuItemsByGroup("operational");
   const analyticalItems = getMenuItemsByGroup("analytical");
 
-  // Выбираем между светло-серым и графитовым фоном (используем графитовый)
   const menuBgColor = "bg-[#3A3A3A]";
   const textColor = "text-white";
   const activeItemBg = "bg-[#4A4A4A]";
   const hoverBg = "hover:bg-[#4A4A4A]";
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <nav className={`${menuBgColor} shadow-md`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Логотип - всегда слева */}
           <div className="flex items-center">
             <NavLink to="/" className="text-xl font-bold flex items-center">
               <span className={`text-[26px] font-bold ${textColor}`}>
@@ -97,10 +107,8 @@ const Navigation = () => {
             </NavLink>
           </div>
 
-          {/* Desktop menu - центрировано с группами */}
           <div className="hidden md:flex md:flex-1 md:justify-center">
             <div className="flex items-center space-x-6">
-              {/* Операционная группа */}
               <div className="flex items-center space-x-6 pr-6 border-r border-white/20">
                 {operationalItems.map((item, index) => (
                   <NavLink
@@ -118,7 +126,6 @@ const Navigation = () => {
                 ))}
               </div>
               
-              {/* Аналитическая группа */}
               <div className="flex items-center space-x-6 pl-2">
                 {analyticalItems.map((item, index) => (
                   <NavLink
@@ -138,7 +145,6 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -156,16 +162,45 @@ const Navigation = () => {
             </button>
           </div>
 
-          {/* User profile icon - always on the right */}
           <div className="flex items-center">
-            <button className={`p-2 rounded-full ${textColor} ${hoverBg}`}>
-              <User className="h-5 w-5" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={`p-2 rounded-full ${textColor} ${hoverBg}`}>
+                  <User className="h-5 w-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  {user?.name || 'Профиль пользователя'}
+                </DropdownMenuLabel>
+                <DropdownMenuLabel className="font-normal text-xs text-muted-foreground">
+                  {user?.role === 'admin' ? 'Администратор' : 
+                   user?.role === 'manager' ? 'Менеджер' : 'Продавец'}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Настройки</span>
+                </DropdownMenuItem>
+                {isAdmin() && (
+                  <DropdownMenuItem asChild>
+                    <NavLink to="/user-management">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Управление пользователями</span>
+                    </NavLink>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Выйти</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu */}
       <div className={`${isMenuOpen ? "block" : "hidden"} md:hidden`} id="mobile-menu">
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <div className="border-b border-white/20 pb-2 mb-2">
