@@ -102,8 +102,8 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <NavLink to="/" className="text-xl font-bold flex items-center">
-              <span className={`text-[26px] font-bold ${textColor}`}>
-                FlakONator
+              <span className={`text-[26px] font-montserrat font-bold ${textColor}`}>
+                Flak<span className="text-[#D3E4FD]">ON</span>ator
               </span>
             </NavLink>
           </div>
