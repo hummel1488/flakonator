@@ -21,9 +21,11 @@ import { useAuth } from "@/contexts/AuthContext";
 const Navigation = () => {
   const { isAdmin, isManager } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
     const handleResize = () => {
+      setWindowWidth(window.innerWidth);
       if (window.innerWidth >= 768) {
         setIsMenuOpen(false);
       }
@@ -102,54 +104,67 @@ const Navigation = () => {
     },
   ];
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const filteredItems = items.filter(
+    item => item.roles.includes("user") || isAdmin() || isManager()
+  );
+
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <NavLink to="/" className="text-2xl font-bold flex items-center">
-                <span className="bg-accent text-accent-foreground px-2 py-0.5 rounded-l-md mr-0.5 flex items-center">
-                  <Flame className="h-5 w-5 mr-1" />
-                  Flak
-                </span>
-                <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-r-md font-light">ONator</span>
-              </NavLink>
-            </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-1">
-                {items.map(
-                  (item, index) =>
-                    (item.roles.includes("user") || isAdmin() || isManager()) && (
-                      <NavLink
-                        key={index}
-                        to={item.href}
-                        className={({ isActive }) =>
-                          isActive
-                            ? "bg-accent text-accent-foreground px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
-                            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
-                        }
-                      >
-                        {item.icon}
-                        {item.title}
-                      </NavLink>
-                    )
-                )}
-              </div>
+          {/* Logo and brand */}
+          <div className={`flex items-center ${windowWidth <= 480 && !isMenuOpen ? "mx-auto" : ""}`}>
+            <NavLink to="/" className="text-2xl font-bold flex items-center">
+              <span className="bg-accent text-accent-foreground px-2 py-0.5 rounded-l-md flex items-center">
+                <Flame className="h-5 w-5 mr-1" />
+                <span className="text-base sm:text-lg">Flak</span>
+              </span>
+              <span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-r-md text-base sm:text-lg">ONator</span>
+            </NavLink>
+          </div>
+
+          {/* Desktop menu */}
+          <div className="hidden md:block flex-grow ml-6">
+            <div className="flex items-center space-x-1">
+              {filteredItems.map(
+                (item, index) => (
+                  <NavLink
+                    key={index}
+                    to={item.href}
+                    className={({ isActive }) =>
+                      isActive
+                        ? "bg-accent text-accent-foreground px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors"
+                    }
+                  >
+                    <span className="flex items-center justify-center">
+                      {item.icon}
+                    </span>
+                    <span>{item.title}</span>
+                  </NavLink>
+                )
+              )}
             </div>
           </div>
-          <div className="hidden md:block">
-            <button className="bg-accent text-accent-foreground p-2 rounded-full">
+
+          {/* Settings button (desktop) */}
+          <div className="hidden md:flex items-center">
+            <button className="bg-accent text-accent-foreground p-2 rounded-full flex items-center justify-center">
               <Settings className="h-5 w-5" />
             </button>
           </div>
-          <div className="md:hidden">
+
+          {/* Mobile menu button */}
+          <div className={`md:hidden ${windowWidth <= 480 && !isMenuOpen ? "absolute right-4" : ""}`}>
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={toggleMenu}
               type="button"
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-accent"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
+              aria-expanded={isMenuOpen}
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
@@ -162,25 +177,30 @@ const Navigation = () => {
         </div>
       </div>
 
-      <div className={`${isMenuOpen ? "block" : "hidden"} md:hidden`} id="mobile-menu">
+      {/* Mobile menu */}
+      <div
+        className={`${isMenuOpen ? "block" : "hidden"} md:hidden`}
+        id="mobile-menu"
+      >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white dark:bg-gray-800">
-          {items.map(
-            (item, index) =>
-              (item.roles.includes("user") || isAdmin() || isManager()) && (
-                <NavLink
-                  key={index}
-                  to={item.href}
-                  onClick={() => setIsMenuOpen(false)}
-                  className={({ isActive }) =>
-                    isActive
-                      ? "bg-accent text-accent-foreground block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
-                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2"
-                  }
-                >
+          {filteredItems.map(
+            (item, index) => (
+              <NavLink
+                key={index}
+                to={item.href}
+                onClick={() => setIsMenuOpen(false)}
+                className={({ isActive }) =>
+                  isActive
+                    ? "bg-accent text-accent-foreground block px-3 py-3 rounded-md text-base font-medium flex items-center gap-2 min-h-[48px]"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white block px-3 py-3 rounded-md text-base font-medium flex items-center gap-2 min-h-[48px]"
+                }
+              >
+                <span className="flex items-center justify-center">
                   {item.icon}
-                  {item.title}
-                </NavLink>
-              )
+                </span>
+                <span>{item.title}</span>
+              </NavLink>
+            )
           )}
         </div>
       </div>
