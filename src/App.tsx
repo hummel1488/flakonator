@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
@@ -14,7 +15,7 @@ import DataManagement from './pages/DataManagement';
 import Unauthorized from './pages/Unauthorized';
 import NotFound from './pages/NotFound';
 import { AuthProvider } from './contexts/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'sonner';
 
 function App() {
