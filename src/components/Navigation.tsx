@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Home,
@@ -7,8 +6,6 @@ import {
   Store,
   BarChart2,
   Users,
-  Speaker,
-  GraduationCap,
   Settings,
   Database,
   Menu,
@@ -79,18 +76,6 @@ const Navigation = () => {
       roles: ["admin"],
     },
     {
-      icon: <Speaker className="h-5 w-5" />,
-      title: "Маркетинг",
-      href: "/marketing",
-      roles: ["admin"],
-    },
-    {
-      icon: <GraduationCap className="h-5 w-5" />,
-      title: "Обучение",
-      href: "/training",
-      roles: ["admin"],
-    },
-    {
       icon: <Database className="h-5 w-5" />,
       title: "Управление данными",
       href: "/data-management",
@@ -116,7 +101,6 @@ const Navigation = () => {
     <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo and brand */}
           <div className={`flex items-center ${windowWidth <= 480 && !isMenuOpen ? "mx-auto" : ""}`}>
             <NavLink to="/" className="text-2xl font-bold flex items-center">
               <span className="bg-accent text-accent-foreground px-2 py-0.5 rounded-l-md flex items-center">
@@ -127,7 +111,6 @@ const Navigation = () => {
             </NavLink>
           </div>
 
-          {/* Desktop menu */}
           <div className="hidden md:block flex-grow ml-6">
             <div className="flex items-center space-x-1">
               {filteredItems.map(
@@ -151,14 +134,12 @@ const Navigation = () => {
             </div>
           </div>
 
-          {/* Settings button (desktop) */}
           <div className="hidden md:flex items-center">
             <button className="bg-accent text-accent-foreground p-2 rounded-full flex items-center justify-center">
               <Settings className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Mobile menu button */}
           <div className={`md:hidden ${windowWidth <= 480 && !isMenuOpen ? "absolute right-4" : ""}`}>
             <button
               onClick={toggleMenu}
@@ -177,7 +158,6 @@ const Navigation = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       <div
         className={`${isMenuOpen ? "block" : "hidden"} md:hidden`}
         id="mobile-menu"
