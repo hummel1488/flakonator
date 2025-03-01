@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -27,6 +28,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -95,6 +97,12 @@ const Inventory = () => {
   const [zeroNonExisting, setZeroNonExisting] = useState<boolean>(true);
   const [showImportResults, setShowImportResults] = useState<boolean>(false);
   
+  useEffect(() => {
+    if (locations.length > 0 && !manualLocationId) {
+      setManualLocationId(locations[0].id);
+    }
+  }, [locations]);
+
   useEffect(() => {
     console.log("Available locations for import:", locations.map(loc => ({ id: loc.id, name: loc.name })));
   }, [locations]);
@@ -623,6 +631,7 @@ const Inventory = () => {
         </div>
       </div>
 
+      {/* Add Product Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -720,6 +729,7 @@ const Inventory = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Update Quantity Dialog */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -753,6 +763,7 @@ const Inventory = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete All Confirmation Dialog */}
       <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -770,7 +781,8 @@ const Inventory = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Dialog open={showImportDialog} onOpenChange={closeImportDialog}>
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Импорт товаров</DialogTitle>
@@ -831,7 +843,7 @@ const Inventory = () => {
                   <Checkbox 
                     id="zero-existing" 
                     checked={zeroNonExisting}
-                    onCheckedChange={(checked) => setZeroNonExisting(checked as boolean)}
+                    onCheckedChange={(checked) => setZeroNonExisting(!!checked)}
                   />
                   <Label htmlFor="zero-existing">
                     Обнулить остатки товаров, отсутствующих в файле импорта
