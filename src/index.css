@@ -1,87 +1,86 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 210 33% 98%;  /* Нежный светло-серый фон #F4F7FA */
-    --foreground: 200 33% 25%;  /* Темно-синий текст #1E4B5F */
+    --background: 0 0% 98%;  /* Light neutral background #fafafa */
+    --foreground: 220 13% 25%;  /* Dark gray text #394049 */
     
-    --card: 0 0% 100%;  /* Белые карточки */
-    --card-foreground: 200 33% 25%;  /* Темно-синий текст */
+    --card: 0 0% 100%;  /* White cards */
+    --card-foreground: 220 13% 25%;  /* Dark gray text */
 
-    --popover: 0 0% 100%;  /* Белые всплывающие окна */
-    --popover-foreground: 200 33% 25%;  /* Темно-синий текст */
+    --popover: 0 0% 100%;  /* White popover windows */
+    --popover-foreground: 220 13% 25%;  /* Dark gray text */
 
-    --primary: 33 100% 50%;  /* Pornhub оранжевый #F90 */
-    --primary-foreground: 0 0% 0%;  /* Черный текст */
+    --primary: 220 13% 25%;  /* Dark gray primary #394049 */
+    --primary-foreground: 0 0% 98%;  /* Light text */
 
-    --secondary: 0 0% 0%;  /* Pornhub черный #000 */
-    --secondary-foreground: 0 0% 100%;  /* Белый текст */
+    --secondary: 210 17% 90%;  /* Light gray secondary #e6eaef */
+    --secondary-foreground: 220 13% 25%;  /* Dark gray text */
 
-    --muted: 210 20% 94%;  /* Очень светло-серый #EEF2F6 */
-    --muted-foreground: 200 20% 45%;  /* Приглушенный синий текст */
+    --muted: 220 14% 96%;  /* Very light gray #f5f6f8 */
+    --muted-foreground: 220 9% 46%;  /* Medium gray text #6c747f */
 
-    --accent: 33 100% 50%;  /* Pornhub оранжевый #F90 */
-    --accent-foreground: 0 0% 0%;  /* Черный текст */
+    --accent: 210 100% 63%;  /* Soft blue accent #5aa6ff */
+    --accent-foreground: 0 0% 100%;  /* White text */
 
-    --destructive: 0 70% 50%;  /* Красный */
-    --destructive-foreground: 0 0% 100%;  /* Белый текст */
+    --destructive: 0 70% 50%;  /* Red for destructive actions */
+    --destructive-foreground: 0 0% 100%;  /* White text */
 
-    --border: 200 25% 90%;  /* Светло-синие границы */
-    --input: 200 25% 90%;  /* Светло-синие поля ввода */
-    --ring: 33 100% 50%;  /* Pornhub оранжевый #F90 */
+    --border: 220 13% 90%;  /* Light gray border */
+    --input: 220 13% 90%;  /* Light gray input fields */
+    --ring: 210 100% 63%;  /* Soft blue for focus rings */
 
-    --radius: 0.625rem;  /* Слегка скругленные углы */
+    --radius: 0.5rem;  /* Subtle rounding of corners */
 
-    --sidebar-background: 0 0% 0%;  /* Черный фон боковой панели */
-    --sidebar-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-primary: 33 100% 50%;  /* Pornhub оранжевый #F90 */
-    --sidebar-primary-foreground: 0 0% 0%;  /* Черный текст */
-    --sidebar-accent: 0 0% 20%;  /* Темно-серый */
-    --sidebar-accent-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-border: 0 0% 15%;  /* Темно-серые границы */
-    --sidebar-ring: 33 100% 50%;  /* Pornhub оранжевый #F90 */
+    --sidebar-background: 220 13% 25%;  /* Dark gray sidebar background #394049 */
+    --sidebar-foreground: 0 0% 95%;  /* Light text */
+    --sidebar-primary: 210 100% 63%;  /* Soft blue accent #5aa6ff */
+    --sidebar-primary-foreground: 0 0% 100%;  /* White text */
+    --sidebar-accent: 223 14% 34%;  /* Medium dark gray #4a5568 */
+    --sidebar-accent-foreground: 0 0% 95%;  /* Light text */
+    --sidebar-border: 223 14% 30%;  /* Darker gray borders */
+    --sidebar-ring: 210 100% 63%;  /* Soft blue for focus rings */
   }
 
   .dark {
-    --background: 0 0% 10%;  /* Темно-серый фон #181818 */
-    --foreground: 0 0% 95%;  /* Светлый текст */
+    --background: 220 13% 15%;  /* Dark gray background #232529 */
+    --foreground: 0 0% 95%;  /* Light text */
 
-    --card: 0 0% 15%;  /* Темно-серые карточки #262626 */
-    --card-foreground: 0 0% 95%;  /* Светлый текст */
+    --card: 220 13% 20%;  /* Slightly lighter dark gray cards #2c2f36 */
+    --card-foreground: 0 0% 95%;  /* Light text */
 
-    --popover: 0 0% 15%;  /* Темно-серые всплывающие окна */
-    --popover-foreground: 0 0% 95%;  /* Светлый текст */
+    --popover: 220 13% 20%;  /* Slightly lighter dark gray popover windows */
+    --popover-foreground: 0 0% 95%;  /* Light text */
 
-    --primary: 33 100% 50%;  /* Pornhub оранжевый #F90 */
-    --primary-foreground: 0 0% 0%;  /* Черный текст */
+    --primary: 210 100% 63%;  /* Soft blue primary #5aa6ff */
+    --primary-foreground: 0 0% 100%;  /* White text */
 
-    --secondary: 0 0% 25%;  /* Темно-серый #404040 */
-    --secondary-foreground: 0 0% 95%;  /* Светлый текст */
+    --secondary: 220 13% 25%;  /* Medium dark gray #394049 */
+    --secondary-foreground: 0 0% 95%;  /* Light text */
 
-    --muted: 0 0% 20%;  /* Приглушенный серый */
-    --muted-foreground: 0 0% 80%;  /* Светло-серый текст */
+    --muted: 220 13% 25%;  /* Medium dark gray */
+    --muted-foreground: 220 9% 70%;  /* Medium light gray text */
 
-    --accent: 33 100% 50%;  /* Pornhub оранжевый #F90 */
-    --accent-foreground: 0 0% 0%;  /* Черный текст */
+    --accent: 210 100% 63%;  /* Soft blue accent #5aa6ff */
+    --accent-foreground: 0 0% 100%;  /* White text */
 
-    --destructive: 0 70% 40%;  /* Темно-красный */
-    --destructive-foreground: 0 0% 95%;  /* Светлый текст */
+    --destructive: 0 70% 40%;  /* Darker red for destructive actions */
+    --destructive-foreground: 0 0% 95%;  /* Light text */
 
-    --border: 0 0% 20%;  /* Серые границы */
-    --input: 0 0% 20%;  /* Серые поля ввода */
-    --ring: 33 100% 50%;  /* Pornhub оранжевый #F90 */
+    --border: 220 13% 25%;  /* Medium dark gray borders */
+    --input: 220 13% 25%;  /* Medium dark gray input fields */
+    --ring: 210 100% 63%;  /* Soft blue for focus rings */
     
-    --sidebar-background: 0 0% 0%;  /* Черный фон боковой панели */
-    --sidebar-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-primary: 33 100% 50%;  /* Pornhub оранжевый #F90 */
-    --sidebar-primary-foreground: 0 0% 0%;  /* Черный текст */
-    --sidebar-accent: 0 0% 25%;  /* Средний серый */
-    --sidebar-accent-foreground: 0 0% 95%;  /* Светлый текст */
-    --sidebar-border: 0 0% 15%;  /* Темно-серые границы */
-    --sidebar-ring: 33 100% 50%;  /* Pornhub оранжевый #F90 */
+    --sidebar-background: 220 13% 15%;  /* Dark gray sidebar background #232529 */
+    --sidebar-foreground: 0 0% 95%;  /* Light text */
+    --sidebar-primary: 210 100% 63%;  /* Soft blue accent #5aa6ff */
+    --sidebar-primary-foreground: 0 0% 100%;  /* White text */
+    --sidebar-accent: 220 13% 25%;  /* Medium dark gray #394049 */
+    --sidebar-accent-foreground: 0 0% 95%;  /* Light text */
+    --sidebar-border: 220 13% 20%;  /* Darker gray borders */
+    --sidebar-ring: 210 100% 63%;  /* Soft blue for focus rings */
   }
 }
 
