@@ -1,20 +1,18 @@
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useSales } from "@/hooks/use-sales";
 import { useInventory } from "@/hooks/use-inventory";
 import { useLocations } from "@/hooks/use-locations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { TrendingUp, Calendar, AlertTriangle, ShoppingBag, Database, BarChart3, Package, DollarSign, Bookmark, Droplet, TrendingDown } from "lucide-react";
-import { formatDistance, subDays, startOfMonth } from "date-fns";
+import { TrendingUp, Calendar, AlertTriangle, ShoppingBag, Database, BarChart3 } from "lucide-react";
+import { formatDistance, subDays } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "./ui/separator";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Progress } from "@/components/ui/progress";
 
 export const Dashboard = () => {
   const navigate = useNavigate();
@@ -22,8 +20,6 @@ export const Dashboard = () => {
   const { inventory } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager, isSeller } = useAuth();
-  const isMobile = useIsMobile();
-  const [showChart, setShowChart] = useState(!isMobile);
 
   // Последние 7 дней продаж
   const recentSales = useMemo(() => {
@@ -82,23 +78,13 @@ export const Dashboard = () => {
 
   // Calculate inventory statistics
   const inventoryStats = useMemo(() => {
-    const sizeStats: Record<string, { count: number, value: number, color: string, startCount: number }> = {
-      "5": { count: 0, value: 0, color: "#8884d8", startCount: 0 },
-      "16": { count: 0, value: 0, color: "#83a6ed", startCount: 0 },
-      "20": { count: 0, value: 0, color: "#8dd1e1", startCount: 0 },
-      "25": { count: 0, value: 0, color: "#82ca9d", startCount: 0 },
-      "30": { count: 0, value: 0, color: "#a4de6c", startCount: 0 },
-      "car": { count: 0, value: 0, color: "#d0ed57", startCount: 0 },
-    };
-
-    // Simulate start of month data (for demonstration purposes)
-    const startOfMonthData = {
-      "5": 30,
-      "16": 25,
-      "20": 20,
-      "25": 15,
-      "30": 10,
-      "car": 20
+    const sizeStats: Record<string, { count: number, value: number }> = {
+      "5": { count: 0, value: 0 },
+      "16": { count: 0, value: 0 },
+      "20": { count: 0, value: 0 },
+      "25": { count: 0, value: 0 },
+      "30": { count: 0, value: 0 },
+      "car": { count: 0, value: 0 },
     };
 
     // Price mapping for each size
@@ -128,8 +114,6 @@ export const Dashboard = () => {
       if (sizeStats[size]) {
         sizeStats[size].count += item.quantity;
         sizeStats[size].value += item.quantity * prices[size];
-        // For demonstration, set the start of month count
-        sizeStats[size].startCount = startOfMonthData[size];
       } else {
         console.log(`Неизвестный размер: ${size} для товара: ${item.name}`);
       }
@@ -137,7 +121,6 @@ export const Dashboard = () => {
 
     const totalCount = Object.values(sizeStats).reduce((sum, stat) => sum + stat.count, 0);
     const totalValue = Object.values(sizeStats).reduce((sum, stat) => sum + stat.value, 0);
-    const totalStartCount = Object.values(sizeStats).reduce((sum, stat) => sum + stat.startCount, 0);
 
     // Convert to format suitable for charts - only include sizes with non-zero counts
     const pieChartData = Object.entries(sizeStats)
@@ -145,50 +128,22 @@ export const Dashboard = () => {
       .map(([size, data]) => ({
         name: size === "car" ? "Автофлакон" : `${size} мл`,
         value: data.count,
-        size,
-        color: data.color
+        size
       }));
 
-    // Sort sizes by count (ascending) for display
-    const sortedSizes = Object.entries(sizeStats)
-      .sort(([_, a], [__, b]) => a.count - b.count)
-      .filter(([_, data]) => data.count > 0); // Only include non-zero items
-
-    return { 
-      sizeStats, 
-      totalCount, 
-      totalValue, 
-      pieChartData, 
-      sortedSizes,
-      totalStartCount 
-    };
+    return { sizeStats, totalCount, totalValue, pieChartData };
   }, [inventory]);
-
-  // Calculate recommendations
-  const recommendations = useMemo(() => {
-    const result = [];
-    const threshold = 0.05; // 5% threshold
-    
-    if (inventoryStats.totalCount > 0) {
-      for (const [size, data] of Object.entries(inventoryStats.sizeStats)) {
-        const percentage = data.count / inventoryStats.totalCount;
-        if (percentage < threshold && data.count > 0) {
-          const recommendedAmount = Math.ceil(inventoryStats.totalCount * 0.1); // recommend 10% of total
-          result.push({
-            size,
-            currentCount: data.count,
-            recommendedAmount
-          });
-        }
-      }
-    }
-    
-    return result;
-  }, [inventoryStats]);
 
   // Форматирование валюты
   const formatCurrency = (value: number) => {
     return value.toLocaleString("ru-RU") + " ₽";
+  };
+
+  // Colors for pie chart
+  const COLORS = ['#8884d8', '#83a6ed', '#8dd1e1', '#82ca9d', '#a4de6c', '#d0ed57'];
+
+  const getSizeLabel = (size: string) => {
+    return size === "car" ? "Автофлакон" : `${size} мл`;
   };
 
   // Custom label renderer for pie chart to avoid overlap
@@ -210,16 +165,6 @@ export const Dashboard = () => {
         {`${name} (${(percent * 100).toFixed(0)}%)`}
       </text>
     );
-  };
-
-  const getSizeLabel = (size: string) => {
-    return size === "car" ? "Автофлакон" : `${size} мл`;
-  };
-
-  // Calculate percentage change
-  const calculateChange = (current: number, previous: number) => {
-    if (previous === 0) return 0;
-    return (current - previous) / previous * 100;
   };
 
   return (
@@ -288,163 +233,81 @@ export const Dashboard = () => {
 
       {/* Inventory Statistics - Only visible for admin */}
       {isAdmin() && (
-        <Card className="bg-white shadow-lg border border-gray-100">
+        <Card className="bg-white shadow-md border border-gray-100">
           <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-amber-500" />
-              <CardTitle className="text-3xl">Статистика инвентаря</CardTitle>
-            </div>
+            <CardTitle>Статистика инвентаря</CardTitle>
+            <Database className="h-5 w-5 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="shadow-md p-2 hover:shadow-lg transition-all duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card className="shadow-sm">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-500 mb-1">Общее количество</div>
-                    <Package className="h-5 w-5 text-blue-500" />
-                  </div>
-                  <div className="text-3xl font-bold">{inventoryStats.totalCount} шт.</div>
+                  <div className="text-sm text-gray-500 mb-1">Общее количество</div>
+                  <div className="text-2xl font-bold">{inventoryStats.totalCount} шт.</div>
                 </CardContent>
               </Card>
-              <Card className="shadow-md p-2 hover:shadow-lg transition-all duration-300">
+              <Card className="shadow-sm">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
-                    <DollarSign className="h-5 w-5 text-green-500" />
-                  </div>
-                  <div className="text-3xl font-bold">{formatCurrency(inventoryStats.totalValue)}</div>
+                  <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
+                  <div className="text-2xl font-bold">{formatCurrency(inventoryStats.totalValue)}</div>
                 </CardContent>
               </Card>
-              <Card className="shadow-md p-2 hover:shadow-lg transition-all duration-300">
+              <Card className="shadow-sm">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
-                    <Bookmark className="h-5 w-5 text-purple-500" />
-                  </div>
-                  <div className="text-3xl font-bold">{inventory.length} шт.</div>
+                  <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
+                  <div className="text-2xl font-bold">{inventory.length} шт.</div>
                 </CardContent>
               </Card>
             </div>
 
-            <div className="mb-4">
-              <div className="flex items-center justify-between">
-                <div className="text-xl font-semibold mb-2">Динамика</div>
-              </div>
-              <Card className="shadow-sm p-4 mb-6">
-                <div className="flex flex-col md:flex-row justify-between gap-4">
-                  <div>
-                    <span className="text-gray-500">Было в начале месяца:</span>
-                    <span className="font-bold ml-2">{inventoryStats.totalStartCount} флаконов</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Осталось сейчас:</span>
-                    <span className="font-bold ml-2">{inventoryStats.totalCount} флаконов</span>
-                  </div>
-                  <div>
-                    {calculateChange(inventoryStats.totalCount, inventoryStats.totalStartCount) < -20 ? (
-                      <div className="flex items-center text-red-500">
-                        <span>Спад</span>
-                        <TrendingDown className="h-4 w-4 ml-1" />
-                      </div>
-                    ) : calculateChange(inventoryStats.totalCount, inventoryStats.totalStartCount) > 20 ? (
-                      <div className="flex items-center text-green-500">
-                        <span>Рост</span>
-                        <TrendingUp className="h-4 w-4 ml-1" />
-                      </div>
-                    ) : (
-                      <span className="text-gray-500">Стабильно</span>
-                    )}
-                  </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-sm font-medium mb-3">Распределение по объемам</h3>
+                <div className="h-[250px]">
+                  {inventoryStats.pieChartData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={inventoryStats.pieChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={renderCustomizedLabel}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {inventoryStats.pieChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value) => [`${value} шт.`, "Количество"]}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-muted-foreground">
+                      Нет данных о товарах
+                    </div>
+                  )}
                 </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-xl font-semibold mb-4">Распределение по объемам</h3>
-                {isMobile ? (
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowChart(!showChart)}
-                    className="w-full mb-4"
-                  >
-                    {showChart ? "Скрыть диаграмму" : "Показать диаграмму"}
-                  </Button>
-                ) : null}
-                
-                {(!isMobile || showChart) && (
-                  <div className="h-[350px]">
-                    {inventoryStats.pieChartData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={inventoryStats.pieChartData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            outerRadius={120}
-                            fill="#8884d8"
-                            dataKey="value"
-                          >
-                            {inventoryStats.pieChartData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip 
-                            formatter={(value) => [`${value} шт.`, "Количество"]}
-                          />
-                          <Legend
-                            layout="vertical"
-                            verticalAlign="middle"
-                            align="right"
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-muted-foreground">
-                        Нет данных о товарах
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-4">Остатки по объемам</h3>
-                <div className="space-y-4 px-2">
-                  {inventoryStats.sortedSizes.map(([size, { count, value, color, startCount }]) => {
-                    const percentage = (count / inventoryStats.totalCount) * 100;
-                    const changePercent = calculateChange(count, startCount);
-                    
-                    return (
-                      <div key={size} className="p-4 border rounded-md shadow-sm hover:shadow-md transition-all duration-300">
-                        <div className="flex justify-between items-center mb-2">
-                          <div className="flex items-center gap-2">
-                            <Droplet className="h-4 w-4" style={{ color }} />
-                            <div className="font-medium">{getSizeLabel(size)}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">{count} шт.</Badge>
-                            <Badge variant="secondary">{formatCurrency(value)}</Badge>
-                            {changePercent < -20 && (
-                              <TrendingDown className="h-4 w-4 text-red-500" />
-                            )}
-                            {changePercent > 20 && (
-                              <TrendingUp className="h-4 w-4 text-green-500" />
-                            )}
-                          </div>
-                        </div>
-                        <Progress value={percentage} className="h-2" style={{ 
-                          '--tw-gradient-from': color,
-                          '--tw-gradient-to': `${color}99`
-                        } as React.CSSProperties} />
-                        <div className="flex justify-between mt-1">
-                          <span className="text-xs text-gray-500">Было: {startCount} шт.</span>
-                          <span className="text-xs text-gray-500">{percentage.toFixed(1)}% от общего</span>
-                        </div>
+                <h3 className="text-sm font-medium mb-3">Остатки по объемам</h3>
+                <div className="space-y-3">
+                  {Object.entries(inventoryStats.sizeStats)
+                    .filter(([_, { count }]) => count > 0) // Only show sizes with products
+                    .map(([size, { count, value }]) => (
+                    <div key={size} className="flex justify-between items-center p-2 border rounded-md">
+                      <div className="font-medium">{getSizeLabel(size)}</div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{count} шт.</Badge>
+                        <Badge variant="secondary">{formatCurrency(value)}</Badge>
                       </div>
-                    );
-                  })}
-                  {inventoryStats.sortedSizes.length === 0 && (
+                    </div>
+                  ))}
+                  {Object.values(inventoryStats.sizeStats).every(({ count }) => count === 0) && (
                     <div className="text-center py-4 text-muted-foreground">
                       Нет данных о товарах
                     </div>
@@ -452,29 +315,6 @@ export const Dashboard = () => {
                 </div>
               </div>
             </div>
-
-            {recommendations.length > 0 && (
-              <div className="mt-8">
-                <Card className="bg-amber-50 border-amber-200">
-                  <CardHeader>
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-500" />
-                      Рекомендуемые действия
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {recommendations.map((rec) => (
-                        <li key={rec.size} className="text-sm">
-                          Рекомендуем заказать <strong>{rec.recommendedAmount}</strong> флаконов 
-                          <strong> {getSizeLabel(rec.size)}</strong>, иначе к концу недели может возникнуть дефицит.
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
           </CardContent>
         </Card>
       )}

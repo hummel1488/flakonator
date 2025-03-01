@@ -13,16 +13,8 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: {
-				DEFAULT: '1rem',
-				sm: '1.5rem',
-				md: '2rem',
-			},
+			padding: '2rem',
 			screens: {
-				sm: '100%',
-				md: '100%',
-				lg: '1024px',
-				xl: '1280px',
 				'2xl': '1400px'
 			}
 		},

@@ -1,7 +1,7 @@
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle, TrendingUp, TrendingDown, Package } from "lucide-react";
+import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,8 +19,7 @@ import {
   TableHead, 
   TableHeader, 
   TableRow,
-  TableFooter,
-  ResponsiveTable
+  TableFooter
 } from "@/components/ui/table";
 import {
   Dialog,
@@ -44,10 +43,9 @@ import {
 import { Card, CardContent, CardTitle, CardHeader, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useInventory, ImportLogItem, Product } from "@/hooks/use-inventory";
+import { useInventory, ImportLogItem } from "@/hooks/use-inventory";
 import { useLocations } from "@/hooks/use-locations";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSales, SaleItem } from "@/hooks/use-sales";
 import Navigation from "@/components/Navigation";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -58,11 +56,7 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
-import { ProductRecommendations } from "@/components/ProductRecommendations";
-import { StatCard } from "@/components/StatCard";
-import { LowStockAlert } from "@/components/LowStockAlert";
+import { ScrollArea } from "@/components/ui/scroll-area"; 
 
 const normalizeText = (text: string) => {
   return text.toLowerCase()
@@ -82,7 +76,6 @@ const Inventory = () => {
   const { inventory, addProduct, loading, updateProductQuantity, importProducts, importFromCSV, deleteAllProducts, getSizeStatKey } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager } = useAuth();
-  const { sales, loading: salesLoading } = useSales();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLocation, setFilterLocation] = useState("all");
@@ -103,22 +96,6 @@ const Inventory = () => {
   const [importTab, setImportTab] = useState<string>("upload");
   const [zeroNonExisting, setZeroNonExisting] = useState<boolean>(true);
   const [showImportResults, setShowImportResults] = useState<boolean>(false);
-  
-  // Revenue calculation data
-  const PRICES: Record<string, number> = {
-    "5": 500,
-    "5 мл": 500,
-    "16": 1000,
-    "16 мл": 1000,
-    "20": 1300,
-    "20 мл": 1300,
-    "25": 1500,
-    "25 мл": 1500,
-    "30": 1800,
-    "30 мл": 1800,
-    "car": 500,
-    "Автофлакон": 500
-  };
   
   useEffect(() => {
     if (locations.length > 0 && !manualLocationId) {
@@ -142,215 +119,6 @@ const Inventory = () => {
     quantity: 0,
   });
 
-  // Weekly and monthly sales data calculation
-  const currentDate = new Date();
-  
-  const weeklySalesData = useMemo(() => {
-    // Calculate dates for current and previous periods
-    const oneWeekAgo = new Date(currentDate);
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
-    const twoWeeksAgo = new Date(oneWeekAgo);
-    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 7);
-    
-    // Filter sales for the current location if one is selected
-    const locationSales = filterLocation !== "all" 
-      ? sales.filter(sale => sale.locationId === filterLocation)
-      : sales;
-    
-    // Last week sales (last 7 days)
-    const lastWeekSales = locationSales.filter(sale => {
-      const saleDate = new Date(sale.date);
-      return saleDate >= oneWeekAgo && saleDate <= currentDate;
-    });
-    
-    // Previous week sales (7 days before last week)
-    const previousWeekSales = locationSales.filter(sale => {
-      const saleDate = new Date(sale.date);
-      return saleDate >= twoWeeksAgo && saleDate < oneWeekAgo;
-    });
-    
-    return { lastWeekSales, previousWeekSales, oneWeekAgo, twoWeeksAgo };
-  }, [sales, filterLocation, currentDate]);
-  
-  const { lastWeekSales, previousWeekSales, oneWeekAgo, twoWeeksAgo } = weeklySalesData;
-  
-  const monthlySalesData = useMemo(() => {
-    // Calculate dates for current and previous months
-    const oneMonthAgo = new Date(currentDate);
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    
-    const twoMonthsAgo = new Date(oneMonthAgo);
-    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 1);
-    
-    // Filter sales for the current location if one is selected
-    const locationSales = filterLocation !== "all" 
-      ? sales.filter(sale => sale.locationId === filterLocation)
-      : sales;
-    
-    // Current month sales
-    const currentMonthSales = locationSales.filter(sale => {
-      const saleDate = new Date(sale.date);
-      return saleDate >= oneMonthAgo && saleDate <= currentDate;
-    });
-    
-    // Previous month sales
-    const previousMonthSales = locationSales.filter(sale => {
-      const saleDate = new Date(sale.date);
-      return saleDate >= twoMonthsAgo && saleDate < oneMonthAgo;
-    });
-    
-    // Calculate revenue for each period
-    const currentMonthRevenue = currentMonthSales.reduce((total, sale) => {
-      return total + sale.items.reduce((subtotal, item) => {
-        const sizeKey = getSizeStatKey(item.size);
-        const price = item.price || PRICES[sizeKey] || 0;
-        return subtotal + (item.quantity * price);
-      }, 0);
-    }, 0);
-    
-    const previousMonthRevenue = previousMonthSales.reduce((total, sale) => {
-      return total + sale.items.reduce((subtotal, item) => {
-        const sizeKey = getSizeStatKey(item.size);
-        const price = item.price || PRICES[sizeKey] || 0;
-        return subtotal + (item.quantity * price);
-      }, 0);
-    }, 0);
-    
-    // Calculate change percentage
-    const revenueDifference = currentMonthRevenue - previousMonthRevenue;
-    const revenueChangePercent = previousMonthRevenue > 0 
-      ? (revenueDifference / previousMonthRevenue) * 100 
-      : 0;
-    
-    return {
-      currentMonthRevenue,
-      previousMonthRevenue,
-      revenueChangePercent
-    };
-  }, [sales, filterLocation, currentDate, getSizeStatKey]);
-  
-  // Product recommendations
-  const productRecommendations = useMemo(() => {
-    if (filterLocation === "all" || salesLoading || !lastWeekSales || !previousWeekSales) {
-      return [];
-    }
-    
-    // Find products with significant sales and look for trends
-    const oneMonthAgo = new Date(currentDate);
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    
-    // Get last 30 days sales for this location
-    const lastMonthSales = sales.filter(sale => {
-      const saleDate = new Date(sale.date);
-      return sale.locationId === filterLocation && 
-        saleDate >= oneMonthAgo && 
-        saleDate <= currentDate;
-    });
-    
-    // Group by product name and calculate total sales
-    const productSales = new Map();
-    
-    lastMonthSales.forEach(sale => {
-      sale.items.forEach(item => {
-        const key = `${item.name}-${item.size}`;
-        if (!productSales.has(key)) {
-          productSales.set(key, {
-            name: item.name,
-            size: item.size,
-            totalQuantity: 0,
-            weeklyQuantity: 0,
-            previousWeekQuantity: 0,
-            revenue: 0
-          });
-        }
-        
-        const saleDate = new Date(sale.date);
-        const product = productSales.get(key);
-        const sizeKey = getSizeStatKey(item.size);
-        const price = item.price || PRICES[sizeKey] || 0;
-        
-        // Add to total quantity
-        product.totalQuantity += item.quantity;
-        product.revenue += item.quantity * price;
-        
-        // Check if sale was in the last week
-        if (saleDate >= oneWeekAgo) {
-          product.weeklyQuantity += item.quantity;
-        } 
-        // Check if sale was in the previous week
-        else if (saleDate >= twoWeeksAgo && saleDate < oneWeekAgo) {
-          product.previousWeekQuantity += item.quantity;
-        }
-      });
-    });
-    
-    // Convert to array and sort by total quantity
-    const sortedProducts = Array.from(productSales.values())
-      .sort((a, b) => b.totalQuantity - a.totalQuantity);
-    
-    // Calculate growth percentage for each product
-    const productsWithGrowth = sortedProducts.map(product => {
-      let growthPercentage = 0;
-      if (product.previousWeekQuantity > 0) {
-        const difference = product.weeklyQuantity - product.previousWeekQuantity;
-        growthPercentage = (difference / product.previousWeekQuantity) * 100;
-      } else if (product.weeklyQuantity > 0) {
-        growthPercentage = 100; // New product that didn't sell before
-      }
-      
-      // Current inventory for this product at this location
-      const inventoryItem = inventory.find(item => 
-        item.name === product.name && 
-        item.size === product.size && 
-        item.locationId === filterLocation
-      );
-      
-      const currentStock = inventoryItem ? inventoryItem.quantity : 0;
-      const isLowStock = currentStock <= 2; // Define low stock as 2 or fewer items
-      
-      // Check if this is a trending product (significant growth)
-      const isTrending = growthPercentage >= 30;
-      
-      // Check if this is a bestseller
-      const isBestseller = product.totalQuantity >= 5;
-      
-      return {
-        ...product,
-        growthPercentage,
-        currentStock,
-        isLowStock,
-        isTrending,
-        isBestseller
-      };
-    });
-    
-    // Filter to products that are: trending OR bestsellers OR low in stock
-    const recommendedProducts = productsWithGrowth.filter(product => 
-      product.isTrending || product.isBestseller || product.isLowStock
-    );
-    
-    // Return top 5 products
-    return recommendedProducts.slice(0, 5);
-  }, [sales, filterLocation, inventory, lastWeekSales, previousWeekSales, currentDate, getSizeStatKey, oneWeekAgo, twoWeeksAgo]);
-  
-  // Low stock products
-  const lowStockProducts = useMemo(() => {
-    if (filterLocation === "all") {
-      return [];
-    }
-    
-    // Get products for the selected location
-    const locationProducts = inventory.filter(item => item.locationId === filterLocation);
-    
-    // Find products with low stock (2 or fewer)
-    const lowStock = locationProducts
-      .filter(item => item.quantity <= 2)
-      .sort((a, b) => a.quantity - b.quantity); // Sort by quantity ascending
-    
-    return lowStock;
-  }, [inventory, filterLocation]);
-  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -558,7 +326,14 @@ const Inventory = () => {
       "car": { count: 0, value: 0 },
     };
 
-    const prices: Record<string, number> = PRICES;
+    const prices: Record<string, number> = {
+      "5": 500,
+      "16": 1000,
+      "20": 1300,
+      "25": 1500,
+      "30": 1800,
+      "car": 500
+    };
 
     inventoryToCalculate.forEach(item => {
       const statKey = getSizeStatKey(item.size);
@@ -673,84 +448,33 @@ const Inventory = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8 space-y-6"
+              className="mb-8"
             >
-              <Card className="shadow-md border border-gray-100 bg-white" gradient>
+              <Card className="shadow-md border border-gray-100 bg-white">
                 <CardHeader>
                   <CardTitle>Статистика инвентаря {filterLocation !== "all" && `- ${getLocationName(filterLocation)}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard 
-                      title="Общее количество"
-                      value={`${stats.totalCount} шт.`}
-                      icon={<Package className="h-5 w-5 text-blue-500" />}
-                    />
-                    
-                    <StatCard 
-                      title="Общая стоимость"
-                      value={`${stats.totalValue.toLocaleString()} ₽`}
-                      icon={<Database className="h-5 w-5 text-amber-500" />}
-                    />
-                    
-                    <StatCard 
-                      title="Количество наименований"
-                      value={`${filteredInventory.length} шт.`}
-                      icon={<FileText className="h-5 w-5 text-purple-500" />}
-                    />
+                    <Card className="shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-500 mb-1">Общее количество</div>
+                        <div className="text-2xl font-bold">{stats.totalCount} шт.</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
+                        <div className="text-2xl font-bold">{stats.totalValue.toLocaleString()} ₽</div>
+                      </CardContent>
+                    </Card>
+                    <Card className="shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
+                        <div className="text-2xl font-bold">{filteredInventory.length} шт.</div>
+                      </CardContent>
+                    </Card>
                   </div>
-
-                  {!salesLoading && filterLocation !== "all" && (
-                    <>
-                      <Separator className="my-6" />
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card>
-                          <CardHeader className="pb-2">
-                            <CardTitle className="text-lg">Выручка за текущий месяц</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="flex justify-between items-center">
-                              <div className="text-2xl font-bold">
-                                {monthlySalesData.currentMonthRevenue.toLocaleString()} ₽
-                              </div>
-                              <div className={`flex items-center gap-1 text-sm font-medium ${
-                                monthlySalesData.revenueChangePercent >= 0 
-                                  ? 'text-green-600' 
-                                  : 'text-red-600'
-                              }`}>
-                                {monthlySalesData.revenueChangePercent >= 0 ? (
-                                  <TrendingUp className="h-4 w-4" />
-                                ) : (
-                                  <TrendingDown className="h-4 w-4" />
-                                )}
-                                {Math.abs(monthlySalesData.revenueChangePercent).toFixed(1)}%
-                              </div>
-                            </div>
-                            <div className="text-sm text-gray-500 mt-1">
-                              По сравнению с {monthlySalesData.previousMonthRevenue.toLocaleString()} ₽ в прошлом месяце
-                            </div>
-
-                            <Progress 
-                              className="h-2 mt-4" 
-                              value={
-                                monthlySalesData.previousMonthRevenue > 0 
-                                  ? (monthlySalesData.currentMonthRevenue / monthlySalesData.previousMonthRevenue) * 100 
-                                  : 100
-                              }
-                              indicatorClassName={monthlySalesData.revenueChangePercent >= 0 
-                                ? "bg-green-500" 
-                                : "bg-red-500"
-                              }
-                            />
-                          </CardContent>
-                        </Card>
-
-                        {lowStockProducts.length > 0 && (
-                          <LowStockAlert products={lowStockProducts} getLocationName={getLocationName} />
-                        )}
-                      </div>
-                    </>
-                  )}
 
                   <Separator className="my-6" />
 
@@ -765,21 +489,12 @@ const Inventory = () => {
                           <div className="text-right text-amber-600 font-semibold">
                             {value.toLocaleString()} ₽
                           </div>
-                          <Progress 
-                            className="h-1.5 mt-2" 
-                            value={Math.min(100, (count / Math.max(stats.totalCount, 1)) * 300)} 
-                            indicatorClassName="bg-amber-500"
-                          />
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                 </CardContent>
               </Card>
-
-              {filterLocation !== "all" && productRecommendations.length > 0 && (
-                <ProductRecommendations products={productRecommendations} locationName={getLocationName(filterLocation)} />
-              )}
             </motion.div>
           )}
 
@@ -852,7 +567,7 @@ const Inventory = () => {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden"
           >
-            <ResponsiveTable>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -876,7 +591,9 @@ const Inventory = () => {
                   ) : filteredInventory.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-10 text-gray-500">
-                        Ничего не найдено
+                        {searchTerm || filterLocation !== "all" || filterSize !== "all"
+                          ? "Нет товаров, соответствующих фильтрам"
+                          : "Нет товаров в инвентаре. Добавьте товар, нажав кнопку выше."}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -885,26 +602,18 @@ const Inventory = () => {
                         <TableCell className="font-medium">{item.name}</TableCell>
                         <TableCell>{getSizeLabel(item.size)}</TableCell>
                         <TableCell>
-                          {item.type === "perfume" ? "Парфюм" : item.type === "cosmetics" ? "Косметика" : item.type}
+                          {item.type === "perfume" ? "Парфюм" : "Другое"}
                         </TableCell>
                         <TableCell>{getLocationName(item.locationId)}</TableCell>
                         <TableCell className="text-right">
-                          <span
-                            className={
-                              item.quantity <= 2
-                                ? "text-red-600 font-bold"
-                                : item.quantity <= 5
-                                ? "text-amber-600 font-medium"
-                                : ""
-                            }
-                          >
+                          <Badge className={`font-medium ${item.quantity > 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                             {item.quantity}
-                          </span>
+                          </Badge>
                         </TableCell>
                         {(isAdmin() || isManager()) && (
                           <TableCell className="text-right">
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="sm"
                               onClick={() => openUpdateDialog(item)}
                             >
@@ -917,105 +626,98 @@ const Inventory = () => {
                   )}
                 </TableBody>
               </Table>
-            </ResponsiveTable>
+            </div>
           </motion.div>
         </div>
       </div>
 
       {/* Add Product Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Добавить товар</DialogTitle>
             <DialogDescription>
-              Добавьте новый товар в инвентарь
+              Заполните форму для добавления нового товара в инвентарь
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Название
-              </Label>
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="name">Название</Label>
               <Input
                 id="name"
                 name="name"
+                placeholder="Название парфюма"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="size" className="text-right">
-                Объем
-              </Label>
-              <Select
-                value={formData.size}
-                onValueChange={(value) => handleSelectChange("size", value)}
-              >
-                <SelectTrigger id="size" className="col-span-3">
-                  <SelectValue placeholder="Выберите размер" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5 мл">5 мл</SelectItem>
-                  <SelectItem value="16 мл">16 мл</SelectItem>
-                  <SelectItem value="20 мл">20 мл</SelectItem>
-                  <SelectItem value="25 мл">25 мл</SelectItem>
-                  <SelectItem value="30 мл">30 мл</SelectItem>
-                  <SelectItem value="car">Автофлакон</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="size">Объем</Label>
+                <Select 
+                  value={formData.size} 
+                  onValueChange={(value) => handleSelectChange("size", value)}
+                >
+                  <SelectTrigger id="size">
+                    <SelectValue placeholder="Выберите объем" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5 мл">5 мл</SelectItem>
+                    <SelectItem value="16 мл">16 мл</SelectItem>
+                    <SelectItem value="20 мл">20 мл</SelectItem>
+                    <SelectItem value="25 мл">25 мл</SelectItem>
+                    <SelectItem value="30 мл">30 мл</SelectItem>
+                    <SelectItem value="Автофлакон">Автофлакон</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="type">Тип</Label>
+                <Select 
+                  value={formData.type} 
+                  onValueChange={(value) => handleSelectChange("type", value)}
+                >
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Выберите тип" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="perfume">Парфюм</SelectItem>
+                    <SelectItem value="other">Другое</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
-                Тип
-              </Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleSelectChange("type", value)}
-              >
-                <SelectTrigger id="type" className="col-span-3">
-                  <SelectValue placeholder="Выберите тип" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="perfume">Парфюм</SelectItem>
-                  <SelectItem value="cosmetics">Косметика</SelectItem>
-                  <SelectItem value="accessories">Аксессуары</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
-                Точка продажи
-              </Label>
-              <Select
-                value={formData.location}
-                onValueChange={(value) => handleSelectChange("location", value)}
-              >
-                <SelectTrigger id="location" className="col-span-3">
-                  <SelectValue placeholder="Выберите точку" />
-                </SelectTrigger>
-                <SelectContent>
-                  {locations.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="quantity" className="text-right">
-                Количество
-              </Label>
-              <Input
-                id="quantity"
-                name="quantity"
-                type="number"
-                min={0}
-                value={formData.quantity}
-                onChange={handleInputChange}
-                className="col-span-3"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="location">Точка продажи</Label>
+                <Select 
+                  value={formData.location} 
+                  onValueChange={(value) => handleSelectChange("location", value)}
+                >
+                  <SelectTrigger id="location">
+                    <SelectValue placeholder="Выберите точку" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <Label htmlFor="quantity">Количество</Label>
+                <Input
+                  id="quantity"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  placeholder="1"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -1027,27 +729,28 @@ const Inventory = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Update Product Dialog */}
+      {/* Update Quantity Dialog */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Обновить количество</DialogTitle>
             <DialogDescription>
-              {selectedProduct && `${selectedProduct.name} (${getSizeLabel(selectedProduct.size)})`}
+              {selectedProduct && (
+                <>
+                  {selectedProduct.name} ({getSizeLabel(selectedProduct.size)})
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="update-quantity" className="text-right">
-                Количество
-              </Label>
+            <div className="grid grid-cols-1 gap-2">
+              <Label htmlFor="update-quantity">Новое количество</Label>
               <Input
                 id="update-quantity"
                 type="number"
-                min={0}
+                min="0"
                 value={updateFormData.quantity}
                 onChange={handleUpdateInputChange}
-                className="col-span-3"
               />
             </div>
           </div>
@@ -1055,229 +758,231 @@ const Inventory = () => {
             <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
               Отмена
             </Button>
-            <Button onClick={handleUpdateProduct}>Обновить</Button>
+            <Button onClick={handleUpdateProduct}>Сохранить</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Import Dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Импорт товаров</DialogTitle>
-            <DialogDescription>
-              Загрузите файл CSV с данными инвентаря
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Tabs value={importTab} onValueChange={setImportTab} className="mt-4">
-            <TabsList className="grid grid-cols-3 mb-4">
-              <TabsTrigger value="upload">Загрузка</TabsTrigger>
-              <TabsTrigger value="preview" disabled={!importData}>Предпросмотр</TabsTrigger>
-              <TabsTrigger value="results" disabled={!showImportResults}>Результаты</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="upload">
-              <div className="grid gap-4 py-4">
-                <div>
-                  <Label htmlFor="import-location" className="block mb-2">
-                    Точка продажи для импорта
-                  </Label>
-                  <Select
-                    value={manualLocationId}
-                    onValueChange={handleLocationChange}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Выберите точку" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locations.map((location) => (
-                        <SelectItem key={location.id} value={location.id}>
-                          {location.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="zero-non-existing" 
-                      checked={zeroNonExisting} 
-                      onCheckedChange={(checked) => setZeroNonExisting(!!checked)} 
-                    />
-                    <Label htmlFor="zero-non-existing">
-                      Обнулять отсутствующие позиции в импорте
-                    </Label>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Если товар есть в точке, но его нет в импорте, количество будет установлено на 0
-                  </p>
-                </div>
-                
-                <div className="border border-dashed border-gray-300 rounded-md p-6 text-center">
-                  <label className="block cursor-pointer">
-                    <Input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv,.txt"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <div className="flex flex-col items-center space-y-2">
-                      <Upload className="h-8 w-8 text-gray-400" />
-                      <span className="text-sm font-medium">
-                        Нажмите для выбора файла или перетащите его сюда
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        CSV или TXT, разделители - запятая или точка с запятой
-                      </span>
-                    </div>
-                  </label>
-                </div>
-                
-                <div className="bg-muted/50 p-4 rounded-md">
-                  <h4 className="font-medium mb-2">Формат файла:</h4>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    CSV файл должен содержать колонки: название, размер, количество.
-                    Порядок колонок и названия могут быть любыми.
-                  </p>
-                  <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">
-                    название,объем,количество{"\n"}
-                    LIBRE,5 мл,12{"\n"}
-                    BLACK OPIUM,16 мл,5{"\n"}
-                    SAUVAGE,30 мл,2
-                  </pre>
-                </div>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="preview">
-              <div className="space-y-4">
-                <div className="bg-muted/50 p-4 rounded-md">
-                  <h4 className="font-medium mb-2">Предварительная информация об импорте:</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Точка продажи: <span className="font-medium">{getLocationName(manualLocationId)}</span>
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {zeroNonExisting 
-                      ? "Отсутствующие позиции будут обнулены" 
-                      : "Отсутствующие позиции останутся неизменными"}
-                  </p>
-                </div>
-                
-                <Button onClick={handleImportData} className="w-full">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Импортировать
-                </Button>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="results">
-              {importStats && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <Card className="bg-green-50">
-                      <CardContent className="pt-6">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">
-                            {importStats.importedCount}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Всего импортировано</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="bg-blue-50">
-                      <CardContent className="pt-6">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {importStats.newItemsCount}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Новых позиций</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card className="bg-amber-50">
-                      <CardContent className="pt-6">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-amber-600">
-                            {importStats.updatedItemsCount}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Обновлено</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  {zeroNonExisting && importStats.zeroedItemsCount > 0 && (
-                    <Card className="bg-red-50">
-                      <CardContent className="pt-6">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-red-600">
-                            {importStats.zeroedItemsCount}
-                          </div>
-                          <p className="text-sm text-muted-foreground">Позиций обнулено</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Журнал импорта</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[300px]">
-                        <div className="space-y-2">
-                          {importResultLogs.map((log, index) => (
-                            <div key={index} className="flex items-start space-x-2 border-b pb-2">
-                              <div className="mt-0.5">{getLogTypeIcon(log.type)}</div>
-                              <div>
-                                <p className="text-sm font-medium">{log.message}</p>
-                                {log.detail && (
-                                  <p className="text-xs text-muted-foreground">{log.detail}</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                  
-                  <div className="flex justify-end">
-                    <Button onClick={closeImportDialog}>Закрыть</Button>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Delete All Dialog */}
+      {/* Delete All Confirmation Dialog */}
       <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Удалить все товары?</AlertDialogTitle>
             <AlertDialogDescription>
-              Вы собираетесь удалить все товары из инвентаря. Это действие нельзя отменить.
+              Вы уверены, что хотите удалить все товары из инвентаря? Это действие невозможно отменить.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Отмена</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteAllProducts}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={handleDeleteAllProducts} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Удалить все
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Импорт товаров</DialogTitle>
+            <DialogDescription>
+              Загрузите файл CSV для импорта товаров
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={importTab} onValueChange={setImportTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="upload">Загрузка файла</TabsTrigger>
+              <TabsTrigger value="preview" disabled={!importData}>Предпросмотр</TabsTrigger>
+              <TabsTrigger value="results" disabled={!showImportResults}>Результаты</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload" className="pt-4">
+              <div className="grid gap-6">
+                <div className="grid grid-cols-1 gap-2">
+                  <Label htmlFor="file-upload">Выберите CSV-файл</Label>
+                  <Input 
+                    id="file-upload" 
+                    type="file" 
+                    accept=".csv,.txt" 
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Поддерживаемые форматы: CSV, TXT с разделителями (запятая, точка с запятой или табуляция)
+                  </p>
+                </div>
+                
+                {locations.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    <Label htmlFor="import-location">Точка продажи</Label>
+                    <Select 
+                      value={manualLocationId} 
+                      onValueChange={handleLocationChange}
+                    >
+                      <SelectTrigger id="import-location">
+                        <SelectValue placeholder="Выберите точку продажи" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="text-red-500 p-4 bg-red-50 rounded-md">
+                    Ошибка: Нет доступных точек продаж. Пожалуйста, добавьте точки продаж перед импортом.
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="zero-existing" 
+                    checked={zeroNonExisting}
+                    onCheckedChange={(checked) => setZeroNonExisting(!!checked)}
+                  />
+                  <Label htmlFor="zero-existing">
+                    Обнулить остатки товаров, отсутствующих в файле импорта
+                  </Label>
+                </div>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Требования к формату</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li>Первая строка должна содержать заголовки колонок</li>
+                      <li>Обязательные колонки: <strong>Название</strong> и <strong>Остаток</strong></li>
+                      <li>Колонка <strong>Объем</strong> опциональна (по умолчанию "5 мл")</li>
+                      <li>Поддерживаемые объемы: 5 мл, 16 мл, 20 мл, 25 мл, 30 мл, Автофлакон</li>
+                      <li>Остаток должен быть числом больше нуля</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="preview" className="pt-4">
+              <div className="grid gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Предпросмотр данных</CardTitle>
+                    <CardDescription>
+                      Данные будут импортированы в точку продажи: {
+                        locations.find(loc => loc.id === manualLocationId)?.name || "Выберите точку продажи"
+                      }
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] w-full">
+                      <div className="text-sm">
+                        <pre className="whitespace-pre-wrap font-mono text-xs">
+                          {importData.slice(0, 1000)}
+                          {importData.length > 1000 && "..."}
+                        </pre>
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="results" className="pt-4">
+              <div className="grid gap-6">
+                {importStats && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Результаты импорта</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="bg-green-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Импортировано</div>
+                          <div className="text-2xl font-bold text-green-600">{importStats.importedCount}</div>
+                        </div>
+                        <div className="bg-amber-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Пропущено</div>
+                          <div className="text-2xl font-bold text-amber-600">{importStats.skippedCount}</div>
+                        </div>
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Новых товаров</div>
+                          <div className="text-2xl font-bold text-blue-600">{importStats.newItemsCount}</div>
+                        </div>
+                        <div className="bg-purple-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Обновлено товаров</div>
+                          <div className="text-2xl font-bold text-purple-600">{importStats.updatedItemsCount}</div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-500">Обнулено товаров</div>
+                          <div className="text-2xl font-bold text-gray-600">{importStats.zeroedItemsCount}</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Журнал импорта</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-[300px] w-full">
+                      <div className="space-y-2">
+                        {importResultLogs.map((log, index) => (
+                          <div key={index} className={`flex items-start gap-2 p-2 rounded-md ${
+                            log.type === 'success' ? 'bg-green-50' :
+                            log.type === 'warning' ? 'bg-amber-50' :
+                            log.type === 'error' ? 'bg-red-50' : 'bg-gray-50'
+                          }`}>
+                            <div className="mt-0.5">
+                              {getLogTypeIcon(log.type)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">
+                                {log.message}
+                              </p>
+                              {log.details && (
+                                <p className="text-xs text-gray-500">
+                                  {typeof log.details === 'string' ? log.details : JSON.stringify(log.details)}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {importResultLogs.length === 0 && (
+                          <div className="text-center text-gray-500 py-10">
+                            Нет данных для отображения
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={closeImportDialog}>
+              Закрыть
+            </Button>
+            {importTab !== "results" && (
+              <Button 
+                onClick={handleImportData} 
+                disabled={!importData || !manualLocationId}
+              >
+                Импортировать
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
