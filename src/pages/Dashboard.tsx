@@ -1,7 +1,7 @@
 
 import React from 'react';
 import Navigation from '@/components/Navigation';
-import Dashboard from '@/components/Dashboard';
+import { Dashboard } from '@/components/Dashboard';
 
 const DashboardPage = () => {
   return (

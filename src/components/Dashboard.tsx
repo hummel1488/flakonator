@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from "react";
 import { useSales } from "@/hooks/use-sales";
 import { useInventory } from "@/hooks/use-inventory";
@@ -813,3 +814,65 @@ export const Dashboard = () => {
                       <div key={item.id} className="flex items-start justify-between border-b pb-3">
                         <div>
                           <p className="font-medium">{item.name}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">
+                              {item.size === "car" ? "Автофлакон" : item.size}
+                            </Badge>
+                            <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">
+                              {location?.name || "Неизвестная точка"}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge variant={item.quantity === 0 ? "destructive" : "secondary"}>
+                            Остаток: {item.quantity} шт.
+                          </Badge>
+                          <Badge variant="outline">
+                            Рекомендуется заказать: {Math.max(5 - item.quantity, 0)} шт.
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="h-[100px] flex items-center justify-center text-muted-foreground">
+                  Все товары в достаточном количестве
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Row 6: Quick Actions */}
+          <Card className="bg-white shadow-md border border-gray-100">
+            <CardHeader>
+              <CardTitle>Быстрые действия</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <Button className="gap-2" onClick={() => navigate("/inventory")}>
+                  <Upload className="h-4 w-4" />
+                  Загрузить остатки
+                </Button>
+                <Button className="gap-2" variant="outline" onClick={() => navigate("/inventory")}>
+                  <Plus className="h-4 w-4" />
+                  Добавить новый аромат
+                </Button>
+                <Button className="gap-2" variant="outline" onClick={() => navigate("/locations")}>
+                  <Store className="h-4 w-4" />
+                  Добавить точку
+                </Button>
+                <Button className="gap-2" variant="outline">
+                  <FileDown className="h-4 w-4" />
+                  Скачать отчёт
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default Dashboard;
