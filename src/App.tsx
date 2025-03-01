@@ -6,11 +6,9 @@ import Index from './pages/Index';
 import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Statistics from './pages/Statistics';
-import Clients from './pages/Clients';
 import Locations from './pages/Locations';
 import UserManagement from './pages/UserManagement';
 import Training from './pages/Training';
-import Marketing from './pages/Marketing';
 import DataManagement from './pages/DataManagement';
 import Unauthorized from './pages/Unauthorized';
 import NotFound from './pages/NotFound';
@@ -25,6 +23,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "manager"]}>
+                <Index />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/inventory"
             element={
@@ -44,29 +50,21 @@ function App() {
           <Route
             path="/statistics"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "manager"]}>
                 <Statistics />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/clients"
-            element={
-              <ProtectedRoute allowedRoles={["admin", "manager", "seller"]}>
-                <Clients />
               </ProtectedRoute>
             }
           />
           <Route
             path="/locations"
             element={
-              <ProtectedRoute allowedRoles={["admin"]}>
+              <ProtectedRoute allowedRoles={["admin", "manager"]}>
                 <Locations />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/users"
+            path="/user-management"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <UserManagement />
@@ -82,15 +80,7 @@ function App() {
             }
           />
           <Route
-            path="/marketing"
-            element={
-              <ProtectedRoute allowedRoles={["admin", "manager"]}>
-                <Marketing />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/data"
+            path="/data-management"
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <DataManagement />

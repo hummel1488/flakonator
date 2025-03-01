@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -6,8 +5,7 @@ import {
   PlusCircle, 
   BarChart3, 
   Store, 
-  ShoppingBag, 
-  Users
+  ShoppingBag
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -57,16 +55,7 @@ const Index = () => {
         path: "/statistics",
         roles: ["admin"],
         variant: "default" as const
-      },
-      {
-        id: "users",
-        title: "Пользователи",
-        description: "Управление аккаунтами системы",
-        icon: <Users className="h-6 w-6" />,
-        path: "/users",
-        roles: ["admin"],
-        variant: "default" as const
-      },
+      }
     ];
 
     // Filter items based on user role
@@ -153,7 +142,6 @@ const Index = () => {
                       item.id === "inventory" ? "bg-teal-500" :
                       item.id === "sales" ? "bg-blue-500" :
                       item.id === "locations" ? "bg-indigo-500" :
-                      item.id === "users" ? "bg-purple-500" :
                       "bg-indigo-500"
                     }`}
                     initial={{ scaleX: 0, originX: 0 }}
@@ -168,7 +156,6 @@ const Index = () => {
                         ${item.id === "inventory" ? "bg-teal-100 text-teal-600 dark:bg-teal-900 dark:text-teal-300" :
                           item.id === "sales" ? "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300" :
                           item.id === "locations" ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300" :
-                          item.id === "users" ? "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300" :
                           "bg-indigo-100 text-indigo-600 dark:bg-indigo-900 dark:text-indigo-300"
                         } p-2 rounded-full`
                       }>
