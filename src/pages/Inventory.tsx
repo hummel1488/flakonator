@@ -1,7 +1,7 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle, TrendingUp, TrendingDown, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +19,8 @@ import {
   TableHead, 
   TableHeader, 
   TableRow,
-  TableFooter
+  TableFooter,
+  ResponsiveTable
 } from "@/components/ui/table";
 import {
   Dialog,
@@ -43,9 +44,10 @@ import {
 import { Card, CardContent, CardTitle, CardHeader, CardDescription, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useInventory, ImportLogItem } from "@/hooks/use-inventory";
+import { useInventory, ImportLogItem, Product } from "@/hooks/use-inventory";
 import { useLocations } from "@/hooks/use-locations";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSales } from "@/hooks/use-sales";
 import Navigation from "@/components/Navigation";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -56,7 +58,11 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area"; 
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Progress } from "@/components/ui/progress";
+import ProductRecommendations from "@/components/ProductRecommendations";
+import StatCard from "@/components/StatCard";
+import LowStockAlert from "@/components/LowStockAlert";
 
 const normalizeText = (text: string) => {
   return text.toLowerCase()
@@ -76,6 +82,7 @@ const Inventory = () => {
   const { inventory, addProduct, loading, updateProductQuantity, importProducts, importFromCSV, deleteAllProducts, getSizeStatKey } = useInventory();
   const { locations } = useLocations();
   const { isAdmin, isManager } = useAuth();
+  const { sales, loading: salesLoading } = useSales();
   
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLocation, setFilterLocation] = useState("all");
@@ -96,6 +103,22 @@ const Inventory = () => {
   const [importTab, setImportTab] = useState<string>("upload");
   const [zeroNonExisting, setZeroNonExisting] = useState<boolean>(true);
   const [showImportResults, setShowImportResults] = useState<boolean>(false);
+  
+  // Revenue calculation data
+  const PRICES: Record<string, number> = {
+    "5": 500,
+    "5 мл": 500,
+    "16": 1000,
+    "16 мл": 1000,
+    "20": 1300,
+    "20 мл": 1300,
+    "25": 1500,
+    "25 мл": 1500,
+    "30": 1800,
+    "30 мл": 1800,
+    "car": 500,
+    "Автофлакон": 500
+  };
   
   useEffect(() => {
     if (locations.length > 0 && !manualLocationId) {
@@ -119,6 +142,209 @@ const Inventory = () => {
     quantity: 0,
   });
 
+  // Weekly and monthly sales data calculation
+  const currentDate = new Date();
+  
+  const weeklySalesData = useMemo(() => {
+    // Calculate dates for current and previous periods
+    const oneWeekAgo = new Date(currentDate);
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const twoWeeksAgo = new Date(oneWeekAgo);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 7);
+    
+    // Filter sales for the current location if one is selected
+    const locationSales = filterLocation !== "all" 
+      ? sales.filter(sale => sale.locationId === filterLocation)
+      : sales;
+    
+    // Last week sales (last 7 days)
+    const lastWeekSales = locationSales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate >= oneWeekAgo && saleDate <= currentDate;
+    });
+    
+    // Previous week sales (7 days before last week)
+    const previousWeekSales = locationSales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate >= twoWeeksAgo && saleDate < oneWeekAgo;
+    });
+    
+    return { lastWeekSales, previousWeekSales };
+  }, [sales, filterLocation, currentDate]);
+  
+  const { lastWeekSales, previousWeekSales } = weeklySalesData;
+  
+  const monthlySalesData = useMemo(() => {
+    // Calculate dates for current and previous months
+    const oneMonthAgo = new Date(currentDate);
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    const twoMonthsAgo = new Date(oneMonthAgo);
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 1);
+    
+    // Filter sales for the current location if one is selected
+    const locationSales = filterLocation !== "all" 
+      ? sales.filter(sale => sale.locationId === filterLocation)
+      : sales;
+    
+    // Current month sales
+    const currentMonthSales = locationSales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate >= oneMonthAgo && saleDate <= currentDate;
+    });
+    
+    // Previous month sales
+    const previousMonthSales = locationSales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return saleDate >= twoMonthsAgo && saleDate < oneMonthAgo;
+    });
+    
+    // Calculate revenue for each period
+    const currentMonthRevenue = currentMonthSales.reduce((total, sale) => {
+      const sizeKey = getSizeStatKey(sale.size);
+      const price = sale.price || PRICES[sizeKey] || 0;
+      return total + (sale.quantity * price);
+    }, 0);
+    
+    const previousMonthRevenue = previousMonthSales.reduce((total, sale) => {
+      const sizeKey = getSizeStatKey(sale.size);
+      const price = sale.price || PRICES[sizeKey] || 0;
+      return total + (sale.quantity * price);
+    }, 0);
+    
+    // Calculate change percentage
+    const revenueDifference = currentMonthRevenue - previousMonthRevenue;
+    const revenueChangePercent = previousMonthRevenue > 0 
+      ? (revenueDifference / previousMonthRevenue) * 100 
+      : 0;
+    
+    return {
+      currentMonthRevenue,
+      previousMonthRevenue,
+      revenueChangePercent
+    };
+  }, [sales, filterLocation, currentDate, getSizeStatKey]);
+  
+  // Product recommendations
+  const productRecommendations = useMemo(() => {
+    if (filterLocation === "all" || salesLoading || !lastWeekSales || !previousWeekSales) {
+      return [];
+    }
+    
+    // Find products with significant sales and look for trends
+    const oneMonthAgo = new Date(currentDate);
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    // Get last 30 days sales for this location
+    const lastMonthSales = sales.filter(sale => {
+      const saleDate = new Date(sale.date);
+      return sale.locationId === filterLocation && 
+        saleDate >= oneMonthAgo && 
+        saleDate <= currentDate;
+    });
+    
+    // Group by product name and calculate total sales
+    const productSales = new Map();
+    
+    lastMonthSales.forEach(sale => {
+      const key = `${sale.name}-${sale.size}`;
+      if (!productSales.has(key)) {
+        productSales.set(key, {
+          name: sale.name,
+          size: sale.size,
+          totalQuantity: 0,
+          weeklyQuantity: 0,
+          previousWeekQuantity: 0,
+          revenue: 0
+        });
+      }
+      
+      const saleDate = new Date(sale.date);
+      const product = productSales.get(key);
+      const sizeKey = getSizeStatKey(sale.size);
+      const price = sale.price || PRICES[sizeKey] || 0;
+      
+      // Add to total quantity
+      product.totalQuantity += sale.quantity;
+      product.revenue += sale.quantity * price;
+      
+      // Check if sale was in the last week
+      if (saleDate >= oneWeekAgo) {
+        product.weeklyQuantity += sale.quantity;
+      } 
+      // Check if sale was in the previous week
+      else if (saleDate >= twoWeeksAgo && saleDate < oneWeekAgo) {
+        product.previousWeekQuantity += sale.quantity;
+      }
+    });
+    
+    // Convert to array and sort by total quantity
+    const sortedProducts = Array.from(productSales.values())
+      .sort((a, b) => b.totalQuantity - a.totalQuantity);
+    
+    // Calculate growth percentage for each product
+    const productsWithGrowth = sortedProducts.map(product => {
+      let growthPercentage = 0;
+      if (product.previousWeekQuantity > 0) {
+        const difference = product.weeklyQuantity - product.previousWeekQuantity;
+        growthPercentage = (difference / product.previousWeekQuantity) * 100;
+      } else if (product.weeklyQuantity > 0) {
+        growthPercentage = 100; // New product that didn't sell before
+      }
+      
+      // Current inventory for this product at this location
+      const inventoryItem = inventory.find(item => 
+        item.name === product.name && 
+        item.size === product.size && 
+        item.locationId === filterLocation
+      );
+      
+      const currentStock = inventoryItem ? inventoryItem.quantity : 0;
+      const isLowStock = currentStock <= 2; // Define low stock as 2 or fewer items
+      
+      // Check if this is a trending product (significant growth)
+      const isTrending = growthPercentage >= 30;
+      
+      // Check if this is a bestseller
+      const isBestseller = product.totalQuantity >= 5;
+      
+      return {
+        ...product,
+        growthPercentage,
+        currentStock,
+        isLowStock,
+        isTrending,
+        isBestseller
+      };
+    });
+    
+    // Filter to products that are: trending OR bestsellers OR low in stock
+    const recommendedProducts = productsWithGrowth.filter(product => 
+      product.isTrending || product.isBestseller || product.isLowStock
+    );
+    
+    // Return top 5 products
+    return recommendedProducts.slice(0, 5);
+  }, [sales, filterLocation, inventory, lastWeekSales, previousWeekSales, currentDate, getSizeStatKey]);
+  
+  // Low stock products
+  const lowStockProducts = useMemo(() => {
+    if (filterLocation === "all") {
+      return [];
+    }
+    
+    // Get products for the selected location
+    const locationProducts = inventory.filter(item => item.locationId === filterLocation);
+    
+    // Find products with low stock (2 or fewer)
+    const lowStock = locationProducts
+      .filter(item => item.quantity <= 2)
+      .sort((a, b) => a.quantity - b.quantity); // Sort by quantity ascending
+    
+    return lowStock;
+  }, [inventory, filterLocation]);
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -326,14 +552,7 @@ const Inventory = () => {
       "car": { count: 0, value: 0 },
     };
 
-    const prices: Record<string, number> = {
-      "5": 500,
-      "16": 1000,
-      "20": 1300,
-      "25": 1500,
-      "30": 1800,
-      "car": 500
-    };
+    const prices: Record<string, number> = PRICES;
 
     inventoryToCalculate.forEach(item => {
       const statKey = getSizeStatKey(item.size);
@@ -448,33 +667,84 @@ const Inventory = () => {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
+              className="mb-8 space-y-6"
             >
-              <Card className="shadow-md border border-gray-100 bg-white">
+              <Card className="shadow-md border border-gray-100 bg-white" gradient>
                 <CardHeader>
                   <CardTitle>Статистика инвентаря {filterLocation !== "all" && `- ${getLocationName(filterLocation)}`}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-gray-500 mb-1">Общее количество</div>
-                        <div className="text-2xl font-bold">{stats.totalCount} шт.</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-gray-500 mb-1">Общая стоимость</div>
-                        <div className="text-2xl font-bold">{stats.totalValue.toLocaleString()} ₽</div>
-                      </CardContent>
-                    </Card>
-                    <Card className="shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
-                        <div className="text-2xl font-bold">{filteredInventory.length} шт.</div>
-                      </CardContent>
-                    </Card>
+                    <StatCard 
+                      title="Общее количество"
+                      value={`${stats.totalCount} шт.`}
+                      icon={<Package className="h-5 w-5 text-blue-500" />}
+                    />
+                    
+                    <StatCard 
+                      title="Общая стоимость"
+                      value={`${stats.totalValue.toLocaleString()} ₽`}
+                      icon={<Database className="h-5 w-5 text-amber-500" />}
+                    />
+                    
+                    <StatCard 
+                      title="Количество наименований"
+                      value={`${filteredInventory.length} шт.`}
+                      icon={<FileText className="h-5 w-5 text-purple-500" />}
+                    />
                   </div>
+
+                  {!salesLoading && filterLocation !== "all" && (
+                    <>
+                      <Separator className="my-6" />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-lg">Выручка за текущий месяц</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="flex justify-between items-center">
+                              <div className="text-2xl font-bold">
+                                {monthlySalesData.currentMonthRevenue.toLocaleString()} ₽
+                              </div>
+                              <div className={`flex items-center gap-1 text-sm font-medium ${
+                                monthlySalesData.revenueChangePercent >= 0 
+                                  ? 'text-green-600' 
+                                  : 'text-red-600'
+                              }`}>
+                                {monthlySalesData.revenueChangePercent >= 0 ? (
+                                  <TrendingUp className="h-4 w-4" />
+                                ) : (
+                                  <TrendingDown className="h-4 w-4" />
+                                )}
+                                {Math.abs(monthlySalesData.revenueChangePercent).toFixed(1)}%
+                              </div>
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              По сравнению с {monthlySalesData.previousMonthRevenue.toLocaleString()} ₽ в прошлом месяце
+                            </div>
+
+                            <Progress 
+                              className="h-2 mt-4" 
+                              value={
+                                monthlySalesData.previousMonthRevenue > 0 
+                                  ? (monthlySalesData.currentMonthRevenue / monthlySalesData.previousMonthRevenue) * 100 
+                                  : 100
+                              }
+                              indicatorClassName={monthlySalesData.revenueChangePercent >= 0 
+                                ? "bg-green-500" 
+                                : "bg-red-500"
+                              }
+                            />
+                          </CardContent>
+                        </Card>
+
+                        {lowStockProducts.length > 0 && (
+                          <LowStockAlert products={lowStockProducts} getLocationName={getLocationName} />
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   <Separator className="my-6" />
 
@@ -489,12 +759,24 @@ const Inventory = () => {
                           <div className="text-right text-amber-600 font-semibold">
                             {value.toLocaleString()} ₽
                           </div>
+                          <Progress 
+                            className="h-1.5 mt-2" 
+                            value={Math.min(100, (count / Math.max(stats.totalCount, 1)) * 300)} 
+                            indicatorClassName="bg-amber-500"
+                          />
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+
+              {filterLocation !== "all" && productRecommendations.length > 0 && (
+                <ProductRecommendations 
+                  products={productRecommendations} 
+                  locationName={getLocationName(filterLocation)} 
+                />
+              )}
             </motion.div>
           )}
 
@@ -567,7 +849,7 @@ const Inventory = () => {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden"
           >
-            <div className="overflow-x-auto">
+            <ResponsiveTable>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -606,7 +888,7 @@ const Inventory = () => {
                         </TableCell>
                         <TableCell>{getLocationName(item.locationId)}</TableCell>
                         <TableCell className="text-right">
-                          <Badge className={`font-medium ${item.quantity > 0 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          <Badge className={`font-medium ${item.quantity > 2 ? "bg-green-100 text-green-800" : item.quantity > 0 ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>
                             {item.quantity}
                           </Badge>
                         </TableCell>
@@ -626,7 +908,7 @@ const Inventory = () => {
                   )}
                 </TableBody>
               </Table>
-            </div>
+            </ResponsiveTable>
           </motion.div>
         </div>
       </div>
