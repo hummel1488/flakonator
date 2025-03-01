@@ -10,19 +10,19 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary",
         destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground active:bg-background",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary",
+        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-transparent",
+        link: "text-primary underline-offset-4 hover:underline active:text-primary",
         // Add custom variants for different user roles
-        admin: "bg-indigo-600 text-white hover:bg-indigo-700",
-        seller: "bg-blue-600 text-white hover:bg-blue-700",
-        manager: "bg-teal-600 text-white hover:bg-teal-700",
+        admin: "bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-600",
+        seller: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-600",
+        manager: "bg-teal-600 text-white hover:bg-teal-700 active:bg-teal-600",
       },
       size: {
         default: "h-10 px-4 py-2",
