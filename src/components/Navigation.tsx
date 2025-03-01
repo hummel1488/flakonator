@@ -28,7 +28,7 @@ import { Separator } from "@/components/ui/separator";
 const Navigation = () => {
   const { isAdmin, isManager, logout, user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isMobile, isTablet } = useIsMobile();
+  const { isMobile } = useIsMobile();
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,35 +43,35 @@ const Navigation = () => {
 
   const items = [
     {
-      icon: <LayoutDashboard className="h-4 w-4" />,
+      icon: <LayoutDashboard className="h-[18px] w-[18px]" />,
       title: "Панель управления",
       href: "/dashboard",
       roles: ["admin", "manager"],
       group: "operational",
     },
     {
-      icon: <ListChecks className="h-4 w-4" />,
+      icon: <ListChecks className="h-[18px] w-[18px]" />,
       title: "Инвентарь",
       href: "/inventory",
       roles: ["admin", "manager", "user"],
       group: "operational",
     },
     {
-      icon: <Store className="h-4 w-4" />,
+      icon: <Store className="h-[18px] w-[18px]" />,
       title: "Точки продаж",
       href: "/locations",
       roles: ["admin", "manager"],
       group: "operational",
     },
     {
-      icon: <BarChart2 className="h-4 w-4" />,
+      icon: <BarChart2 className="h-[18px] w-[18px]" />,
       title: "Продажи",
       href: "/sales",
       roles: ["admin", "manager", "user"],
       group: "analytical",
     },
     {
-      icon: <BarChart2 className="h-4 w-4" />,
+      icon: <BarChart2 className="h-[18px] w-[18px]" />,
       title: "Статистика",
       href: "/statistics",
       roles: ["admin", "manager"],
@@ -91,9 +91,8 @@ const Navigation = () => {
 
   const menuBgColor = "bg-[#3A3A3A]";
   const textColor = "text-white";
-  const textColorInactive = "text-white/70 hover:text-white";
-  const activeItemBg = "bg-[#4A4A4A]";
-  const activeBorder = "border-b-2 border-[#0FA0CE]";
+  const textColorInactive = "text-[#B0B0B0] hover:text-white";
+  const activeBorder = "border-b-2 border-[#007bff]";
 
   const handleLogout = () => {
     logout();
@@ -111,8 +110,8 @@ const Navigation = () => {
             </NavLink>
           </div>
 
-          <div className="hidden md:flex md:flex-1 md:justify-center">
-            <div className="flex items-center space-x-0">
+          <div className="hidden md:flex md:flex-1 md:justify-center pl-6">
+            <div className="flex items-center">
               <div className="flex items-center">
                 {operationalItems.map((item, index) => (
                   <NavLink
@@ -120,8 +119,8 @@ const Navigation = () => {
                     to={item.href}
                     className={({ isActive }) =>
                       isActive
-                        ? `${textColor} ${activeBorder} px-5 py-2 text-sm font-medium flex items-center transition-colors`
-                        : `${textColorInactive} px-5 py-2 text-sm font-medium flex items-center transition-colors`
+                        ? `${textColor} ${activeBorder} px-4 py-2 text-[14px] font-medium flex items-center transition-colors`
+                        : `${textColorInactive} px-4 py-2 text-[14px] font-medium flex items-center transition-colors`
                     }
                   >
                     {item.icon}
@@ -130,7 +129,9 @@ const Navigation = () => {
                 ))}
               </div>
               
-              <Separator orientation="vertical" className="h-8 mx-4 bg-white/20" />
+              <div className="mx-4 h-6">
+                <Separator orientation="vertical" className="h-6 bg-[#6C6C6C]" />
+              </div>
               
               <div className="flex items-center">
                 {analyticalItems.map((item, index) => (
@@ -139,8 +140,8 @@ const Navigation = () => {
                     to={item.href}
                     className={({ isActive }) =>
                       isActive
-                        ? `${textColor} ${activeBorder} px-5 py-2 text-sm font-medium flex items-center transition-colors`
-                        : `${textColorInactive} px-5 py-2 text-sm font-medium flex items-center transition-colors`
+                        ? `${textColor} ${activeBorder} px-4 py-2 text-[14px] font-medium flex items-center transition-colors`
+                        : `${textColorInactive} px-4 py-2 text-[14px] font-medium flex items-center transition-colors`
                     }
                   >
                     {item.icon}
@@ -161,9 +162,9 @@ const Navigation = () => {
             >
               <span className="sr-only">Открыть меню</span>
               {isMenuOpen ? (
-                <X className="block h-5 w-5" aria-hidden="true" />
+                <X className="block h-[18px] w-[18px]" aria-hidden="true" />
               ) : (
-                <Menu className="block h-5 w-5" aria-hidden="true" />
+                <Menu className="block h-[18px] w-[18px]" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -172,13 +173,8 @@ const Navigation = () => {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={`p-2 flex items-center rounded-full ${textColor} hover:bg-[#4A4A4A]`}>
-                  <User className="h-5 w-5" />
-                  {!isMobile && (
-                    <>
-                      <span className="ml-2 text-sm">{user?.name || 'Пользователь'}</span>
-                      <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
-                    </>
-                  )}
+                  <User className="h-[18px] w-[18px]" />
+                  <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -228,8 +224,8 @@ const Navigation = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
                       isActive
-                        ? `${activeItemBg} ${textColor} block px-3 py-2 rounded-md text-base font-medium flex items-center`
-                        : `${textColorInactive} block px-3 py-2 rounded-md text-base font-medium flex items-center`
+                        ? `bg-[#4A4A4A] ${textColor} block px-3 py-2 rounded-md text-[14px] font-medium flex items-center`
+                        : `${textColorInactive} block px-3 py-2 rounded-md text-[14px] font-medium flex items-center`
                     }
                   >
                     {item.icon}
@@ -252,8 +248,8 @@ const Navigation = () => {
                     onClick={() => setIsMenuOpen(false)}
                     className={({ isActive }) =>
                       isActive
-                        ? `${activeItemBg} ${textColor} block px-3 py-2 rounded-md text-base font-medium flex items-center`
-                        : `${textColorInactive} block px-3 py-2 rounded-md text-base font-medium flex items-center`
+                        ? `bg-[#4A4A4A] ${textColor} block px-3 py-2 rounded-md text-[14px] font-medium flex items-center`
+                        : `${textColorInactive} block px-3 py-2 rounded-md text-[14px] font-medium flex items-center`
                     }
                   >
                     {item.icon}
@@ -261,6 +257,13 @@ const Navigation = () => {
                   </NavLink>
                 )
             )}
+          </div>
+          
+          <div className="mt-4 pt-4 border-t border-white/20">
+            <div className="px-3 py-2 text-xs text-[#B0B0B0]">
+              Вы вошли как: {user?.role === 'admin' ? 'Администратор' : 
+                            user?.role === 'manager' ? 'Менеджер' : 'Продавец'}
+            </div>
           </div>
         </div>
       </div>
