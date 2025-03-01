@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -177,4 +176,146 @@
   .inventory-table td:not(:first-child):not(:last-child) {
     display: none;
   }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .inventory-card-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .inventory-title {
+    font-size: 1.5rem;
+    line-height: 1.2;
+    flex-wrap: wrap;
+  }
+  
+  .inventory-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .inventory-header-actions {
+    width: 100%;
+  }
+  
+  .card-stats-container {
+    flex-direction: column;
+  }
+  
+  .mobile-action-menu {
+    position: relative;
+  }
+  
+  .mobile-action-menu-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    min-width: 200px;
+    z-index: 50;
+  }
+  
+  .mobile-title-container {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .mobile-size-card {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Responsive table handling */
+.table-scrollable {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* Mobile-first inventory cards */
+.inventory-stat-card {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.inventory-stat-card-icon {
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inventory-stat-card-content {
+  flex: 1;
+}
+
+.inventory-stat-card-label {
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.25rem;
+}
+
+.inventory-stat-card-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Table to cards transformation for mobile */
+.mobile-inventory-card {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0.75rem;
+}
+
+.mobile-inventory-card-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-inventory-card-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-inventory-card-label {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+}
+
+.mobile-inventory-card-value {
+  font-weight: 500;
+}
+
+.mobile-inventory-card-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Improved dropdown menu with higher z-index */
+.dropdown-menu-container {
+  position: relative;
+}
+
+.dropdown-menu-content {
+  position: absolute;
+  z-index: 100;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 200px;
+  right: 0;
+  top: 100%;
+  margin-top: 0.25rem;
 }

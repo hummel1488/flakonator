@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
@@ -120,6 +119,54 @@ const ResponsiveTable = React.forwardRef<
 ))
 ResponsiveTable.displayName = "ResponsiveTable"
 
+// Add a custom mobile card component for table rows
+const TableMobileCard = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { highlight?: boolean }
+>(({ className, highlight, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "p-4 rounded-lg border mb-3 bg-card shadow-sm",
+      highlight && "bg-blue-50/50 dark:bg-blue-900/20",
+      className
+    )}
+    {...props}
+  />
+))
+TableMobileCard.displayName = "TableMobileCard"
+
+// Add a component for mobile table view field
+const TableMobileField = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { 
+    label: string; 
+    badgeValue?: boolean; 
+    badgePositive?: boolean;
+  }
+>(({ className, label, children, badgeValue, badgePositive, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex justify-between items-center py-1", className)}
+    {...props}
+  >
+    <span className="text-sm text-muted-foreground">{label}</span>
+    {badgeValue ? (
+      <span className={cn(
+        "px-2 py-0.5 text-xs font-medium rounded-full",
+        badgePositive 
+          ? "bg-green-100 text-green-800" 
+          : "bg-red-100 text-red-800"
+      )}>
+        {children}
+      </span>
+    ) : (
+      <span className="text-sm font-medium">{children}</span>
+    )}
+  </div>
+))
+TableMobileField.displayName = "TableMobileField"
+
 export {
   Table,
   TableHeader,
@@ -129,5 +176,7 @@ export {
   TableRow,
   TableCell,
   TableCaption,
-  ResponsiveTable
+  ResponsiveTable,
+  TableMobileCard,
+  TableMobileField
 }

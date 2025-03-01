@@ -23,12 +23,15 @@ const buttonVariants = cva(
         admin: "bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-600",
         seller: "bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-600",
         manager: "bg-teal-600 text-white hover:bg-teal-700 active:bg-teal-600",
+        icon: "h-9 w-9 p-0",
+        mobileAction: "w-full text-left justify-start",
       },
       size: {
         default: "h-10 px-4 py-2",
         sm: "h-9 rounded-md px-3",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
+        full: "w-full",
       },
     },
     defaultVariants: {
