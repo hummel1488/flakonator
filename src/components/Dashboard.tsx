@@ -197,7 +197,7 @@ export const Dashboard = () => {
               className="gap-2"
             >
               <TrendingUp className="h-4 w-4" />
-              Полная статистика
+              По��ная статистика
             </Button>
             <Button 
               variant="outline" 
@@ -269,7 +269,7 @@ export const Dashboard = () => {
               <Card className="shadow-sm">
                 <CardContent className="p-4">
                   <div className="text-sm text-gray-500 mb-1">Количество наименований</div>
-                  <div className="text-2xl font-bold">{inventory.length} шт.</div>
+                  <div className="text-2xl font-bold">{inventoryStats.uniqueNamesCount} шт.</div>
                 </CardContent>
               </Card>
             </div>
