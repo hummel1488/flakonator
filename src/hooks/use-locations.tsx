@@ -34,27 +34,36 @@ export const useLocations = () => {
   // Загрузка точек продаж из localStorage при первом рендере
   useEffect(() => {
     try {
-      const storedLocations = localStorage.getItem(LOCAL_STORAGE_KEY);
-      console.log("Загруженные данные из localStorage:", storedLocations);
-      
-      if (storedLocations) {
-        const parsedLocations = JSON.parse(storedLocations);
-        if (Array.isArray(parsedLocations) && parsedLocations.length > 0) {
-          setLocations(parsedLocations);
-          console.log("Точки продаж успешно загружены:", parsedLocations);
+      // Обеспечиваем выполнение только на клиенте
+      if (typeof window !== 'undefined') {
+        const storedLocations = localStorage.getItem(LOCAL_STORAGE_KEY);
+        console.log("Загруженные данные из localStorage:", storedLocations);
+        
+        if (storedLocations) {
+          try {
+            const parsedLocations = JSON.parse(storedLocations);
+            if (Array.isArray(parsedLocations) && parsedLocations.length > 0) {
+              setLocations(parsedLocations);
+              console.log("Точки продаж успешно загружены:", parsedLocations);
+            } else {
+              // Если массив пустой или не массив, используем значения по умолчанию
+              console.log("Данные из localStorage пусты или недействительны, используем значения по умолчанию");
+              setLocations(DEFAULT_LOCATIONS);
+              // Сохраняем значения по умолчанию в localStorage
+              localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+            }
+          } catch (parseError) {
+            console.error("Ошибка при парсинге данных из localStorage:", parseError);
+            setLocations(DEFAULT_LOCATIONS);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+          }
         } else {
-          // Если массив пустой или не массив, используем значения по умолчанию
-          console.log("Данные из localStorage пусты или недействительны, используем значения по умолчанию");
+          // Если в localStorage нет данных, используем значения по умолчанию
+          console.log("В localStorage нет данных, используем значения по умолчанию");
           setLocations(DEFAULT_LOCATIONS);
-          // Сохраняем значения по умолчанию в localStorage
+          // Сохраняем значения по умолчанию
           localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
         }
-      } else {
-        // Если в localStorage нет данных, используем значения по умолчанию
-        console.log("В localStorage нет данных, используем значения по умолчанию");
-        setLocations(DEFAULT_LOCATIONS);
-        // Сохраняем значения по умолчанию
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
       }
     } catch (error) {
       console.error("Ошибка при загрузке точек продаж:", error);
@@ -74,7 +83,7 @@ export const useLocations = () => {
   // Сохранение точек продаж в localStorage при их изменении
   useEffect(() => {
     // Сохраняем только если компонент инициализирован и не в состоянии загрузки
-    if (!loading && initialized) {
+    if (!loading && initialized && typeof window !== 'undefined') {
       try {
         console.log("Сохранение точек продаж:", locations);
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(locations));
@@ -87,25 +96,56 @@ export const useLocations = () => {
   // Добавление новой точки
   const addLocation = (location: Location) => {
     console.log("Добавление точки:", location);
-    setLocations([...locations, location]);
+    setLocations(prevLocations => {
+      const newLocations = [...prevLocations, location];
+      // Немедленно сохраняем в localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLocations));
+        } catch (error) {
+          console.error("Ошибка при сохранении после добавления:", error);
+        }
+      }
+      return newLocations;
+    });
   };
 
   // Обновление точки
   const updateLocation = (updatedLocation: Location) => {
     console.log("Обновление точки:", updatedLocation);
-    const updatedLocations = locations.map((location) =>
-      location.id === updatedLocation.id ? updatedLocation : location
-    );
-    setLocations(updatedLocations);
+    setLocations(prevLocations => {
+      const updatedLocations = prevLocations.map((location) =>
+        location.id === updatedLocation.id ? updatedLocation : location
+      );
+      // Немедленно сохраняем в localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocations));
+        } catch (error) {
+          console.error("Ошибка при сохранении после обновления:", error);
+        }
+      }
+      return updatedLocations;
+    });
   };
 
   // Удаление точки
   const deleteLocation = (locationId: string) => {
     console.log("Удаление точки с ID:", locationId);
-    const updatedLocations = locations.filter(
-      (location) => location.id !== locationId
-    );
-    setLocations(updatedLocations);
+    setLocations(prevLocations => {
+      const updatedLocations = prevLocations.filter(
+        (location) => location.id !== locationId
+      );
+      // Немедленно сохраняем в localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedLocations));
+        } catch (error) {
+          console.error("Ошибка при сохранении после удаления:", error);
+        }
+      }
+      return updatedLocations;
+    });
   };
 
   // Получение точки по ID
@@ -124,7 +164,9 @@ export const useLocations = () => {
       const parsedData = JSON.parse(jsonData);
       if (Array.isArray(parsedData)) {
         setLocations(parsedData);
-        localStorage.setItem(LOCAL_STORAGE_KEY, jsonData);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(LOCAL_STORAGE_KEY, jsonData);
+        }
         return { success: true, message: "Данные точек продаж успешно импортированы" };
       }
       return { success: false, message: "Неверный формат данных" };

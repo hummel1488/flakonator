@@ -80,35 +80,46 @@ export const useInventory = () => {
 
   // Load inventory from local storage on initial render
   useEffect(() => {
-    const storedInventory = localStorage.getItem(LOCAL_STORAGE_KEY);
-    if (storedInventory) {
+    if (typeof window !== 'undefined') {
       try {
-        // При загрузке нормализуем все размеры
-        const parsedInventory = JSON.parse(storedInventory);
-        const normalizedInventory = parsedInventory.map((product: Product) => {
-          // Проверяем, нужно ли нормализовать размер
-          if (!VALID_SIZES.includes(product.size)) {
-            // Пытаемся нормализовать размер
-            const normalizedSize = normalizeSize(product.size);
-            if (normalizedSize) {
-              return { ...product, size: normalizedSize };
-            }
+        const storedInventory = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedInventory) {
+          try {
+            // При загрузке нормализуем все размеры
+            const parsedInventory = JSON.parse(storedInventory);
+            const normalizedInventory = parsedInventory.map((product: Product) => {
+              // Проверяем, нужно ли нормализовать размер
+              if (!VALID_SIZES.includes(product.size)) {
+                // Пытаемся нормализовать размер
+                const normalizedSize = normalizeSize(product.size);
+                if (normalizedSize) {
+                  return { ...product, size: normalizedSize };
+                }
+              }
+              return product;
+            });
+            
+            setInventory(normalizedInventory);
+          } catch (parseError) {
+            console.error("Error parsing inventory data:", parseError);
+            setInventory([]);
           }
-          return product;
-        });
-        
-        setInventory(normalizedInventory);
+        }
       } catch (error) {
-        console.error("Error parsing inventory data:", error);
+        console.error("Error loading inventory from localStorage:", error);
       }
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   // Save inventory to local storage whenever it changes
   useEffect(() => {
-    if (!loading) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(inventory));
+    if (!loading && typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(inventory));
+      } catch (error) {
+        console.error("Error saving inventory to localStorage:", error);
+      }
     }
   }, [inventory, loading]);
 
@@ -129,12 +140,37 @@ export const useInventory = () => {
 
     if (existingProductIndex >= 0) {
       // Update quantity of existing product
-      const updatedInventory = [...inventory];
-      updatedInventory[existingProductIndex].quantity += productWithNormalizedSize.quantity;
-      setInventory(updatedInventory);
+      setInventory(prevInventory => {
+        const updatedInventory = [...prevInventory];
+        updatedInventory[existingProductIndex].quantity += productWithNormalizedSize.quantity;
+        
+        // Immediately save to localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedInventory));
+          } catch (error) {
+            console.error("Error saving to localStorage after update:", error);
+          }
+        }
+        
+        return updatedInventory;
+      });
     } else {
       // Add new product
-      setInventory([...inventory, productWithNormalizedSize]);
+      setInventory(prevInventory => {
+        const newInventory = [...prevInventory, productWithNormalizedSize];
+        
+        // Immediately save to localStorage
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newInventory));
+          } catch (error) {
+            console.error("Error saving to localStorage after adding:", error);
+          }
+        }
+        
+        return newInventory;
+      });
     }
   };
 
@@ -532,7 +568,7 @@ export const useInventory = () => {
         if (!quantityRaw) {
           logs.push({
             type: 'warning',
-            message: `Пропущена строка ${i+1}: отсутствует количество товара`
+            message: `Пропущена строка ${i+1}: отсутствует количество т��вара`
           });
           continue;
         }
@@ -603,33 +639,77 @@ export const useInventory = () => {
 
   // Update a product's quantity
   const updateProductQuantity = (productId: string, newQuantity: number) => {
-    const updatedInventory = inventory.map((product) =>
-      product.id === productId
-        ? { ...product, quantity: newQuantity }
-        : product
-    );
-    setInventory(updatedInventory);
+    setInventory(prevInventory => {
+      const updatedInventory = prevInventory.map((product) =>
+        product.id === productId
+          ? { ...product, quantity: newQuantity }
+          : product
+      );
+      
+      // Immediately save to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedInventory));
+        } catch (error) {
+          console.error("Error saving to localStorage after quantity update:", error);
+        }
+      }
+      
+      return updatedInventory;
+    });
   };
 
   // Update a product
   const updateProduct = (updatedProduct: Product) => {
-    const updatedInventory = inventory.map((product) =>
-      product.id === updatedProduct.id ? updatedProduct : product
-    );
-    setInventory(updatedInventory);
+    setInventory(prevInventory => {
+      const updatedInventory = prevInventory.map((product) =>
+        product.id === updatedProduct.id ? updatedProduct : product
+      );
+      
+      // Immediately save to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedInventory));
+        } catch (error) {
+          console.error("Error saving to localStorage after product update:", error);
+        }
+      }
+      
+      return updatedInventory;
+    });
   };
 
   // Delete a product
   const deleteProduct = (productId: string) => {
-    const updatedInventory = inventory.filter(
-      (product) => product.id !== productId
-    );
-    setInventory(updatedInventory);
+    setInventory(prevInventory => {
+      const updatedInventory = prevInventory.filter(
+        (product) => product.id !== productId
+      );
+      
+      // Immediately save to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(updatedInventory));
+        } catch (error) {
+          console.error("Error saving to localStorage after product deletion:", error);
+        }
+      }
+      
+      return updatedInventory;
+    });
   };
 
   // Delete all products
   const deleteAllProducts = () => {
     setInventory([]);
+    // Immediately save to localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify([]));
+      } catch (error) {
+        console.error("Error saving to localStorage after deleting all products:", error);
+      }
+    }
   };
 
   // Get products for a specific location
