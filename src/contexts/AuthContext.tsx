@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-export type UserRole = "admin" | "seller" | "manager" | null;
+export type UserRole = "admin" | "seller" | "manager" | "user" | null;
 
 interface User {
   id: string;
@@ -18,6 +17,7 @@ interface AuthContextType {
   isAdmin: () => boolean;
   isSeller: () => boolean;
   isManager: () => boolean;
+  isUser: () => boolean;
   assignSellerLocation: (locationId: string) => void;
   MOCK_USERS: User[]; // Expose users for admin management
   addUser: (user: User) => void;
@@ -107,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = () => user?.role === "admin";
   const isSeller = () => user?.role === "seller";
   const isManager = () => user?.role === "manager";
+  const isUser = () => user?.role === "user";
 
   const assignSellerLocation = (locationId: string) => {
     if (user && user.role === "seller") {
@@ -158,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAdmin, 
       isSeller, 
       isManager,
+      isUser,
       assignSellerLocation,
       MOCK_USERS,
       addUser,
