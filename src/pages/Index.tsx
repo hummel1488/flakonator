@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +36,7 @@ import { useInventory } from "@/hooks/use-inventory";
 import { useSales } from "@/hooks/use-sales";
 import { useLocations } from "@/hooks/use-locations";
 import { Separator } from "@/components/ui/separator";
+import TaskCalendar from "@/components/TaskCalendar";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -145,13 +145,6 @@ const Index = () => {
       networkBestSeller = product;
     }
   });
-  
-  // Mock tasks and notifications for calendar
-  const tasks = [
-    { id: 1, title: "Поставка товара", date: "15 июня 2024", icon: <Truck className="h-4 w-4" /> },
-    { id: 2, title: "Инвентаризация в ТЦ Галерея", date: "20 июня 2024", icon: <ClipboardList className="h-4 w-4" /> },
-    { id: 3, title: "Запуск летней акции", date: "1 июля 2024", icon: <Megaphone className="h-4 w-4" /> }
-  ];
   
   // Mock news and updates
   const news = [
@@ -391,34 +384,14 @@ const Index = () => {
               </div>
             </motion.div>
 
-            {/* Tasks & Calendar */}
+            {/* Tasks & Calendar - Replace with new TaskCalendar */}
             <motion.div
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               <h2 className="text-xl font-semibold mb-4">Календарь задач</h2>
-              <Card className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="space-y-4">
-                    {tasks.map((task) => (
-                      <motion.div
-                        key={task.id}
-                        variants={itemVariants}
-                        className="flex items-start space-x-3 border-b last:border-0 pb-3 last:pb-0"
-                      >
-                        <div className="bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300 p-2 rounded-full">
-                          {task.icon}
-                        </div>
-                        <div>
-                          <p className="font-medium">{task.title}</p>
-                          <p className="text-sm text-muted-foreground">{task.date}</p>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <TaskCalendar />
             </motion.div>
           </div>
 
