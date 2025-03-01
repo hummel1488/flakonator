@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle, TrendingUp, TrendingDown, Package } from "lucide-react";
@@ -875,3 +876,410 @@ const Inventory = () => {
                   ) : filteredInventory.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-10 text-gray-500">
+                        Ничего не найдено
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredInventory.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        <TableCell>{getSizeLabel(item.size)}</TableCell>
+                        <TableCell>
+                          {item.type === "perfume" ? "Парфюм" : item.type === "cosmetics" ? "Косметика" : item.type}
+                        </TableCell>
+                        <TableCell>{getLocationName(item.locationId)}</TableCell>
+                        <TableCell className="text-right">
+                          <span
+                            className={
+                              item.quantity <= 2
+                                ? "text-red-600 font-bold"
+                                : item.quantity <= 5
+                                ? "text-amber-600 font-medium"
+                                : ""
+                            }
+                          >
+                            {item.quantity}
+                          </span>
+                        </TableCell>
+                        {(isAdmin() || isManager()) && (
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openUpdateDialog(item)}
+                            >
+                              Изменить
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </ResponsiveTable>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Add Product Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Добавить товар</DialogTitle>
+            <DialogDescription>
+              Добавьте новый товар в инвентарь
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Название
+              </Label>
+              <Input
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="size" className="text-right">
+                Объем
+              </Label>
+              <Select
+                value={formData.size}
+                onValueChange={(value) => handleSelectChange("size", value)}
+              >
+                <SelectTrigger id="size" className="col-span-3">
+                  <SelectValue placeholder="Выберите размер" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5 мл">5 мл</SelectItem>
+                  <SelectItem value="16 мл">16 мл</SelectItem>
+                  <SelectItem value="20 мл">20 мл</SelectItem>
+                  <SelectItem value="25 мл">25 мл</SelectItem>
+                  <SelectItem value="30 мл">30 мл</SelectItem>
+                  <SelectItem value="car">Автофлакон</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="type" className="text-right">
+                Тип
+              </Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) => handleSelectChange("type", value)}
+              >
+                <SelectTrigger id="type" className="col-span-3">
+                  <SelectValue placeholder="Выберите тип" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="perfume">Парфюм</SelectItem>
+                  <SelectItem value="cosmetics">Косметика</SelectItem>
+                  <SelectItem value="accessories">Аксессуары</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="location" className="text-right">
+                Точка продажи
+              </Label>
+              <Select
+                value={formData.location}
+                onValueChange={(value) => handleSelectChange("location", value)}
+              >
+                <SelectTrigger id="location" className="col-span-3">
+                  <SelectValue placeholder="Выберите точку" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map((location) => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantity" className="text-right">
+                Количество
+              </Label>
+              <Input
+                id="quantity"
+                name="quantity"
+                type="number"
+                min={0}
+                value={formData.quantity}
+                onChange={handleInputChange}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleAddProduct}>Добавить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Update Product Dialog */}
+      <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Обновить количество</DialogTitle>
+            <DialogDescription>
+              {selectedProduct && `${selectedProduct.name} (${getSizeLabel(selectedProduct.size)})`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="update-quantity" className="text-right">
+                Количество
+              </Label>
+              <Input
+                id="update-quantity"
+                type="number"
+                min={0}
+                value={updateFormData.quantity}
+                onChange={handleUpdateInputChange}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={handleUpdateProduct}>Обновить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Импорт товаров</DialogTitle>
+            <DialogDescription>
+              Загрузите файл CSV с данными инвентаря
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={importTab} onValueChange={setImportTab} className="mt-4">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="upload">Загрузка</TabsTrigger>
+              <TabsTrigger value="preview" disabled={!importData}>Предпросмотр</TabsTrigger>
+              <TabsTrigger value="results" disabled={!showImportResults}>Результаты</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload">
+              <div className="grid gap-4 py-4">
+                <div>
+                  <Label htmlFor="import-location" className="block mb-2">
+                    Точка продажи для импорта
+                  </Label>
+                  <Select
+                    value={manualLocationId}
+                    onValueChange={handleLocationChange}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Выберите точку" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations.map((location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="zero-non-existing" 
+                      checked={zeroNonExisting} 
+                      onCheckedChange={(checked) => setZeroNonExisting(!!checked)} 
+                    />
+                    <Label htmlFor="zero-non-existing">
+                      Обнулять отсутствующие позиции в импорте
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Если товар есть в точке, но его нет в импорте, количество будет установлено на 0
+                  </p>
+                </div>
+                
+                <div className="border border-dashed border-gray-300 rounded-md p-6 text-center">
+                  <label className="block cursor-pointer">
+                    <Input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.txt"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center space-y-2">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                      <span className="text-sm font-medium">
+                        Нажмите для выбора файла или перетащите его сюда
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        CSV или TXT, разделители - запятая или точка с запятой
+                      </span>
+                    </div>
+                  </label>
+                </div>
+                
+                <div className="bg-muted/50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Формат файла:</h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    CSV файл должен содержать колонки: название, размер, количество.
+                    Порядок колонок и названия могут быть любыми.
+                  </p>
+                  <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">
+                    название,объем,количество{"\n"}
+                    LIBRE,5 мл,12{"\n"}
+                    BLACK OPIUM,16 мл,5{"\n"}
+                    SAUVAGE,30 мл,2
+                  </pre>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="preview">
+              <div className="space-y-4">
+                <div className="bg-muted/50 p-4 rounded-md">
+                  <h4 className="font-medium mb-2">Предварительная информация об импорте:</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Точка продажи: <span className="font-medium">{getLocationName(manualLocationId)}</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {zeroNonExisting 
+                      ? "Отсутствующие позиции будут обнулены" 
+                      : "Отсутствующие позиции останутся неизменными"}
+                  </p>
+                </div>
+                
+                <Button onClick={handleImportData} className="w-full">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Импортировать
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="results">
+              {importStats && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <Card className="bg-green-50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {importStats.importedCount}
+                          </div>
+                          <p className="text-sm text-muted-foreground">Всего импортировано</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-blue-50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {importStats.newItemsCount}
+                          </div>
+                          <p className="text-sm text-muted-foreground">Новых позиций</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-amber-50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-amber-600">
+                            {importStats.updatedItemsCount}
+                          </div>
+                          <p className="text-sm text-muted-foreground">Обновлено</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  {zeroNonExisting && importStats.zeroedItemsCount > 0 && (
+                    <Card className="bg-red-50">
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-red-600">
+                            {importStats.zeroedItemsCount}
+                          </div>
+                          <p className="text-sm text-muted-foreground">Позиций обнулено</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Журнал импорта</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[300px]">
+                        <div className="space-y-2">
+                          {importResultLogs.map((log, index) => (
+                            <div key={index} className="flex items-start space-x-2 border-b pb-2">
+                              <div className="mt-0.5">{getLogTypeIcon(log.type)}</div>
+                              <div>
+                                <p className="text-sm font-medium">{log.message}</p>
+                                {log.detail && (
+                                  <p className="text-xs text-muted-foreground">{log.detail}</p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                  
+                  <div className="flex justify-end">
+                    <Button onClick={closeImportDialog}>Закрыть</Button>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete All Dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить все товары?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы собираетесь удалить все товары из инвентаря. Это действие нельзя отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteAllProducts}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Удалить все
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default Inventory;
