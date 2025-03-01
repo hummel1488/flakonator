@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PlusCircle, Search, ArrowLeft, Filter, Database, Upload, FileText, Trash2, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
@@ -97,9 +96,10 @@ const Inventory = () => {
   const [importTab, setImportTab] = useState<string>("upload");
   const [zeroNonExisting, setZeroNonExisting] = useState<boolean>(true);
   const [showImportResults, setShowImportResults] = useState<boolean>(false);
-
-  console.log("Current manualLocationId:", manualLocationId);
-  console.log("Available locations:", locations.map(loc => ({ id: loc.id, name: loc.name })));
+  
+  useEffect(() => {
+    console.log("Available locations for import:", locations.map(loc => ({ id: loc.id, name: loc.name })));
+  }, [locations]);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -381,6 +381,16 @@ const Inventory = () => {
     setManualLocationId(locationId);
   };
 
+  // Проверяем загрузку локаций непосредственно перед открытием диалога
+  const openImportDialog = () => {
+    console.log("Opening import dialog, available locations:", locations);
+    if (locations.length > 0 && !manualLocationId) {
+      // Устанавливаем первую локацию по умолчанию
+      setManualLocationId(locations[0].id);
+    }
+    setShowImportDialog(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       <Navigation />
@@ -425,7 +435,7 @@ const Inventory = () => {
               {(isAdmin() || isManager()) && (
                 <>
                   <Button
-                    onClick={() => setShowImportDialog(true)}
+                    onClick={openImportDialog}
                     variant="outline"
                     className="gap-2"
                   >
@@ -815,24 +825,30 @@ const Inventory = () => {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-2">
-                  <Label htmlFor="import-location">Точка продажи</Label>
-                  <Select 
-                    value={manualLocationId} 
-                    onValueChange={handleLocationChange}
-                  >
-                    <SelectTrigger id="import-location">
-                      <SelectValue placeholder="Выберите точку продажи" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locations.map((location) => (
-                        <SelectItem key={location.id} value={location.id}>
-                          {location.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {locations.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    <Label htmlFor="import-location">Точка продажи</Label>
+                    <Select 
+                      value={manualLocationId} 
+                      onValueChange={handleLocationChange}
+                    >
+                      <SelectTrigger id="import-location">
+                        <SelectValue placeholder="Выберите точку продажи" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="text-red-500 p-4 bg-red-50 rounded-md">
+                    Ошибка: Нет доступных точек продаж. Пожалуйста, добавьте точки продаж перед импортом.
+                  </div>
+                )}
                 
                 <div className="flex items-center space-x-2">
                   <Checkbox 
@@ -864,112 +880,3 @@ const Inventory = () => {
             
             <TabsContent value="preview" className="pt-4">
               <div className="grid gap-6">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle>Предпросмотр импорта</CardTitle>
-                    <CardDescription>
-                      Проверьте правильность данных перед импортом
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="text-xs bg-gray-50 p-4 rounded-md overflow-auto max-h-[200px]">
-                      {importData.slice(0, 500)}
-                      {importData.length > 500 && '...'}
-                    </pre>
-                  </CardContent>
-                  <CardFooter>
-                    <p className="text-sm text-gray-500">
-                      Файл будет импортирован в локацию: <strong>{
-                        getLocationName(manualLocationId)
-                      }</strong>
-                    </p>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="results" className="pt-4">
-              {importStats && (
-                <div className="grid gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Результаты импорта</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        <div className="bg-green-50 p-3 rounded-md">
-                          <div className="text-sm text-green-700">Импортировано</div>
-                          <div className="text-xl font-bold">{importStats.importedCount}</div>
-                        </div>
-                        <div className="bg-blue-50 p-3 rounded-md">
-                          <div className="text-sm text-blue-700">Новых</div>
-                          <div className="text-xl font-bold">{importStats.newItemsCount}</div>
-                        </div>
-                        <div className="bg-indigo-50 p-3 rounded-md">
-                          <div className="text-sm text-indigo-700">Обновлено</div>
-                          <div className="text-xl font-bold">{importStats.updatedItemsCount}</div>
-                        </div>
-                        <div className="bg-red-50 p-3 rounded-md">
-                          <div className="text-sm text-red-700">Пропущено</div>
-                          <div className="text-xl font-bold">{importStats.skippedCount}</div>
-                        </div>
-                        <div className="bg-amber-50 p-3 rounded-md">
-                          <div className="text-sm text-amber-700">Обнулено</div>
-                          <div className="text-xl font-bold">{importStats.zeroedItemsCount}</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Журнал операций</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <ScrollArea className="h-[300px]">
-                        <div className="space-y-2">
-                          {importResultLogs.length > 0 ? (
-                            importResultLogs.map((log, index) => (
-                              <div key={index} className={`flex items-start gap-2 p-2 rounded-md ${
-                                log.type === 'success' ? 'bg-green-50' : 
-                                log.type === 'warning' ? 'bg-amber-50' : 
-                                'bg-red-50'
-                              }`}>
-                                {getLogTypeIcon(log.type)}
-                                <span className="text-sm">{log.message}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="text-center py-8 text-gray-500">
-                              Нет данных для отображения
-                            </div>
-                          )}
-                        </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-          
-          <DialogFooter className="sticky bottom-0 bg-white pt-2 pb-2 z-10 border-t">
-            <Button variant="outline" onClick={closeImportDialog}>
-              Закрыть
-            </Button>
-            {importTab !== "results" && (
-              <Button 
-                onClick={handleImportData}
-                disabled={!importData || !manualLocationId}
-              >
-                Импортировать
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default Inventory;

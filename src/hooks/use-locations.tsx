@@ -46,20 +46,25 @@ export const useLocations = () => {
           // Если массив пустой или не массив, используем значения по умолчанию
           console.log("Данные из localStorage пусты или недействительны, используем значения по умолчанию");
           setLocations(DEFAULT_LOCATIONS);
-          // НЕ записываем значения по умолчанию в localStorage здесь, 
-          // чтобы не перезаписать случайно существующие данные пользователя
+          // Сохраняем значения по умолчанию в localStorage
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
         }
       } else {
         // Если в localStorage нет данных, используем значения по умолчанию
         console.log("В localStorage нет данных, используем значения по умолчанию");
         setLocations(DEFAULT_LOCATIONS);
-        // Сохраняем значения по умолчанию только если действительно нет данных
+        // Сохраняем значения по умолчанию
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
       }
     } catch (error) {
       console.error("Ошибка при загрузке точек продаж:", error);
-      // В случае ошибки, используем значения по умолчанию но не сохраняем их
+      // В случае ошибки, используем значения по умолчанию и сохраняем их
       setLocations(DEFAULT_LOCATIONS);
+      try {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(DEFAULT_LOCATIONS));
+      } catch (storageError) {
+        console.error("Не удалось сохранить точки продаж в localStorage:", storageError);
+      }
     } finally {
       setLoading(false);
       setInitialized(true);
