@@ -32,3 +32,10 @@ export function useIsMobile() {
     screenWidth 
   }
 }
+
+// This overload allows using useIsMobile() as a boolean for backward compatibility
+// with components like the sidebar that expect just a boolean
+export function useIsMobile2(): boolean {
+  const { isMobile } = useIsMobile()
+  return isMobile
+}

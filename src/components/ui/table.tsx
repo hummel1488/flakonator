@@ -6,12 +6,8 @@ const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
 >(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-auto" style={{ maxHeight: "calc(100vh - 220px)" }}>
-    <table
-      ref={ref}
-      className={cn("w-full caption-bottom text-sm", className)}
-      {...props}
-    />
+  <div className="relative w-full overflow-auto">
+    <table className={cn("w-full caption-bottom text-sm", className)} ref={ref} {...props} />
   </div>
 ))
 Table.displayName = "Table"
@@ -20,7 +16,7 @@ const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b sticky top-0 bg-white dark:bg-card z-10 shadow-sm", className)} {...props} />
+  <thead className={cn("bg-muted [&:where([data-state='selected'])]]:bg-accent", className)} ref={ref} {...props} />
 ))
 TableHeader.displayName = "TableHeader"
 
@@ -28,11 +24,7 @@ const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <tbody
-    ref={ref}
-    className={cn("[&_tr:last-child]:border-0", className)}
-    {...props}
-  />
+  <tbody className={cn(" [&:where([data-state='selected'])]]:bg-accent", className)} ref={ref} {...props} />
 ))
 TableBody.displayName = "TableBody"
 
@@ -40,143 +32,101 @@ const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
 >(({ className, ...props }, ref) => (
-  <tfoot
-    ref={ref}
-    className={cn(
-      "border-t bg-muted/50 font-medium [&>tr]:last:border-b-0 sticky bottom-0 z-10 bg-white dark:bg-card shadow-sm",
-      className
-    )}
-    {...props}
-  />
+  <tfoot className={cn("bg-muted font-medium [&:where([data-state='selected'])]]:bg-accent", className)} ref={ref} {...props} />
 ))
 TableFooter.displayName = "TableFooter"
-
-const TableRow = React.forwardRef<
-  HTMLTableRowElement,
-  React.HTMLAttributes<HTMLTableRowElement> & { highlight?: boolean }
->(({ className, highlight, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn(
-      "border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted",
-      highlight && "bg-blue-50/50 dark:bg-blue-900/20",
-      className
-    )}
-    {...props}
-  />
-))
-TableRow.displayName = "TableRow"
 
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
   <th
-    ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0",
+      "h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
       className
     )}
+    ref={ref}
     {...props}
   />
 ))
 TableHead.displayName = "TableHead"
+
+const TableRow = React.forwardRef<
+  HTMLTableRowElement,
+  React.HTMLAttributes<HTMLTableRowElement>
+>(({ className, ...props }, ref) => (
+  <tr
+    className={cn(
+      "border-b transition-colors data-[state=selected]:bg-muted hover:bg-accent hover:text-accent-foreground [&:has([role=checkbox])]:pr-0",
+      className
+    )}
+    ref={ref}
+    {...props}
+  />
+))
+TableRow.displayName = "TableRow"
 
 const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
 >(({ className, ...props }, ref) => (
   <td
-    ref={ref}
     className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0", className)}
+    ref={ref}
     {...props}
   />
 ))
 TableCell.displayName = "TableCell"
 
-const TableCaption = React.forwardRef<
-  HTMLTableCaptionElement,
-  React.HTMLAttributes<HTMLTableCaptionElement>
->(({ className, ...props }, ref) => (
-  <caption
-    ref={ref}
-    className={cn("mt-4 text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-TableCaption.displayName = "TableCaption"
-
-// Add a responsive table wrapper
-const ResponsiveTable = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("overflow-x-auto w-full", className)}
-    {...props}
-  />
-))
-ResponsiveTable.displayName = "ResponsiveTable"
-
-// Add a custom mobile card component for table rows
-const TableMobileCard = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { highlight?: boolean }
->(({ className, highlight, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "p-4 rounded-lg border mb-3 bg-card shadow-sm",
-      highlight && "bg-blue-50/50 dark:bg-blue-900/20",
-      className
-    )}
-    {...props}
-  />
-))
-TableMobileCard.displayName = "TableMobileCard"
-
-// Add a component for mobile table view field
-const TableMobileField = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & { 
-    label: string; 
-    badgeValue?: boolean; 
-    badgePositive?: boolean;
-  }
->(({ className, label, children, badgeValue, badgePositive, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex justify-between items-center py-1", className)}
-    {...props}
-  >
-    <span className="text-sm text-muted-foreground">{label}</span>
-    {badgeValue ? (
-      <span className={cn(
-        "px-2 py-0.5 text-xs font-medium rounded-full",
-        badgePositive 
-          ? "bg-green-100 text-green-800" 
-          : "bg-red-100 text-red-800"
-      )}>
-        {children}
-      </span>
-    ) : (
-      <span className="text-sm font-medium">{children}</span>
-    )}
-  </div>
-))
-TableMobileField.displayName = "TableMobileField"
-
-export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableCaption,
-  ResponsiveTable,
-  TableMobileCard,
-  TableMobileField
+// Add these new mobile-friendly table components
+export function TableMobileCard({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border bg-card text-card-foreground shadow-sm p-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
 }
+
+type TableMobileFieldProps = {
+  label: string
+  children: React.ReactNode
+  badgeValue?: boolean
+  badgePositive?: boolean
+} & React.HTMLAttributes<HTMLDivElement>
+
+export function TableMobileField({
+  label,
+  children,
+  badgeValue = false,
+  badgePositive = true,
+  className,
+  ...props
+}: TableMobileFieldProps) {
+  return (
+    <div className={cn("flex justify-between py-1", className)} {...props}>
+      <span className="text-muted-foreground">{label}:</span>
+      {badgeValue ? (
+        <span className={cn(
+          "px-2 py-0.5 rounded-full text-xs font-medium",
+          badgePositive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        )}>
+          {children}
+        </span>
+      ) : (
+        <span className="font-medium">{children}</span>
+      )}
+    </div>
+  )
+}
+
+export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell }
