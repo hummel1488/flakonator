@@ -107,15 +107,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 w-full overflow-x-hidden">
       <Navigation />
-      <div className="p-6 md:p-12">
+      <div className="px-4 sm:px-6 md:px-8 lg:px-12 w-full max-w-full">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mb-12"
+            className="mb-8 md:mb-12 w-full"
           >
             <Dashboard />
           </motion.div>
@@ -124,7 +124,7 @@ const Index = () => {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6"
           >
             {menuItems.map((item) => (
               <motion.div
@@ -132,9 +132,10 @@ const Index = () => {
                 variants={itemVariants}
                 onHoverStart={() => setHoveredCard(item.id)}
                 onHoverEnd={() => setHoveredCard(null)}
+                className="w-full"
               >
                 <Card
-                  className={`relative overflow-hidden border glass-card transition-all duration-300 ${
+                  className={`relative overflow-hidden border glass-card transition-all duration-300 h-full ${
                     hoveredCard === item.id
                       ? "shadow-lg scale-[1.02]"
                       : "shadow-sm"
