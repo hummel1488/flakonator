@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Login from './pages/Login';
 import Index from './pages/Index';
+import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Statistics from './pages/Statistics';
@@ -27,7 +28,7 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute allowedRoles={["admin", "manager"]}>
-                <Index />
+                <Dashboard />
               </ProtectedRoute>
             }
           />
