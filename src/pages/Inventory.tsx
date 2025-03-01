@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { 
@@ -907,4 +908,260 @@ const Inventory = () => {
                 type="number"
                 min="0"
                 value={updateFormData.quantity}
-                onChange={handleUpdate
+                onChange={handleUpdateInputChange}
+              />
+            </div>
+          </div>
+          <DialogFooter className={isMobile ? "flex-col space-y-2" : undefined}>
+            <Button variant="outline" onClick={() => setShowUpdateDialog(false)} className={isMobile ? "w-full" : undefined}>
+              Отмена
+            </Button>
+            <Button onClick={handleUpdateProduct} className={isMobile ? "w-full" : undefined}>Сохранить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete All Confirmation Dialog */}
+      <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Удалить все товары?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Вы уверены, что хотите удалить все товары из инвентаря? Это действие невозможно отменить.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteAllProducts} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Удалить все
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={closeImportDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Импорт товаров</DialogTitle>
+            <DialogDescription>
+              Загрузите файл CSV для импорта товаров
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={importTab} onValueChange={setImportTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="upload">Загрузка файла</TabsTrigger>
+              <TabsTrigger value="preview" disabled={!importData}>Предпросмотр</TabsTrigger>
+              <TabsTrigger value="results" disabled={!showImportResults}>Результаты</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload" className="pt-4">
+              <div className="grid gap-6">
+                <div className="grid grid-cols-1 gap-2">
+                  <Label htmlFor="file-upload">Выберите CSV-файл</Label>
+                  <Input 
+                    id="file-upload" 
+                    type="file" 
+                    accept=".csv,.txt" 
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Поддерживаемые форматы: CSV, TXT с разделителями (запятая, точка с запятой или табуляция)
+                  </p>
+                </div>
+                
+                {locations.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    <Label htmlFor="import-location">Точка продажи</Label>
+                    <Select 
+                      value={manualLocationId} 
+                      onValueChange={handleLocationChange}
+                    >
+                      <SelectTrigger id="import-location">
+                        <SelectValue placeholder="Выберите точку продажи" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map((location) => (
+                          <SelectItem key={location.id} value={location.id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <div className="text-red-500 p-4 bg-red-50 rounded-md">
+                    Ошибка: Нет доступных точек продаж. Пожалуйста, добавьте точки продаж перед импортом.
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="zero-existing" 
+                    checked={zeroNonExisting}
+                    onCheckedChange={(checked) => setZeroNonExisting(!!checked)}
+                  />
+                  <Label htmlFor="zero-existing">
+                    Обнулить остатки товаров, отсутствующих в файле импорта
+                  </Label>
+                </div>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Требования к формату</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li>Первая строка должна содержать заголовки колонок</li>
+                      <li>Обязательные колонки: <strong>Название</strong> и <strong>Остаток</strong></li>
+                      <li>Колонка <strong>Объем</strong> опциональна (по умолчанию "5 мл")</li>
+                      <li>Поддерживаемые объемы: 5 мл, 16 мл, 20 мл, 25 мл, 30 мл, Автофлакон</li>
+                      <li>Остаток должен быть числом больше нуля</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="preview" className="pt-4">
+              <div className="flex flex-col gap-4">
+                <div className="grid grid-cols-1 gap-2">
+                  <Label>Предпросмотр данных</Label>
+                  <div className="border rounded-md p-4 bg-gray-50 min-h-[200px] max-h-[400px] overflow-auto">
+                    <pre className="text-xs whitespace-pre-wrap font-mono">
+                      {importData ? importData.slice(0, 1000) + (importData.length > 1000 ? '...' : '') : 'Нет данных для просмотра'}
+                    </pre>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4 flex justify-end gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setImportTab("upload")}
+                  >
+                    Назад
+                  </Button>
+                  <Button onClick={handleImportData}>
+                    Импортировать данные
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="results" className="pt-4">
+              {importStats && (
+                <div className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Результаты импорта</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="text-sm text-gray-500 mb-1">Всего обработано</div>
+                          <div className="text-xl font-bold">
+                            {importStats.importedCount + importStats.skippedCount} строк
+                          </div>
+                        </div>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="text-sm text-gray-500 mb-1">Успешно импортировано</div>
+                          <div className="text-xl font-bold text-green-600">
+                            {importStats.importedCount} товаров
+                          </div>
+                        </div>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="text-sm text-gray-500 mb-1">Пропущено</div>
+                          <div className="text-xl font-bold text-amber-600">
+                            {importStats.skippedCount} строк
+                          </div>
+                        </div>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="text-sm text-gray-500 mb-1">Новых товаров</div>
+                          <div className="text-xl font-bold text-blue-600">
+                            {importStats.newItemsCount} шт.
+                          </div>
+                        </div>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="text-sm text-gray-500 mb-1">Обновлено товаров</div>
+                          <div className="text-xl font-bold text-purple-600">
+                            {importStats.updatedItemsCount} шт.
+                          </div>
+                        </div>
+                        <div className="border rounded-md p-4 text-center">
+                          <div className="text-sm text-gray-500 mb-1">Обнулено товаров</div>
+                          <div className="text-xl font-bold text-red-600">
+                            {importStats.zeroedItemsCount} шт.
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Журнал импорта</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ScrollArea className="h-[300px] rounded border">
+                        <div className="p-4 space-y-2">
+                          {importResultLogs.length > 0 ? (
+                            importResultLogs.map((log, index) => (
+                              <div 
+                                key={index} 
+                                className={`flex items-start gap-2 p-2 rounded text-sm ${
+                                  log.type === 'success' 
+                                    ? 'bg-green-50' 
+                                    : log.type === 'warning' 
+                                    ? 'bg-amber-50' 
+                                    : 'bg-red-50'
+                                }`}
+                              >
+                                <div className="mt-0.5">{getLogTypeIcon(log.type)}</div>
+                                <div>
+                                  <div className={`font-medium ${
+                                    log.type === 'success' 
+                                      ? 'text-green-700' 
+                                      : log.type === 'warning' 
+                                      ? 'text-amber-700' 
+                                      : 'text-red-700'
+                                  }`}>
+                                    {log.message}
+                                  </div>
+                                  {log.details && (
+                                    <div className="text-xs mt-1 text-gray-500">
+                                      {typeof log.details === 'object' 
+                                        ? JSON.stringify(log.details) 
+                                        : String(log.details)}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-8 text-gray-500">
+                              Нет доступных логов импорта
+                            </div>
+                          )}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                  
+                  <div className="border-t pt-4 flex justify-end">
+                    <Button onClick={closeImportDialog}>
+                      Закрыть
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default Inventory;
