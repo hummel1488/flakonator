@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocations } from "@/hooks/use-locations";
@@ -27,17 +26,28 @@ import {
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+
+type UserRole = "admin" | "seller" | "manager";
 
 type UserFormData = {
+  id?: string;
   name: string;
   password: string;
-  role: "admin" | "seller" | "manager";
+  role: UserRole;
   locationId?: string;
 };
 
 const UserManagement = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, MOCK_USERS, addUser } = useAuth();
+  const { user, isAdmin, MOCK_USERS, addUser, updateUser, deleteUser } = useAuth();
   const { locations } = useLocations();
   const { toast } = useToast();
   
@@ -46,6 +56,9 @@ const UserManagement = () => {
     password: "",
     role: "seller",
   });
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserFormData | null>(null);
   
   const [users, setUsers] = useState(MOCK_USERS || []);
   
@@ -65,12 +78,31 @@ const UserManagement = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
   
-  const handleRoleChange = (role: "admin" | "seller" | "manager") => {
+  const handleRoleChange = (role: UserRole) => {
     setFormData((prev) => ({ ...prev, role }));
   };
   
   const handleLocationChange = (locationId: string) => {
     setFormData((prev) => ({ ...prev, locationId }));
+  };
+
+  const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (editingUser) {
+      setEditingUser({ ...editingUser, [name]: value });
+    }
+  };
+
+  const handleEditRoleChange = (role: UserRole) => {
+    if (editingUser) {
+      setEditingUser({ ...editingUser, role });
+    }
+  };
+
+  const handleEditLocationChange = (locationId: string) => {
+    if (editingUser) {
+      setEditingUser({ ...editingUser, locationId });
+    }
   };
   
   const handleSubmit = (e: React.FormEvent) => {
@@ -115,6 +147,86 @@ const UserManagement = () => {
       role: "seller",
       locationId: undefined,
     });
+  };
+
+  const handleEditUser = (userId: string) => {
+    const userToEdit = users.find(u => u.id === userId);
+    if (userToEdit) {
+      // Don't expose password in the form for security
+      setEditingUser({
+        id: userToEdit.id,
+        name: userToEdit.name,
+        password: "", // Empty password initially
+        role: userToEdit.role as UserRole,
+        locationId: userToEdit.locationId
+      });
+      setEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingUser) return;
+
+    // Basic validation
+    if (!editingUser.name) {
+      toast({
+        title: "Ошибка",
+        description: "Имя пользователя не может быть пустым",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate location for sellers
+    if (editingUser.role === "seller" && !editingUser.locationId) {
+      toast({
+        title: "Требуется точка продаж",
+        description: "Для продавца необходимо выбрать точку продаж",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Get the original user to preserve password if not changed
+    const originalUser = users.find(u => u.id === editingUser.id);
+    if (!originalUser) return;
+
+    const updatedUser = {
+      ...editingUser,
+      // Keep the original password if not modified
+      password: editingUser.password.trim() === "" ? originalUser.password : editingUser.password
+    };
+
+    updateUser(updatedUser);
+    setEditDialogOpen(false);
+    
+    toast({
+      title: "Пользователь обновлен",
+      description: `Изменения для пользователя ${editingUser.name} сохранены`,
+    });
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    const userToDelete = users.find(u => u.id === userId);
+    
+    // Prevent deleting current user
+    if (user && user.id === userId) {
+      toast({
+        title: "Невозможно удалить",
+        description: "Вы не можете удалить текущего пользователя",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (window.confirm(`Вы уверены, что хотите удалить пользователя ${userToDelete?.name}?`)) {
+      deleteUser(userId);
+      
+      toast({
+        title: "Пользователь удален",
+        description: `Пользователь ${userToDelete?.name} был успешно удален`,
+      });
+    }
   };
   
   return (
@@ -179,7 +291,7 @@ const UserManagement = () => {
                     <Select
                       value={formData.role}
                       onValueChange={(value) => 
-                        handleRoleChange(value as "admin" | "seller" | "manager")
+                        handleRoleChange(value as UserRole)
                       }
                     >
                       <SelectTrigger id="role">
@@ -261,10 +373,18 @@ const UserManagement = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end space-x-2">
-                              <Button variant="ghost" size="icon">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleEditUser(user.id)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button variant="ghost" size="icon">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleDeleteUser(user.id)}
+                              >
                                 <Trash2 className="h-4 w-4 text-red-500" />
                               </Button>
                             </div>
@@ -287,6 +407,91 @@ const UserManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Редактирование пользователя</DialogTitle>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Имя пользователя</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  value={editingUser.name}
+                  onChange={handleEditInputChange}
+                  placeholder="Введите имя пользователя"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">Пароль</Label>
+                <Input
+                  id="edit-password"
+                  name="password"
+                  type="password"
+                  value={editingUser.password}
+                  onChange={handleEditInputChange}
+                  placeholder="Оставьте пустым, чтобы не менять"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Оставьте поле пустым, чтобы сохранить текущий пароль
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Роль</Label>
+                <Select
+                  value={editingUser.role}
+                  onValueChange={(value) => 
+                    handleEditRoleChange(value as UserRole)
+                  }
+                >
+                  <SelectTrigger id="edit-role">
+                    <SelectValue placeholder="Выберите роль" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Администратор</SelectItem>
+                    <SelectItem value="seller">Продавец</SelectItem>
+                    <SelectItem value="manager">Управляющий</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {editingUser.role === "seller" && (
+                <div className="space-y-2">
+                  <Label htmlFor="edit-location">Точка продаж</Label>
+                  <Select
+                    value={editingUser.locationId}
+                    onValueChange={handleEditLocationChange}
+                  >
+                    <SelectTrigger id="edit-location">
+                      <SelectValue placeholder="Выберите точку продаж" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {locations.map((location) => (
+                        <SelectItem key={location.id} value={location.id}>
+                          {location.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Отмена</Button>
+            </DialogClose>
+            <Button onClick={handleSaveEdit}>Сохранить</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
