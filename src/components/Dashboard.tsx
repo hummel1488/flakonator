@@ -18,7 +18,7 @@ import { ru } from "date-fns/locale";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "./ui/separator";
 import { 
   Select, 

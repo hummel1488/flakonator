@@ -13,7 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import Navigation from '@/components/Navigation';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,6 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Plus, Edit, Eye, Trash } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 
 // Define a log entry type
 interface LogEntry {
@@ -31,9 +30,8 @@ interface LogEntry {
 }
 
 const UserManagement = () => {
-  const { user: currentUser, isAdmin } = useAuth();
+  const { MOCK_USERS, user: currentUser, addUser, updateUser, deleteUser, isAdmin } = useAuth();
   
-  const [users, setUsers] = useState<any[]>([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
@@ -41,13 +39,9 @@ const UserManagement = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [selectedUserLogs, setSelectedUserLogs] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка пользователей из Supabase
+  // Initialize logs from localStorage or create demo logs if none exist
   useEffect(() => {
-    fetchUsers();
-    
-    // Загрузка логов
     const storedLogs = localStorage.getItem('userLogs');
     if (storedLogs) {
       setLogs(JSON.parse(storedLogs));
@@ -83,36 +77,6 @@ const UserManagement = () => {
     }
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*');
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setUsers(data);
-      }
-    } catch (error: any) {
-      console.error('Ошибка при загрузке пользователей:', error.message);
-      toast.error('Не удалось загрузить пользователей');
-      
-      // Если не удалось загрузить из Supabase, используем демо-данные
-      const demoUsers = [
-        { id: "1", name: "Администратор", role: "admin", email: "admin@example.com" },
-        { id: "2", name: "Продавец", role: "seller", email: "seller@example.com" },
-        { id: "3", name: "Управляющий", role: "manager", email: "manager@example.com" },
-      ];
-      setUsers(demoUsers);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Function to handle user editing
   const handleEditUser = (user: any) => {
     setEditingUser({...user});
@@ -122,10 +86,9 @@ const UserManagement = () => {
   // Function to handle user addition
   const handleAddUser = () => {
     setEditingUser({
-      id: '',
+      id: Date.now().toString(),
       name: '',
       role: 'seller',
-      email: '',
       password: ''
     });
     setIsAddModalOpen(true);
@@ -145,69 +108,28 @@ const UserManagement = () => {
         return;
       }
       
+      // Add or update user
       if (isAddModalOpen) {
-        if (!editingUser.email || !editingUser.password) {
-          toast.error("Пожалуйста, укажите email и пароль для нового пользователя");
+        if (!editingUser.password) {
+          toast.error("Пожалуйста, укажите пароль для нового пользователя");
           setIsSubmitting(false);
           return;
         }
         
-        // Регистрация пользователя через Supabase Auth
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: editingUser.email,
-          password: editingUser.password,
+        addUser(editingUser);
+        
+        // Add log entry for creating a user
+        addLogEntry({
+          userId: currentUser?.id || '',
+          userName: currentUser?.name || '',
+          action: 'Создание пользователя',
+          details: `Создан пользователь ${editingUser.name} с ролью ${translateRole(editingUser.role)}`
         });
         
-        if (authError) {
-          throw authError;
-        }
-        
-        if (authData.user) {
-          // Создание профиля пользователя
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert([
-              { 
-                id: authData.user.id,
-                name: editingUser.name,
-                role: editingUser.role
-              }
-            ]);
-            
-          if (profileError) {
-            throw profileError;
-          }
-          
-          // Перезагрузка списка пользователей
-          fetchUsers();
-          
-          // Add log entry for creating a user
-          addLogEntry({
-            userId: currentUser?.id || '',
-            userName: currentUser?.name || '',
-            action: 'Создание пользователя',
-            details: `Создан пользователь ${editingUser.name} с ролью ${translateRole(editingUser.role)}`
-          });
-          
-          toast.success("Пользователь создан");
-          setIsAddModalOpen(false);
-        }
+        toast.success("Пользователь создан");
+        setIsAddModalOpen(false);
       } else {
-        // Обновление профиля пользователя
-        const { error } = await supabase
-          .from('user_profiles')
-          .update({ 
-            name: editingUser.name,
-            role: editingUser.role
-          })
-          .eq('id', editingUser.id);
-          
-        if (error) {
-          throw error;
-        }
-        
-        // Перезагрузка списка пользователей
-        fetchUsers();
+        updateUser(editingUser);
         
         // Add log entry for updating a user
         addLogEntry({
@@ -222,18 +144,18 @@ const UserManagement = () => {
       }
       
       setEditingUser(null);
-    } catch (error: any) {
-      console.error("Error saving user:", error.message);
-      toast.error(error.message || "Ошибка при сохранении пользователя");
+    } catch (error) {
+      console.error("Error saving user:", error);
+      toast.error("Ошибка при сохранении пользователя");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // Function to delete user
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteUser = (userId: string) => {
     try {
-      const userToDelete = users.find(u => u.id === userId);
+      const userToDelete = MOCK_USERS.find(u => u.id === userId);
       if (!userToDelete) return;
       
       if (userId === currentUser?.id) {
@@ -241,18 +163,7 @@ const UserManagement = () => {
         return;
       }
       
-      // Удаление пользователя из Supabase
-      const { error } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', userId);
-        
-      if (error) {
-        throw error;
-      }
-      
-      // Перезагрузка списка пользователей
-      fetchUsers();
+      deleteUser(userId);
       
       // Add log entry for deleting a user
       addLogEntry({
@@ -263,9 +174,9 @@ const UserManagement = () => {
       });
       
       toast.success("Пользователь удален");
-    } catch (error: any) {
-      console.error("Error deleting user:", error.message);
-      toast.error(error.message || "Ошибка при удалении пользователя");
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Ошибка при удалении пользователя");
     }
   };
 
@@ -316,20 +227,6 @@ const UserManagement = () => {
     }).format(date);
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
-        <div className="container mx-auto py-6 px-4">
-          <h1 className="text-3xl font-bold mb-6">Управление пользователями</h1>
-          <div className="flex justify-center items-center h-64">
-            <p>Загрузка данных...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -342,7 +239,7 @@ const UserManagement = () => {
             Добавить пользователя
           </Button>
           
-          {isAdmin && (
+          {isAdmin() && (
             <Button variant="outline" onClick={() => handleViewLogs()} className="flex items-center gap-2">
               <Eye size={16} />
               Журнал операций
@@ -360,16 +257,14 @@ const UserManagement = () => {
                 <TableRow>
                   <TableHead>Имя</TableHead>
                   <TableHead>Роль</TableHead>
-                  <TableHead>Email</TableHead>
                   <TableHead>Действия</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map(user => (
+                {MOCK_USERS.map(user => (
                   <TableRow key={user.id}>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{translateRole(user.role || '')}</TableCell>
-                    <TableCell>{user.email || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button 
@@ -379,7 +274,7 @@ const UserManagement = () => {
                         >
                           <Edit size={16} />
                         </Button>
-                        {isAdmin && (
+                        {isAdmin() && (
                           <Button 
                             variant="outline" 
                             size="sm" 
@@ -435,6 +330,15 @@ const UserManagement = () => {
                     <option value="seller">Продавец</option>
                   </select>
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Новый пароль (оставьте пустым, чтобы не менять)</Label>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={editingUser.password || ''} 
+                    onChange={(e) => setEditingUser({...editingUser, password: e.target.value})}
+                  />
+                </div>
               </div>
             )}
             <DialogFooter>
@@ -471,15 +375,6 @@ const UserManagement = () => {
                     id="name" 
                     value={editingUser.name} 
                     onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    value={editingUser.email || ''} 
-                    onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
@@ -532,7 +427,7 @@ const UserManagement = () => {
             <DialogHeader>
               <DialogTitle>
                 {selectedUserLogs 
-                  ? `Журнал операций: ${users.find(u => u.id === selectedUserLogs)?.name || 'Пользователь'}`
+                  ? `Журнал операций: ${MOCK_USERS.find(u => u.id === selectedUserLogs)?.name || 'Пользователь'}`
                   : 'Журнал всех операций'}
               </DialogTitle>
             </DialogHeader>

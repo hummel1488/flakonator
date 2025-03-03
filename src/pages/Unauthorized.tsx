@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { Shield, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthProvider";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Unauthorized = () => {
   const navigate = useNavigate();

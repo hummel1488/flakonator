@@ -5,21 +5,20 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { User, KeyRound, ShieldCheck, Mail, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { User, KeyRound, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthProvider";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, user, isSupabaseConfigured } = useAuth();
+  const { login, user } = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("demo123");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { isMobile } = useIsMobile();
   
@@ -28,7 +27,7 @@ const Login = () => {
   // Если пользователь уже авторизован, перенаправляем его
   useEffect(() => {
     if (user) {
-      console.log("Пользователь уже вошёл, перенаправление на:", from);
+      console.log("User already logged in, redirecting to:", from);
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
@@ -38,24 +37,24 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log("Отправка формы входа:", email);
-      const success = await login(email, password);
+      console.log("Submitting login form:", username);
+      const success = await login(username, password);
       if (success) {
         toast({
           title: "Успешный вход",
           description: "Вы успешно вошли в систему",
         });
-        console.log("Вход успешен, перенаправление на:", from);
+        console.log("Login successful, redirecting to:", from);
         navigate(from, { replace: true });
       } else {
         toast({
           title: "Ошибка входа",
-          description: "Неверный email или пароль",
+          description: "Неверное имя пользователя или пароль",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Ошибка входа:", error);
+      console.error("Login error:", error);
       toast({
         title: "Ошибка",
         description: "Произошла ошибка при входе",
@@ -75,43 +74,30 @@ const Login = () => {
         className="w-full max-w-md"
       >
         <div className="flex justify-center mb-6">
-          <div className="text-3xl font-bold">
-            FLAK<span className="text-blue-500">ON</span>ATOR
-          </div>
+          <img 
+            src="/lovable-uploads/68b9ed5b-c4d4-44be-bf47-99958ce5197f.png" 
+            alt="âme logo" 
+            className="h-24"
+          />
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Вход в систему</CardTitle>
           </CardHeader>
-          
-          {!isSupabaseConfigured && (
-            <CardContent>
-              <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <AlertTitle>Деморежим</AlertTitle>
-                <AlertDescription>
-                  Приложение работает в демонстрационном режиме. Используйте любой логин и пароль для входа.
-                  <br />
-                  Все данные будут сохранены только в браузере.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          )}
-          
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="username">Имя пользователя</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="Введите email" 
+                    id="username" 
+                    type="text" 
+                    placeholder="Введите имя пользователя" 
                     className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     required
                   />
                 </div>
@@ -144,20 +130,32 @@ const Login = () => {
               </Button>
             </form>
 
-            {!isSupabaseConfigured && (
-              <div className="mt-6 space-y-2">
-                <p className="text-sm text-center text-gray-500">Для полной функциональности приложения требуется настройка Supabase.</p>
-                <p className="text-sm text-center text-gray-500">В Vercel добавьте переменные окружения:</p>
-                <div className="space-y-2 text-sm">
-                  <div className="p-2 border rounded-md bg-gray-50">
-                    <code>VITE_SUPABASE_URL=ваш_supabase_url</code>
+            <div className="mt-6 space-y-2">
+              <p className="text-sm text-center text-gray-500">Демонстрационные учетные записи:</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between p-2 border rounded-md">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
+                    <span>Администратор</span>
                   </div>
-                  <div className="p-2 border rounded-md bg-gray-50">
-                    <code>VITE_SUPABASE_ANON_KEY=ваш_публичный_ключ</code>
+                  <Badge variant="admin">admin</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 border rounded-md">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-blue-500" />
+                    <span>Продавец</span>
                   </div>
+                  <Badge variant="seller">seller</Badge>
+                </div>
+                <div className="flex items-center justify-between p-2 border rounded-md">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-teal-500" />
+                    <span>Управляющий</span>
+                  </div>
+                  <Badge variant="manager">manager</Badge>
                 </div>
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       </motion.div>
