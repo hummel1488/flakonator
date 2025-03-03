@@ -22,9 +22,13 @@ interface AuthContextType {
   isManager: () => boolean;
   assignSellerLocation: (locationId: string) => void;
   session: Session | null;
+  isSupabaseConfigured: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Проверка, настроен ли Supabase
+const isSupabaseConfigured = !!import.meta.env.VITE_SUPABASE_URL && !!import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -33,6 +37,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Загрузка пользовательской сессии при инициализации
   useEffect(() => {
+    // Если Supabase не настроен, пропускаем проверку сессии
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
@@ -57,6 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Загрузка профиля пользователя из Supabase
   const loadUserProfile = async (supabaseUser: User) => {
+    // Если Supabase не настроен, пропускаем загрузку профиля
+    if (!isSupabaseConfigured) return;
+
     const { data, error } = await supabase
       .from("user_profiles")
       .select("*")
@@ -81,6 +94,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Аутентификация пользователя
   const login = async (email: string, password: string): Promise<boolean> => {
+    // Если Supabase не настроен, возвращаем успешный вход с тестовыми данными
+    if (!isSupabaseConfigured) {
+      setUser({
+        id: "test-user-id",
+        name: email.split('@')[0] || "Тестовый пользователь",
+        role: "admin",
+        email: email
+      });
+      return true;
+    }
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -101,8 +125,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Выход из системы
   const logout = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
+    setSession(null);
   };
 
   const isAdmin = () => user?.role === "admin";
@@ -111,7 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Назначение продавцу точки продаж
   const assignSellerLocation = async (locationId: string) => {
-    if (!user || user.role !== "seller") return;
+    if (!user || user.role !== "seller" || !isSupabaseConfigured) return;
 
     const { error } = await supabase
       .from("user_profiles")
@@ -127,7 +154,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   if (loading) {
-    return <div>Загрузка...</div>;
+    return <div className="flex items-center justify-center h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
   }
 
   return (
@@ -139,7 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isSeller, 
       isManager,
       assignSellerLocation,
-      session
+      session,
+      isSupabaseConfigured
     }}>
       {children}
     </AuthContext.Provider>

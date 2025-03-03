@@ -5,20 +5,21 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, KeyRound, ShieldCheck, Mail } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { User, KeyRound, ShieldCheck, Mail, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthProvider";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, user } = useAuth();
+  const { login, user, isSupabaseConfigured } = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("demo@example.com");
+  const [password, setPassword] = useState("demo123");
   const [isLoading, setIsLoading] = useState(false);
   const { isMobile } = useIsMobile();
   
@@ -74,17 +75,30 @@ const Login = () => {
         className="w-full max-w-md"
       >
         <div className="flex justify-center mb-6">
-          <img 
-            src="/lovable-uploads/68b9ed5b-c4d4-44be-bf47-99958ce5197f.png" 
-            alt="âme logo" 
-            className="h-24"
-          />
+          <div className="text-3xl font-bold">
+            FLAK<span className="text-blue-500">ON</span>ATOR
+          </div>
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Вход в систему</CardTitle>
           </CardHeader>
+          
+          {!isSupabaseConfigured && (
+            <CardContent>
+              <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <AlertTitle>Деморежим</AlertTitle>
+                <AlertDescription>
+                  Приложение работает в демонстрационном режиме. Используйте любой логин и пароль для входа.
+                  <br />
+                  Все данные будут сохранены только в браузере.
+                </AlertDescription>
+              </Alert>
+            </CardContent>
+          )}
+          
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -130,18 +144,20 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="mt-6 space-y-2">
-              <p className="text-sm text-center text-gray-500">Для работы приложения требуется настройка Supabase.</p>
-              <p className="text-sm text-center text-gray-500">В Vercel добавьте переменные окружения:</p>
-              <div className="space-y-2 text-sm">
-                <div className="p-2 border rounded-md bg-gray-50">
-                  <code>VITE_SUPABASE_URL=ваш_supabase_url</code>
-                </div>
-                <div className="p-2 border rounded-md bg-gray-50">
-                  <code>VITE_SUPABASE_ANON_KEY=ваш_публичный_ключ</code>
+            {!isSupabaseConfigured && (
+              <div className="mt-6 space-y-2">
+                <p className="text-sm text-center text-gray-500">Для полной функциональности приложения требуется настройка Supabase.</p>
+                <p className="text-sm text-center text-gray-500">В Vercel добавьте переменные окружения:</p>
+                <div className="space-y-2 text-sm">
+                  <div className="p-2 border rounded-md bg-gray-50">
+                    <code>VITE_SUPABASE_URL=ваш_supabase_url</code>
+                  </div>
+                  <div className="p-2 border rounded-md bg-gray-50">
+                    <code>VITE_SUPABASE_ANON_KEY=ваш_публичный_ключ</code>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
