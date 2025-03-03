@@ -1,6 +1,6 @@
 
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth, UserRole } from "@/contexts/AuthProvider";
 import { useEffect } from "react";
 
 interface ProtectedRouteProps {
@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Проверка авторизации
   if (!user) {
-    console.log("Redirecting to login - no user");
+    console.log("Перенаправление на страницу входа - пользователь не авторизован");
     // Redirect to the login page if not logged in
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
@@ -37,7 +37,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <>{children}</>;
   }
 
-  console.log("Redirecting to unauthorized - no permission");
+  console.log("Перенаправление на страницу unauthorized - нет прав доступа");
   // If user doesn't have the required role, redirect to unauthorized page
   return <Navigate to="/unauthorized" replace />;
 };

@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useInventory, Product } from "@/hooks/use-inventory";
 import { useLocations } from "@/hooks/use-locations";
 import { useSales } from "@/hooks/use-sales";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import Navigation from "@/components/Navigation";
 import { Badge } from "@/components/ui/badge";
 
