@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, KeyRound, ShieldCheck } from "lucide-react";
+import { User, KeyRound, ShieldCheck, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthProvider";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -17,7 +17,7 @@ const Login = () => {
   const location = useLocation();
   const { login, user } = useAuth();
   const { toast } = useToast();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { isMobile } = useIsMobile();
@@ -27,7 +27,7 @@ const Login = () => {
   // Если пользователь уже авторизован, перенаправляем его
   useEffect(() => {
     if (user) {
-      console.log("User already logged in, redirecting to:", from);
+      console.log("Пользователь уже вошёл, перенаправление на:", from);
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
@@ -37,24 +37,24 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      console.log("Submitting login form:", username);
-      const success = await login(username, password);
+      console.log("Отправка формы входа:", email);
+      const success = await login(email, password);
       if (success) {
         toast({
           title: "Успешный вход",
           description: "Вы успешно вошли в систему",
         });
-        console.log("Login successful, redirecting to:", from);
+        console.log("Вход успешен, перенаправление на:", from);
         navigate(from, { replace: true });
       } else {
         toast({
           title: "Ошибка входа",
-          description: "Неверное имя пользователя или пароль",
+          description: "Неверный email или пароль",
           variant: "destructive",
         });
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Ошибка входа:", error);
       toast({
         title: "Ошибка",
         description: "Произошла ошибка при входе",
@@ -88,16 +88,16 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Имя пользователя</Label>
+                <Label htmlFor="email">Email</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input 
-                    id="username" 
-                    type="text" 
-                    placeholder="Введите имя пользователя" 
+                    id="email" 
+                    type="email" 
+                    placeholder="Введите email" 
                     className="pl-10"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -131,28 +131,14 @@ const Login = () => {
             </form>
 
             <div className="mt-6 space-y-2">
-              <p className="text-sm text-center text-gray-500">Демонстрационные учетные записи:</p>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between p-2 border rounded-md">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-indigo-500" />
-                    <span>Администратор</span>
-                  </div>
-                  <Badge variant="admin">admin</Badge>
+              <p className="text-sm text-center text-gray-500">Для работы приложения требуется настройка Supabase.</p>
+              <p className="text-sm text-center text-gray-500">В Vercel добавьте переменные окружения:</p>
+              <div className="space-y-2 text-sm">
+                <div className="p-2 border rounded-md bg-gray-50">
+                  <code>VITE_SUPABASE_URL=ваш_supabase_url</code>
                 </div>
-                <div className="flex items-center justify-between p-2 border rounded-md">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-blue-500" />
-                    <span>Продавец</span>
-                  </div>
-                  <Badge variant="seller">seller</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2 border rounded-md">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-teal-500" />
-                    <span>Управляющий</span>
-                  </div>
-                  <Badge variant="manager">manager</Badge>
+                <div className="p-2 border rounded-md bg-gray-50">
+                  <code>VITE_SUPABASE_ANON_KEY=ваш_публичный_ключ</code>
                 </div>
               </div>
             </div>

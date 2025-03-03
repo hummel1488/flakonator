@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -19,7 +18,7 @@ import DataManagement from "./pages/DataManagement";
 import Training from "./pages/Training";
 import UserManagement from "./pages/UserManagement";
 import { Toaster } from "./components/ui/sonner";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthProvider";
 import { TaskProvider } from "./contexts/TaskContext";
 
 // Create a client
