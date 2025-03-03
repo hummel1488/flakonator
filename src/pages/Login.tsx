@@ -10,7 +10,6 @@ import { User, KeyRound, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,7 +19,6 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { isMobile } = useIsMobile();
   
   const from = location.state?.from || "/";
   
@@ -119,12 +117,8 @@ const Login = () => {
               </div>
               <Button 
                 type="submit" 
-                className={`w-full bg-gradient-to-r from-indigo-600 to-indigo-500 ${isMobile ? 'py-3 text-base' : ''}`}
+                className="w-full bg-gradient-to-r from-indigo-600 to-indigo-500"
                 disabled={isLoading}
-                onClick={isMobile ? (e) => {
-                  e.preventDefault();
-                  handleSubmit(e);
-                } : undefined}
               >
                 {isLoading ? "Вход..." : "Войти"}
               </Button>
