@@ -188,7 +188,7 @@ const Index = () => {
         title: "Журнал операций",
         description: "История всех транзакций",
         icon: <FileText className="h-6 w-6" />,
-        path: "/sales/history",
+        path: "/user-management",
         roles: ["admin"],
         variant: "default" as const
       }
