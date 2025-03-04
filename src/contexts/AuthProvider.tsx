@@ -16,7 +16,7 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string, forceDemoMode?: boolean) => Promise<boolean>;
   logout: () => Promise<void>;
   isAdmin: () => boolean;
   isSeller: () => boolean;
@@ -157,13 +157,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Аутентификация пользователя
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string, forceDemoMode: boolean = false): Promise<boolean> => {
     try {
-      console.log("Попытка входа:", email);
-      // Если Supabase не настроен, возвращаем успешный вход с тестовыми данными
-      if (!isSupabaseEnabled) {
+      console.log("Попытка входа:", email, "forceDemoMode:", forceDemoMode);
+      // Если принудительно включен демо-режим или Supabase не настроен, возвращаем успешный вход с тестовыми данными
+      if (forceDemoMode || !isSupabaseEnabled) {
+        console.log("Использование демо-режима для входа");
         const demoUser = {
-          id: "test-user-id",
+          id: "demo-user-id",
           name: email.split('@')[0] || "Тестовый пользователь",
           role: "admin" as UserRole,
           email: email

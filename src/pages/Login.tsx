@@ -24,6 +24,7 @@ const Login = () => {
   const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [forceDemoMode, setForceDemoMode] = useState(false);
   
   const from = location.state?.from || "/";
   
@@ -38,18 +39,27 @@ const Login = () => {
   // Проверка сессии при загрузке страницы
   useEffect(() => {
     const checkSession = async () => {
-      if (!isSupabaseConfigured) return;
+      if (!isSupabaseConfigured) {
+        console.log("Supabase не настроен, демо-режим активирован автоматически");
+        setForceDemoMode(true);
+        return;
+      }
       
       try {
-        const { data } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         console.log("Текущая сессия:", data.session ? "Активна" : "Отсутствует");
+        if (error) {
+          console.error("Ошибка при проверке сессии:", error);
+          setForceDemoMode(true);
+        }
       } catch (error) {
-        console.error("Ошибка при проверке сессии:", error);
+        console.error("Непредвиденная ошибка при проверке сессии:", error);
+        setForceDemoMode(true);
       }
     };
     
     checkSession();
-  }, []);
+  }, [isSupabaseConfigured]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +70,9 @@ const Login = () => {
     try {
       // Дополнительный вывод для отладки
       console.log("isSupabaseConfigured:", isSupabaseConfigured);
+      console.log("forceDemoMode:", forceDemoMode);
       
-      const success = await login(email, password);
+      const success = await login(email, password, forceDemoMode);
       if (success) {
         toast.success("Вы успешно вошли в систему");
         console.log("Вход успешен, перенаправление на:", from);
@@ -78,6 +89,11 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const enableDemoMode = () => {
+    setForceDemoMode(true);
+    toast.info("Демо-режим активирован. Используйте любые данные для входа.");
   };
 
   return (
@@ -97,9 +113,14 @@ const Login = () => {
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Вход в систему</CardTitle>
+            {forceDemoMode && (
+              <Badge variant="outline" className="mx-auto bg-amber-50 text-amber-700 border-amber-200">
+                Демо-режим
+              </Badge>
+            )}
           </CardHeader>
           
-          {!isSupabaseConfigured && (
+          {!isSupabaseConfigured || forceDemoMode ? (
             <CardContent>
               <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
@@ -111,7 +132,7 @@ const Login = () => {
                 </AlertDescription>
               </Alert>
             </CardContent>
-          )}
+          ) : null}
           
           <CardContent>
             {errorMessage && (
@@ -162,7 +183,19 @@ const Login = () => {
               </Button>
             </form>
 
-            {!isSupabaseConfigured && (
+            {!forceDemoMode && isSupabaseConfigured && (
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={enableDemoMode}
+                >
+                  Войти в демо-режиме
+                </Button>
+              </div>
+            )}
+
+            {(!isSupabaseConfigured || forceDemoMode) && (
               <div className="mt-6 space-y-2">
                 <p className="text-sm text-center text-gray-500">Для полной функциональности приложения требуется настройка Supabase.</p>
                 <p className="text-sm text-center text-gray-500">В Vercel добавьте переменные окружения:</p>

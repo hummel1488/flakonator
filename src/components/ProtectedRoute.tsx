@@ -24,7 +24,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       currentPath: location.pathname,
       allowedRoles,
       isAuthenticated: !!user,
-      hasPermission: user?.role && allowedRoles.includes(user.role)
+      hasPermission: user ? allowedRoles.includes(user.role || "admin") : false
     });
   }, [user, session, allowedRoles, location]);
 
@@ -34,6 +34,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     toast.error("Необходимо войти в систему");
     // Redirect to the login page if not logged in
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  // Для демо-режима (если id пользователя начинается с "demo-") всегда разрешаем доступ
+  if (user.id.startsWith("demo-")) {
+    return <>{children}</>;
   }
 
   // Check if user has the required role
