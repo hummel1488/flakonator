@@ -23,6 +23,7 @@ const getURL = () => {
   // Убеждаемся, что URL заканчивается слешем
   url = url.charAt(url.length - 1) === '/' ? url : `${url}/`;
   
+  console.log('Redirect URL:', url);
   return url;
 };
 
@@ -36,8 +37,7 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce',
-      redirect_to: getURL(),
+      flowType: 'pkce'
     },
   }
 );
