@@ -19,8 +19,8 @@ const Login = () => {
   const location = useLocation();
   const { login, user, isSupabaseConfigured } = useAuth();
   const { isMobile } = useIsMobile();
-  const [email, setEmail] = useState("demo@example.com");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("admin@example.com");
+  const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
   
   const from = location.state?.from || "/";
@@ -36,9 +36,9 @@ const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    console.log("Отправка формы входа с email:", email);
 
     try {
-      console.log("Отправка формы входа:", email);
       const success = await login(email, password);
       if (success) {
         toast.success("Вы успешно вошли в систему");

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -56,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Начальная сессия получена:", session ? "существует" : "отсутствует");
       setSession(session);
       if (session?.user) {
         loadUserProfile(session.user);
@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Изменение состояния аутентификации:", _event);
       setSession(session);
       if (session?.user) {
         loadUserProfile(session.user);
@@ -83,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSupabaseEnabled) return;
 
     try {
+      console.log("Загрузка профиля для пользователя:", supabaseUser.id);
       const { data, error } = await supabase
         .from("user_profiles")
         .select("*")
@@ -95,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data) {
+        console.log("Профиль пользователя загружен:", data);
         setUser({
           id: supabaseUser.id,
           name: data.name || supabaseUser.email?.split('@')[0] || 'Пользователь',
@@ -102,6 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           locationId: data.location_id,
           email: supabaseUser.email
         });
+      } else {
+        console.log("Профиль не найден для пользователя:", supabaseUser.id);
       }
     } catch (err) {
       console.error("Непредвиденная ошибка при загрузке профиля:", err);
@@ -111,6 +116,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Аутентификация пользователя
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log("Попытка входа:", email);
       // Если Supabase не настроен, возвращаем успешный вход с тестовыми данными
       if (!isSupabaseEnabled) {
         const demoUser = {
@@ -137,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
 
+      console.log("Вход успешен, получена сессия:", !!data.session);
       return !!data.session;
     } catch (err) {
       console.error("Непредвиденная ошибка при входе:", err);
