@@ -7,7 +7,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Проверка наличия переменных окружения
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Отсутствуют переменные окружения для Supabase');
+  console.error('Отсутствуют переменные окружения для Supabase. Приложение работает в демо-режиме.');
 }
 
 // Создаем клиент Supabase с пустыми значениями, если переменные не определены
@@ -16,3 +16,8 @@ export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co', 
   supabaseAnonKey || 'placeholder-key'
 );
+
+// Функция для проверки, настроен ли Supabase
+export const isSupabaseConfigured = () => {
+  return !!supabaseUrl && !!supabaseAnonKey;
+};

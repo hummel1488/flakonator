@@ -12,16 +12,16 @@ import { useAuth } from "@/contexts/AuthProvider";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, user, isSupabaseConfigured } = useAuth();
-  const { toast } = useToast();
+  const { isMobile } = useIsMobile();
   const [email, setEmail] = useState("demo@example.com");
   const [password, setPassword] = useState("demo123");
   const [isLoading, setIsLoading] = useState(false);
-  const { isMobile } = useIsMobile();
   
   const from = location.state?.from || "/";
   
@@ -41,26 +41,15 @@ const Login = () => {
       console.log("Отправка формы входа:", email);
       const success = await login(email, password);
       if (success) {
-        toast({
-          title: "Успешный вход",
-          description: "Вы успешно вошли в систему",
-        });
+        toast.success("Вы успешно вошли в систему");
         console.log("Вход успешен, перенаправление на:", from);
         navigate(from, { replace: true });
       } else {
-        toast({
-          title: "Ошибка входа",
-          description: "Неверный email или пароль",
-          variant: "destructive",
-        });
+        toast.error("Неверный email или пароль");
       }
     } catch (error) {
       console.error("Ошибка входа:", error);
-      toast({
-        title: "Ошибка",
-        description: "Произошла ошибка при входе",
-        variant: "destructive",
-      });
+      toast.error("Произошла ошибка при входе");
     } finally {
       setIsLoading(false);
     }
@@ -135,10 +124,6 @@ const Login = () => {
                 type="submit" 
                 className={`w-full bg-gradient-to-r from-indigo-600 to-indigo-500 ${isMobile ? 'py-3 text-base' : ''}`}
                 disabled={isLoading}
-                onClick={isMobile ? (e) => {
-                  e.preventDefault();
-                  handleSubmit(e);
-                } : undefined}
               >
                 {isLoading ? "Вход..." : "Войти"}
               </Button>
