@@ -13,18 +13,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   allowedRoles = ["admin", "seller", "manager"]
 }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const location = useLocation();
 
   // Добавляем логирование для отладки
   useEffect(() => {
     console.log("ProtectedRoute check:", {
       user,
+      session: session ? "Активна" : "Отсутствует",
+      currentPath: location.pathname,
       allowedRoles,
       isAuthenticated: !!user,
       hasPermission: user?.role && allowedRoles.includes(user.role)
     });
-  }, [user, allowedRoles]);
+  }, [user, session, allowedRoles, location]);
 
   // Проверка авторизации
   if (!user) {

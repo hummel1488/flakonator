@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Login = () => {
   const [email, setEmail] = useState("admin@example.com");
   const [password, setPassword] = useState("password");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const from = location.state?.from || "/";
   
@@ -33,22 +35,45 @@ const Login = () => {
     }
   }, [user, navigate, from]);
 
+  // Проверка сессии при загрузке страницы
+  useEffect(() => {
+    const checkSession = async () => {
+      if (!isSupabaseConfigured) return;
+      
+      try {
+        const { data } = await supabase.auth.getSession();
+        console.log("Текущая сессия:", data.session ? "Активна" : "Отсутствует");
+      } catch (error) {
+        console.error("Ошибка при проверке сессии:", error);
+      }
+    };
+    
+    checkSession();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage(null);
     console.log("Отправка формы входа с email:", email);
 
     try {
+      // Дополнительный вывод для отладки
+      console.log("isSupabaseConfigured:", isSupabaseConfigured);
+      
       const success = await login(email, password);
       if (success) {
         toast.success("Вы успешно вошли в систему");
         console.log("Вход успешен, перенаправление на:", from);
         navigate(from, { replace: true });
       } else {
+        console.error("Неудачный вход в систему");
+        setErrorMessage("Неверный email или пароль");
         toast.error("Неверный email или пароль");
       }
     } catch (error) {
       console.error("Ошибка входа:", error);
+      setErrorMessage(error instanceof Error ? error.message : "Произошла ошибка при входе");
       toast.error("Произошла ошибка при входе");
     } finally {
       setIsLoading(false);
@@ -89,6 +114,14 @@ const Login = () => {
           )}
           
           <CardContent>
+            {errorMessage && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Ошибка</AlertTitle>
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -139,6 +172,9 @@ const Login = () => {
                   </div>
                   <div className="p-2 border rounded-md bg-gray-50">
                     <code>VITE_SUPABASE_ANON_KEY=ваш_публичный_ключ</code>
+                  </div>
+                  <div className="p-2 border rounded-md bg-gray-50">
+                    <code>VITE_SITE_URL=https://ваш_vercel_url</code>
                   </div>
                 </div>
               </div>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
@@ -54,22 +55,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Начальная сессия получена:", session ? "существует" : "отсутствует");
-      setSession(session);
-      if (session?.user) {
-        loadUserProfile(session.user);
+    const checkSession = async () => {
+      try {
+        console.log("Проверка сессии при инициализации");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Ошибка при получении сессии:", error);
+          setLoading(false);
+          return;
+        }
+        
+        console.log("Начальная сессия получена:", data.session ? "существует" : "отсутствует");
+        setSession(data.session);
+        
+        if (data.session?.user) {
+          await loadUserProfile(data.session.user);
+        }
+      } catch (err) {
+        console.error("Непредвиденная ошибка при получении сессии:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
+    checkSession();
+
+    // Настройка слушателя изменений состояния аутентификации
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       console.log("Изменение состояния аутентификации:", _event);
-      setSession(session);
-      if (session?.user) {
-        loadUserProfile(session.user);
+      setSession(newSession);
+      
+      if (newSession?.user) {
+        await loadUserProfile(newSession.user);
       } else {
         setUser(null);
       }
@@ -85,6 +105,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       console.log("Загрузка профиля для пользователя:", supabaseUser.id);
+      // Для отладки: вывод всех доступных полей пользователя
+      console.log("Данные supabaseUser:", JSON.stringify({
+        id: supabaseUser.id,
+        email: supabaseUser.email,
+        phone: supabaseUser.phone,
+        app_metadata: supabaseUser.app_metadata,
+        user_metadata: supabaseUser.user_metadata
+      }, null, 2));
+      
       const { data, error } = await supabase
         .from("user_profiles")
         .select("*")
@@ -93,6 +122,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error("Ошибка загрузки профиля:", error);
+        // В случае ошибки создаем базовый профиль пользователя
+        setUser({
+          id: supabaseUser.id,
+          name: supabaseUser.email?.split('@')[0] || 'Пользователь',
+          role: null,
+          email: supabaseUser.email
+        });
         return;
       }
 
@@ -107,6 +143,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       } else {
         console.log("Профиль не найден для пользователя:", supabaseUser.id);
+        // Если профиль не найден, создаем базовый профиль пользователя
+        setUser({
+          id: supabaseUser.id,
+          name: supabaseUser.email?.split('@')[0] || 'Пользователь',
+          role: null,
+          email: supabaseUser.email
+        });
       }
     } catch (err) {
       console.error("Непредвиденная ошибка при загрузке профиля:", err);
@@ -132,6 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return true;
       }
 
+      console.log("Вызов supabase.auth.signInWithPassword с email:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -144,6 +188,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       console.log("Вход успешен, получена сессия:", !!data.session);
+      if (data.session) {
+        console.log("ID пользователя:", data.session.user.id);
+        console.log("Email пользователя:", data.session.user.email);
+      }
+      
       return !!data.session;
     } catch (err) {
       console.error("Непредвиденная ошибка при входе:", err);
